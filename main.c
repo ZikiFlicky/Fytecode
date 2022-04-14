@@ -24,10 +24,16 @@ char *Fy_LoadFile(char *name) {
     return stream;
 }
 
+typedef struct Fy_VM {
+    uint8_t ax[2];
+    uint8_t bx[2];
+} Fy_VM;
+
 int main(int argc, char **argv) {
     char *stream;
     Fy_Lexer lexer;
     Fy_Parser parser;
+    Fy_Generator gen;
 
     if (argc != 2) {
         printf("Expected 1 argument\n");
@@ -44,8 +50,14 @@ int main(int argc, char **argv) {
     Fy_Parser_Init(&lexer, &parser);
     Fy_Parser_parseAll(&parser);
 
-    Fy_Parser_logParsed(&parser);
-    Fy_Parser_generateToFile(&parser, "output");
+    Fy_Parser_generateBytecode(&parser, &gen);
+    // for (size_t i = 0; i < gen.idx; ++i) {
+    //     switch (gen.output[i]) {
+    //     case 
+    //     }
+    // }
+    // Fy_Parser_logParsed(&parser);
+    // Fy_Parser_generateToFile(&parser, "output");
 
     // printf("%zu\n", parser.amount_used);
 

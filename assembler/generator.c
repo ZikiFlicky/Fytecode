@@ -39,20 +39,8 @@ void Fy_Generator_addConst16(Fy_Generator *generator, uint16_t w) {
     generator->idx += 2;
 }
 
-void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_ParserInstruction *instruction) {
+void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instruction) {
     // Add the instruction opcode
-    Fy_Generator_addByte(generator, instruction->type);
-
-    switch (instruction->type) {
-    case Fy_ParserInstructionType_MovReg16Const:
-        Fy_Generator_addByte(generator, instruction->mov_reg16_const.reg_id);
-        Fy_Generator_addConst16(generator, instruction->mov_reg16_const.const16);
-        break;
-    case Fy_ParserInstructionType_MovReg16Reg16:
-        Fy_Generator_addByte(generator, instruction->mov_reg16_reg16.reg_id);
-        Fy_Generator_addByte(generator, instruction->mov_reg16_reg16.reg2_id);
-        break;
-    default:
-        FY_UNREACHABLE();
-    }
+    Fy_Generator_addByte(generator, instruction->type->opcode);
+    instruction->type->write_func(generator, instruction);
 }

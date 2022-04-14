@@ -3,6 +3,8 @@
 
 #include "token.h"
 
+#include <stdbool.h>
+
 typedef struct Fy_Lexer {
     char *stream_base, *stream;
     Fy_Token token;

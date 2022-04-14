@@ -49,12 +49,6 @@ char *Fy_ParserError_toString(Fy_ParserError error) {
     }
 }
 
-Fy_ParserInstruction *Fy_ParserInstruction_New(Fy_ParserInstructionType type) {
-    Fy_ParserInstruction *instruction = malloc(sizeof(Fy_ParserInstruction));
-    instruction->type = type;
-    return instruction;
-}
-
 /* Returns lowercase string representation of 16-bit register */
 char *Fy_ParserReg16_toString(Fy_ParserReg16 reg) {
     switch (reg) {
@@ -115,22 +109,23 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
     return true;
 }
 
-Fy_ParserInstruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_ParserInstruction *instruction = Fy_ParserInstruction_New(Fy_ParserInstructionType_MovReg16Const);
-    instruction->mov_reg16_const.reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->mov_reg16_const.const16 = Fy_Token_toConst16(token_arg2, parser);
-    return instruction;
+Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    Fy_Instruction_MovReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Const, Fy_InstructionType_MovReg16Const);
+    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
+    instruction->val = Fy_Token_toConst16(token_arg2, parser);
+    return (Fy_Instruction*)instruction;
 }
 
-Fy_ParserInstruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_ParserInstruction *instruction = Fy_ParserInstruction_New(Fy_ParserInstructionType_MovReg16Reg16);
+Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    Fy_Instruction_MovReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Reg16, Fy_InstructionType_MovReg16Reg16);
     (void)parser;
-    instruction->mov_reg16_reg16.reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->mov_reg16_reg16.reg2_id = Fy_TokenType_toReg16(token_arg2->type);
-    return instruction;
+    // FIXME: This should be a different register type (VMRegister instead of ParserRegister)
+    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
+    instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
+    return (Fy_Instruction*)instruction;
 }
 
-Fy_ParserInstruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
+Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack, backtrack;
     Fy_TokenType start_token;
 
@@ -211,7 +206,7 @@ Fy_ParserInstruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
     //         if (parser->token.type == Fy_TokenType_Const) {
     //             int16_t c = Fy_Token_toConst16(&parser->token, parser);
-    //             instruction = Fy_ParserInstruction_New(Fy_ParserInstructionType_MovReg16Const);
+    //             instruction = Fy_Instruction_New(Fy_InstructionType_MovReg16Const);
     //             instruction->mov_reg16_const.reg_id = reg;
     //             instruction->mov_reg16_const.const16 = c;
     //         } else {
@@ -219,7 +214,7 @@ Fy_ParserInstruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     //         }
 
     //         // if (Fy_TokenType_isReg16(parser->token.type)) {
-    //         //     instruction = Fy_ParserInstruction_New(Fy_ParserInstructionType_)
+    //         //     instruction = Fy_Instruction_New(Fy_InstructionType_)
     //         // }
     //     } else if (Fy_TokenType_isReg8(parser->token.type)) {
     //         // TODO: implement this
@@ -252,16 +247,16 @@ void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
 }
 
 void Fy_Parser_parseAll(Fy_Parser *parser) {
-    Fy_ParserInstruction *instruction;
+    Fy_Instruction *instruction;
 
     // If there is a newline, advance it
     Fy_Parser_expectNewline(parser, false);
 
     while ((instruction = Fy_Parser_parseInstruction(parser))) {
         if (parser->amount_allocated == 0)
-            parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_ParserInstruction*));
+            parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_Instruction*));
         else if (parser->amount_used == parser->amount_allocated)
-            parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_ParserInstruction*));
+            parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_Instruction*));
 
         parser->instructions[parser->amount_used++] = instruction;
         Fy_Parser_expectNewline(parser, true);
@@ -269,25 +264,27 @@ void Fy_Parser_parseAll(Fy_Parser *parser) {
 }
 
 void Fy_Parser_logParsed(Fy_Parser *parser) {
-    printf("--- %zu instructions ---\n", parser->amount_used);
-    for (size_t i = 0; i < parser->amount_used; ++i) {
-        Fy_ParserInstruction *instruction = parser->instructions[i];
-        switch (instruction->type) {
-        case Fy_ParserInstructionType_MovReg16Const:
-            printf("mov %s %d",
-                    Fy_ParserReg16_toString(instruction->mov_reg16_const.reg_id),
-                    instruction->mov_reg16_const.const16);
-            break;
-        case Fy_ParserInstructionType_MovReg16Reg16:
-            printf("mov %s %s",
-                    Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg_id),
-                    Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg2_id));
-            break;
-        default:
-            FY_UNREACHABLE();
-        }
-        printf("\n");
-    }
+    (void)parser;
+    FY_UNREACHABLE();
+    // printf("--- %zu instructions ---\n", parser->amount_used);
+    // for (size_t i = 0; i < parser->amount_used; ++i) {
+    //     Fy_Instruction *instruction = parser->instructions[i];
+    //     switch (instruction->type) {
+    //     case Fy_InstructionType_MovReg16Const:
+    //         printf("mov %s %d",
+    //                 Fy_ParserReg16_toString(instruction->mov_reg16_const.reg_id),
+    //                 instruction->mov_reg16_const.const16);
+    //         break;
+    //     case Fy_InstructionType_MovReg16Reg16:
+    //         printf("mov %s %s",
+    //                 Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg_id),
+    //                 Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg2_id));
+    //         break;
+    //     default:
+    //         FY_UNREACHABLE();
+    //     }
+    //     printf("\n");
+    // }
 }
 
 /* Generate bytecode from parsed values */
@@ -296,7 +293,7 @@ void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out) {
     Fy_Generator_Init(&generator);
 
     for (size_t i = 0; i < parser->amount_used; ++i) {
-        Fy_ParserInstruction *instruction = parser->instructions[i];
+        Fy_Instruction *instruction = parser->instructions[i];
         Fy_Generator_addInstruction(&generator, instruction);
     }
 

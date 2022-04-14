@@ -45,10 +45,21 @@ bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
 
 /* Removes space and tab (indent characters) */
 void Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
-    int8_t c;
-    while ((c = lexer->stream[0]) == ' ' || c == '\t') {
-        ++lexer->stream;
-        ++lexer->column;
+    bool removing = true;
+    while (removing) {
+        int8_t c = lexer->stream[0];
+        if (c == ' ' || c == '\t') {
+            ++lexer->stream;
+            ++lexer->column;
+        } else if (c == ';') {
+            do {
+                ++lexer->stream;
+                ++lexer->column;
+                c = lexer->stream[0];
+            } while (c != '\n' && c != '\0');
+        } else {
+            removing = false;
+        }
     }
 }
 

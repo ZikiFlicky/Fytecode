@@ -40,7 +40,11 @@ void Fy_Generator_addConst16(Fy_Generator *generator, uint16_t w) {
 }
 
 void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instruction) {
+    Fy_InstructionWriteFunc func;
     // Add the instruction opcode
     Fy_Generator_addByte(generator, instruction->type->opcode);
-    instruction->type->write_func(generator, instruction);
+    func = instruction->type->write_func;
+    // Write only if function is defined
+    if (func)
+        func(generator, instruction);
 }

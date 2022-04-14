@@ -1,6 +1,15 @@
 #include "fy.h"
 
+/* Parse-function declarations */
+
+Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
+
+/* Define rules */
+
 Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
+    .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
     .arg1 = {
         .type = Fy_ParserArgType_Reg16,
@@ -9,10 +18,11 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
     .arg2 = {
         .type = Fy_ParserArgType_Constant
     },
-    .func = Fy_ParseMovReg16Const
+    .func_two_params = Fy_ParseMovReg16Const
 };
 
 Fy_ParserParseRule Fy_parseRuleMovReg16Reg16 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
     .arg1 = {
         .type = Fy_ParserArgType_Reg16,
@@ -22,12 +32,20 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Reg16 = {
         .type = Fy_ParserArgType_Reg16,
         .possible_tokens = NULL
     },
-    .func = Fy_ParseMovReg16Reg16
+    .func_two_params = Fy_ParseMovReg16Reg16
 };
 
+Fy_ParserParseRule Fy_parseRuleDebug = {
+    .type = Fy_ParserParseRuleType_NoParams,
+    .start_token = Fy_TokenType_Debug,
+    .func_no_params = Fy_ParseDebug
+};
+
+/* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
-    &Fy_parseRuleMovReg16Reg16
+    &Fy_parseRuleMovReg16Reg16,
+    &Fy_parseRuleDebug
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -42,8 +60,8 @@ char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Constant too big";
     case Fy_ParserError_ExpectedNewline:
         return "Expected newline";
-    case Fy_ParserError_InvalidInstructionParams:
-        return "Invalid instruction parameters";
+    case Fy_ParserError_InvalidInstruction:
+        return "Invalid instruction";
     default:
         FY_UNREACHABLE();
     }
@@ -125,6 +143,12 @@ Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, F
     return (Fy_Instruction*)instruction;
 }
 
+Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
+    Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_Debug);
+    (void)parser;
+    return instruction;
+}
+
 Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack, backtrack;
     Fy_TokenType start_token;
@@ -145,6 +169,10 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         if (start_token != rule->start_token)
             continue;
+
+        // If we take no params
+        if (rule->type == Fy_ParserParseRuleType_NoParams)
+            return rule->func_no_params(parser);
 
         if (!Fy_Parser_lex(parser))
             continue;
@@ -171,6 +199,9 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         token_arg1 = parser->token;
 
+        if (rule->type == Fy_ParserParseRuleType_OneParam)
+            return rule->func_two_params(parser, &token_arg1, &token_arg2);
+
         if (!Fy_Parser_lex(parser)) {
             Fy_Parser_loadState(parser, &backtrack);
             continue;
@@ -183,12 +214,15 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         token_arg2 = parser->token;
 
-        return rule->func(parser, &token_arg1, &token_arg2);
+        if (rule->type == Fy_ParserParseRuleType_TwoParams)
+            return rule->func_two_params(parser, &token_arg1, &token_arg2);
+
+        FY_UNREACHABLE();
     }
 
     // TODO: Add clever error message that tells us why we were wrong
 
-    Fy_Parser_error(parser, Fy_ParserError_InvalidInstructionParams);
+    Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction);
 
     // switch (parser->token.type) {
     // case Fy_TokenType_Mov:

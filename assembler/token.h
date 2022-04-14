@@ -12,6 +12,7 @@ typedef enum Fy_ParserArgType Fy_ParserArgType;
 
 typedef enum Fy_TokenType {
     Fy_TokenType_Mov = 1,
+    Fy_TokenType_Debug,
     Fy_TokenType_Ax,
     Fy_TokenType_Bx,
     Fy_TokenType_Const,

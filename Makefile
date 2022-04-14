@@ -1,6 +1,6 @@
 CC=gcc
-LINK=-lm -lSDL2
-CFLAGS=-Wall -Wextra -std=c99 -Wno-missing-braces -Isrc/
+LINK=-lm
+CFLAGS=-Wall -Wextra -std=c99 -Wno-missing-braces -Iutils/
 
 SRCDIR=.
 MKDIR=mkdir -p
@@ -9,7 +9,7 @@ NAME=fy
 RM=rm -f
 RMDIR=rm -rf
 
-OBJECTS=main.o
+OBJECTS=token.o lexer.o parser.o generator.o main.o instruction.o
 
 .PHONY: clean all debug
 
@@ -26,6 +26,9 @@ $(BUILDDIR)/$(NAME): $(OBJECTS)
 	$(CC) $(CFLAGS) $(BUILDDIR)/* -o $@ $(LINK)
 
 %.o: %.c $(BUILDDIR)
+	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
+
+%.o: assembler/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
 
 clean:

@@ -1,2 +1,3 @@
-mov ax 123
-mov bx 123
+mov ax 23432
+mov bx ax
+debug

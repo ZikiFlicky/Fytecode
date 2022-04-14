@@ -8,10 +8,6 @@
 #include <stddef.h>
 #include <inttypes.h>
 
-/* Parse function declarations */
-Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
-Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
-
 typedef struct Fy_ParserState {
     char *stream;
     size_t line, column;
@@ -28,7 +24,7 @@ typedef enum Fy_ParserError {
     Fy_ParserError_ExpectedReg,
     Fy_ParserError_ConstTooBig,
     Fy_ParserError_ExpectedNewline,
-    Fy_ParserError_InvalidInstructionParams
+    Fy_ParserError_InvalidInstruction
 } Fy_ParserError;
 
 typedef struct Fy_Parser {
@@ -46,15 +42,26 @@ typedef enum Fy_ParserArgType {
     Fy_ParserArgType_Constant
 } Fy_ParserArgType;
 
+typedef enum Fy_ParserParseRuleType {
+    Fy_ParserParseRuleType_NoParams = 1,
+    Fy_ParserParseRuleType_OneParam,
+    Fy_ParserParseRuleType_TwoParams
+} Fy_ParserParseRuleType;
+
 // TODO: This currently only supports two parameters
 typedef struct Fy_ParserParseRule {
+    Fy_ParserParseRuleType type;
     Fy_TokenType start_token; /* Type of token to be expected at start */
     struct {
         Fy_ParserArgType type;
         Fy_TokenType *possible_tokens; /* All of the possible tokens to be found after */
     } arg1, arg2;
     /* A function that always returns a valid ParserInstruction based on the given token */
-    Fy_Instruction *(*func)(Fy_Parser*, Fy_Token*, Fy_Token*);
+    union {
+        Fy_Instruction *(*func_no_params)(Fy_Parser*);
+        Fy_Instruction *(*func_one_param)(Fy_Parser*);
+        Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_Token*, Fy_Token*);
+    };
 } Fy_ParserParseRule;
 
 extern Fy_ParserParseRule *Fy_parserRules[];

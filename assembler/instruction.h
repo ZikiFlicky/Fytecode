@@ -42,6 +42,7 @@ struct Fy_Instruction_MovReg16Reg16 {
 /* Instruction types */
 extern Fy_InstructionType Fy_InstructionType_MovReg16Const;
 extern Fy_InstructionType Fy_InstructionType_MovReg16Reg16;
+extern Fy_InstructionType Fy_InstructionType_Debug;
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

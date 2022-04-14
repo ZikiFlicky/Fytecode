@@ -116,6 +116,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (Fy_Lexer_lexNewline(lexer))
         return true;
 
+    if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "ax", Fy_TokenType_Ax))

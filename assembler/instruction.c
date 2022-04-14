@@ -28,3 +28,8 @@ Fy_InstructionType Fy_InstructionType_MovReg16Reg16 = {
     .opcode = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Reg16_write
 };
+
+Fy_InstructionType Fy_InstructionType_Debug = {
+    .opcode = 2,
+    .write_func = NULL
+};

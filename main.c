@@ -4,7 +4,7 @@
  * Reads all of the file into memory and returns the pointer to that memory.
  * Returns a NULL on failure.
  */
-char *Fy_LoadFile(char *name) {
+static char *Fy_LoadTextFile(char *name) {
     FILE *file;
     size_t length;
     char *stream;
@@ -24,47 +24,95 @@ char *Fy_LoadFile(char *name) {
     return stream;
 }
 
-typedef struct Fy_VM {
-    uint8_t ax[2];
-    uint8_t bx[2];
-} Fy_VM;
+/*
+ * Reads all of the binary file into `stream_out` and puts size in out_size.
+ * Returns false on failure.
+ */
+bool Fy_LoadBinaryFile(char *name, uint8_t **stream_out, uint16_t *out_size) {
+    FILE *file;
+    uint16_t length;
+    uint8_t *stream;
+
+    file = fopen(name, "r");
+    if (!file)
+        return false;
+
+    fseek(file, 0, SEEK_END);
+    length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    stream = malloc(length * sizeof(uint8_t));
+    fread(stream, sizeof(uint8_t), length, file);
+    fclose(file);
+
+    *stream_out = stream;
+    *out_size = length;
+
+    return true;
+}
+
+static void Fy_PrintHelp(void) {
+    puts("Welcome to the Fytecode engine!");
+    puts("usage: fy -h | -c source output | -r file [--warn-undefined]");
+    puts("  -c source output: assembles file into bytecode");
+    puts("  -r file:          runs bytecode on virtual machine");
+    puts("  -h:               shows this help message");
+}
 
 int main(int argc, char **argv) {
-    char *stream;
-    Fy_Lexer lexer;
-    Fy_Parser parser;
-    Fy_Generator gen;
-
-    if (argc != 2) {
-        printf("Expected 1 argument\n");
+    if (argc < 2) {
+        Fy_PrintHelp();
         return 1;
     }
 
-    stream = Fy_LoadFile(argv[1]);
-    if (!stream) {
-        printf("Failed in opening %s\n", argv[1]);
-        return 1;
+    if (strcmp(argv[1], "-c") == 0) {
+        char *stream;
+        Fy_Lexer lexer;
+        Fy_Parser parser;
+
+        if (argc != 4) {
+            printf("Expected two arguments after '-c' switch\n");
+            return 1;
+        }
+
+        stream = Fy_LoadTextFile(argv[2]);
+        if (!stream) {
+            printf("Couldn't open file '%s' for read\n", argv[2]);
+            return 1;
     }
 
-    Fy_Lexer_Init(&lexer, stream);
-    Fy_Parser_Init(&lexer, &parser);
-    Fy_Parser_parseAll(&parser);
+        Fy_Lexer_Init(stream, &lexer);
+        Fy_Parser_Init(&lexer, &parser);
+        Fy_Parser_parseAll(&parser);
 
-    Fy_Parser_generateBytecode(&parser, &gen);
-    // for (size_t i = 0; i < gen.idx; ++i) {
-    //     switch (gen.output[i]) {
-    //     case 
-    //     }
-    // }
-    // Fy_Parser_logParsed(&parser);
-    // Fy_Parser_generateToFile(&parser, "output");
+        Fy_Parser_generateToFile(&parser, argv[3]);
 
-    // printf("%zu\n", parser.amount_used);
+        free(stream);
+    } else if (strcmp(argv[1], "-r") == 0) {
+        uint8_t *stream;
+        uint16_t length;
+        Fy_VM vm;
 
-    // while (Fy_Lexer_lex(&lexer))
-    //     printf("%d\n", lexer.token.type);
+        if (argc != 3) {
+            printf("Expected one argument after '-r' switch\n");
+            return 1;
+        }
 
-    free(stream);
+        if (!Fy_LoadBinaryFile(argv[2], &stream, &length)) {
+            printf("Couldn't load binary file '%s' for read\n", argv[2]);
+            return 1;
+        }
+
+        Fy_VM_Init(stream, length, &vm);
+        Fy_VM_runAll(&vm);
+
+        free(stream);
+    } else if (strcmp(argv[1], "-h")) {
+        Fy_PrintHelp();
+    } else {
+        Fy_PrintHelp();
+        return 1;
+    }
 
     return 0;
 }

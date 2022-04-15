@@ -357,12 +357,6 @@ void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename) {
         FY_UNREACHABLE();
 
     Fy_Parser_generateBytecode(parser, &generator);
-    for (size_t i = 0; i < generator.idx; ++i) {
-        if (i != 0)
-            printf(" ");
-        printf("%x", generator.output[i]);
-    }
-    printf("\n");
     fwrite(generator.output, 1, generator.idx, file);
 
     fclose(file);

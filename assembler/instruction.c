@@ -26,8 +26,7 @@ static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
     uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
     // Register not found
     if (!reg_ptr) {
-        // Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
-        FY_UNREACHABLE();
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
     }
     *reg_ptr = val;
 }
@@ -52,8 +51,7 @@ static void Fy_InstructionType_MovReg16Reg16_run(Fy_VM *vm) {
     uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
     // Register not found
     if (!reg_ptr || !reg2_ptr) {
-        // Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
-        FY_UNREACHABLE();
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
     }
     *reg_ptr = *reg2_ptr;
 }

@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "../assembler/token.h"
 #include "../assembler/lexer.h"

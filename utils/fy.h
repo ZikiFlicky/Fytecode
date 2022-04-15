@@ -17,6 +17,8 @@
 #include "../assembler/generator.h"
 #include "../assembler/instruction.h"
 
+#include "../interpreter/vm.h"
+
 #define FY_UNREACHABLE() assert(0)
 
 #endif /* FY_FY_H */

@@ -5,6 +5,7 @@
 Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
+Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
 
 /* Define rules */
 
@@ -41,11 +42,18 @@ Fy_ParserParseRule Fy_parseRuleDebug = {
     .func_no_params = Fy_ParseDebug
 };
 
+Fy_ParserParseRule Fy_parseRuleEnd = {
+    .type = Fy_ParserParseRuleType_NoParams,
+    .start_token = Fy_TokenType_End,
+    .func_no_params = Fy_ParseEnd
+};
+
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
     &Fy_parseRuleMovReg16Reg16,
-    &Fy_parseRuleDebug
+    &Fy_parseRuleDebug,
+    &Fy_parseRuleEnd
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -145,6 +153,12 @@ Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, F
 
 Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
     Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_Debug);
+    (void)parser;
+    return instruction;
+}
+
+Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
+    Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_EndProgram);
     (void)parser;
     return instruction;
 }
@@ -337,6 +351,10 @@ void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out) {
 void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename) {
     FILE *file = fopen(filename, "w+");
     Fy_Generator generator;
+
+    // FIXME:
+    if (!file)
+        FY_UNREACHABLE();
 
     Fy_Parser_generateBytecode(parser, &generator);
     for (size_t i = 0; i < generator.idx; ++i) {

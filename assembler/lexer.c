@@ -11,11 +11,11 @@ char *Fy_LexerError_toString(Fy_LexerError error) {
 }
 
 /* Initialize a lexer */
-void Fy_Lexer_Init(Fy_Lexer *lexer, char *stream) {
-    lexer->stream_base = stream;
-    lexer->stream = stream;
-    lexer->line = 1;
-    lexer->column = 1;
+void Fy_Lexer_Init(char *stream, Fy_Lexer *out) {
+    out->stream_base = stream;
+    out->stream = stream;
+    out->line = 1;
+    out->column = 1;
 }
 
 /*
@@ -128,6 +128,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
 
     if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "end", Fy_TokenType_End))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))
         return true;

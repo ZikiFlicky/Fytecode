@@ -56,7 +56,9 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
         if (opcode == type->opcode) {
             assert(type->run_func);
             type->run_func(vm);
-            vm->reg_ip += 1 + type->additional_size;
+            // If we are told to advance after running the instruction (disabled in jumps)
+            if (type->advance_after_run)
+                vm->reg_ip += 1 + type->additional_size;
             return;
         }
     }

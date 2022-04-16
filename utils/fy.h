@@ -12,11 +12,14 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "defines.h"
+
 #include "../assembler/token.h"
 #include "../assembler/lexer.h"
 #include "../assembler/parser.h"
 #include "../assembler/generator.h"
 #include "../assembler/instruction.h"
+#include "../assembler/labelmap.h"
 
 #include "../interpreter/vm.h"
 

@@ -22,12 +22,12 @@ bool Fy_TokenType_isReg16(Fy_TokenType type) {
     }
 }
 
-Fy_ParserReg16 Fy_TokenType_toReg16(Fy_TokenType type) {
+Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
     switch (type) {
     case Fy_TokenType_Ax:
-        return Fy_ParserReg16_Ax;
+        return Fy_Reg16_Ax;
     case Fy_TokenType_Bx:
-        return Fy_ParserReg16_Bx;
+        return Fy_Reg16_Bx;
     default:
         FY_UNREACHABLE();
     }
@@ -104,7 +104,20 @@ bool Fy_TokenType_isPossibleArg(Fy_TokenType token_type, Fy_ParserArgType arg_ty
             return false;
     case Fy_ParserArgType_Reg8:
         FY_UNREACHABLE(); // FIXME: Not implemented yet
+    case Fy_ParserArgType_Label:
+        if (token_type == Fy_TokenType_Label)
+            return true;
+        else
+            return false;
     default:
         FY_UNREACHABLE();
     }
+}
+
+char *Fy_Token_toLowercaseCStr(Fy_Token *token) {
+    char *cstr = malloc((token->length + 1) * sizeof(char));
+    for (size_t i = 0; i < token->length; ++i)
+        cstr[i] = tolower(token->start[i]);
+    cstr[token->length] = '\0';
+    return cstr;
 }

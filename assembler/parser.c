@@ -1,14 +1,16 @@
 #include "fy.h"
 
 /* Parse-function declarations */
+static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
+static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
+static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
 
-Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
-Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
-Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
-Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
+/* Process-function declarations */
+static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction);
 
 /* Define rules */
-
 Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
     .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
@@ -19,9 +21,9 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
     .arg2 = {
         .type = Fy_ParserArgType_Constant
     },
-    .func_two_params = Fy_ParseMovReg16Const
+    .func_two_params = Fy_ParseMovReg16Const,
+    .func_process = NULL
 };
-
 Fy_ParserParseRule Fy_parseRuleMovReg16Reg16 = {
     .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
@@ -33,27 +35,37 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Reg16 = {
         .type = Fy_ParserArgType_Reg16,
         .possible_tokens = NULL
     },
-    .func_two_params = Fy_ParseMovReg16Reg16
+    .func_two_params = Fy_ParseMovReg16Reg16,
+    .func_process = NULL
 };
-
 Fy_ParserParseRule Fy_parseRuleDebug = {
     .type = Fy_ParserParseRuleType_NoParams,
     .start_token = Fy_TokenType_Debug,
-    .func_no_params = Fy_ParseDebug
+    .func_no_params = Fy_ParseDebug,
+    .func_process = NULL
 };
-
 Fy_ParserParseRule Fy_parseRuleEnd = {
     .type = Fy_ParserParseRuleType_NoParams,
     .start_token = Fy_TokenType_End,
-    .func_no_params = Fy_ParseEnd
+    .func_no_params = Fy_ParseEnd,
+    .func_process = NULL
 };
-
+Fy_ParserParseRule Fy_parseRuleJmp = {
+    .type = Fy_ParserParseRuleType_OneParam,
+    .start_token = Fy_TokenType_Jmp,
+    .arg1 = {
+        .type = Fy_ParserArgType_Label
+    },
+    .func_one_param = Fy_ParseJmp,
+    .func_process = (Fy_InstructionProcessFunc)Fy_ProcessJmp
+};
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
     &Fy_parseRuleMovReg16Reg16,
     &Fy_parseRuleDebug,
-    &Fy_parseRuleEnd
+    &Fy_parseRuleEnd,
+    &Fy_parseRuleJmp
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -70,18 +82,8 @@ char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Expected newline";
     case Fy_ParserError_InvalidInstruction:
         return "Invalid instruction";
-    default:
-        FY_UNREACHABLE();
-    }
-}
-
-/* Returns lowercase string representation of 16-bit register */
-char *Fy_ParserReg16_toString(Fy_ParserReg16 reg) {
-    switch (reg) {
-    case Fy_ParserReg16_Ax:
-        return "ax";
-    case Fy_ParserReg16_Bx:
-        return "bx";
+    case Fy_ParserError_SyntaxError:
+        return "Syntax error";
     default:
         FY_UNREACHABLE();
     }
@@ -92,6 +94,8 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     out->lexer = lexer;
     out->amount_allocated = 0;
     out->amount_used = 0;
+    out->code_offset = 0;
+    Fy_Labelmap_Init(&out->labelmap);
 }
 
 void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
@@ -135,14 +139,14 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
     return true;
 }
 
-Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     Fy_Instruction_MovReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Const, Fy_InstructionType_MovReg16Const);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
     instruction->val = Fy_Token_toConst16(token_arg2, parser);
     return (Fy_Instruction*)instruction;
 }
 
-Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     Fy_Instruction_MovReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Reg16, Fy_InstructionType_MovReg16Reg16);
     (void)parser;
     // FIXME: This should be a different register type (VMRegister instead of ParserRegister)
@@ -151,19 +155,35 @@ Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, F
     return (Fy_Instruction*)instruction;
 }
 
-Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
+static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
     Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_Debug);
     (void)parser;
     return instruction;
 }
 
-Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
+static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
     Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_EndProgram);
     (void)parser;
     return instruction;
 }
 
-Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
+static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg) {
+    Fy_Instruction_Jmp *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_Jmp, Fy_InstructionType_Jmp);
+    (void)parser;
+    instruction->name = Fy_Token_toLowercaseCStr(token_arg);
+    return (Fy_Instruction*)instruction;
+}
+
+static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction) {
+    uint16_t address;
+    if (!Fy_Labelmap_getEntry(&parser->labelmap, instruction->name, &address)) {
+        FY_UNREACHABLE();
+        // Fy_Parser_error(parser, Fy_ParserError_LabelNotFound);
+    }
+    instruction->address = address;
+}
+
+static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack, backtrack;
     Fy_TokenType start_token;
 
@@ -185,8 +205,11 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
             continue;
 
         // If we take no params
-        if (rule->type == Fy_ParserParseRuleType_NoParams)
-            return rule->func_no_params(parser);
+        if (rule->type == Fy_ParserParseRuleType_NoParams) {
+            Fy_Instruction *instruction = rule->func_no_params(parser);
+            instruction->parse_rule = rule;
+            return instruction;
+        }
 
         if (!Fy_Parser_lex(parser))
             continue;
@@ -213,8 +236,11 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         token_arg1 = parser->token;
 
-        if (rule->type == Fy_ParserParseRuleType_OneParam)
-            return rule->func_two_params(parser, &token_arg1, &token_arg2);
+        if (rule->type == Fy_ParserParseRuleType_OneParam) {
+            Fy_Instruction *instruction = rule->func_one_param(parser, &token_arg1);
+            instruction->parse_rule = rule;
+            return instruction;
+        }
 
         if (!Fy_Parser_lex(parser)) {
             Fy_Parser_loadState(parser, &backtrack);
@@ -228,8 +254,11 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         token_arg2 = parser->token;
 
-        if (rule->type == Fy_ParserParseRuleType_TwoParams)
-            return rule->func_two_params(parser, &token_arg1, &token_arg2);
+        if (rule->type == Fy_ParserParseRuleType_TwoParams) {
+            Fy_Instruction *instruction = rule->func_two_params(parser, &token_arg1, &token_arg2);
+            instruction->parse_rule = rule;
+            return instruction;
+        }
 
         FY_UNREACHABLE();
     }
@@ -239,6 +268,24 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction);
 
     FY_UNREACHABLE();
+}
+
+/* Returns whether we parsed a label */
+bool Fy_Parser_parseLabel(Fy_Parser *parser) {
+    Fy_Token label_token;
+    char *label_string;
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+        return false;
+    label_token = parser->token;
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Colon))
+        Fy_Parser_error(parser, Fy_ParserError_SyntaxError);
+
+    label_string = Fy_Token_toLowercaseCStr(&label_token);
+    Fy_Labelmap_addEntry(&parser->labelmap, label_string, parser->code_offset);
+
+    return true;
 }
 
 void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
@@ -256,21 +303,57 @@ void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline);
 }
 
-void Fy_Parser_parseAll(Fy_Parser *parser) {
-    Fy_Instruction *instruction;
-
+/* Step 1: reading all of the instructions and creating a vector of them */
+static void Fy_Parser_readInstructions(Fy_Parser *parser) {
     // If there is a newline, advance it
     Fy_Parser_expectNewline(parser, false);
 
-    while ((instruction = Fy_Parser_parseInstruction(parser))) {
-        if (parser->amount_allocated == 0)
-            parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_Instruction*));
-        else if (parser->amount_used == parser->amount_allocated)
-            parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_Instruction*));
+    for (;;) {
+        Fy_Instruction *instruction;
+        Fy_ParserState backtrack;
 
-        parser->instructions[parser->amount_used++] = instruction;
-        Fy_Parser_expectNewline(parser, true);
+        if (Fy_Parser_parseLabel(parser))
+            continue;
+
+        Fy_Parser_expectNewline(parser, false);
+
+        if ((instruction = Fy_Parser_parseInstruction(parser))) {
+            if (parser->amount_allocated == 0)
+                parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_Instruction*));
+            else if (parser->amount_used == parser->amount_allocated)
+                parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_Instruction*));
+
+            parser->instructions[parser->amount_used++] = instruction;
+            // Update offset
+            parser->code_offset += 1 + instruction->type->additional_size;
+            Fy_Parser_expectNewline(parser, true);
+            continue;
+        }
+
+        Fy_Parser_dumpState(parser, &backtrack);
+        if (!Fy_Parser_lex(parser)) {
+            break;
+        } else {
+            Fy_Parser_loadState(parser, &backtrack);
+            Fy_Parser_error(parser, Fy_ParserError_SyntaxError);
+        }
     }
+}
+
+
+/* Step 2: processing parsed instructions */
+static void Fy_Parser_processInstructions(Fy_Parser *parser) {
+    for (size_t i = 0; i < parser->amount_used; ++i) {
+        Fy_Instruction *instruction = parser->instructions[i];
+        if (instruction->parse_rule->func_process) {
+            instruction->parse_rule->func_process(parser, instruction);
+        }
+    }
+}
+
+void Fy_Parser_parseAll(Fy_Parser *parser) {
+    Fy_Parser_readInstructions(parser);
+    Fy_Parser_processInstructions(parser);
 }
 
 void Fy_Parser_logParsed(Fy_Parser *parser) {

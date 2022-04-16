@@ -85,6 +85,20 @@ bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
     return true;
 }
 
+bool Fy_Lexer_lexLabel(Fy_Lexer *lexer) {
+    if (!isalpha(lexer->stream[0]))
+        return false;
+    lexer->token.type = Fy_TokenType_Label;
+    lexer->token.start = lexer->stream;
+    lexer->token.length = 0;
+    do {
+        ++lexer->stream;
+        ++lexer->token.length;
+    } while (isalnum(lexer->stream[0]));
+
+    return true;
+}
+
 /*
  * Lex a newline.
  * Returns false on failure.
@@ -115,7 +129,7 @@ void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
 
 /*
  * Lex a token into the `token` member.
- * If unable to tokenize, returns false, otherwise returns true.
+ * If end of file, returns false, otherwise returns true.
  */
 bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     Fy_Lexer_removeWhitespace(lexer);
@@ -124,10 +138,20 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (lexer->stream[0] == '\0')
         return false;
 
+    if (lexer->stream[0] == ':') {
+        lexer->token.type = Fy_TokenType_Colon;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        return true;
+    }
+
     if (Fy_Lexer_lexNewline(lexer))
         return true;
 
     if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "jmp", Fy_TokenType_Jmp))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "end", Fy_TokenType_End))
         return true;
@@ -137,7 +161,11 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "bx", Fy_TokenType_Bx))
         return true;
+
     if (Fy_Lexer_lexConst(lexer))
+        return true;
+
+    if (Fy_Lexer_lexLabel(lexer))
         return true;
 
     Fy_Lexer_error(lexer, Fy_LexerError_Syntax);

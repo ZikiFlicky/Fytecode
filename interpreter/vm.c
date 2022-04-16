@@ -23,7 +23,7 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
 
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err) {
     (void)vm;
-    printf("RuntimeError: %s", Fy_RuntimeError_toString(err));
+    printf("RuntimeError: %s\n", Fy_RuntimeError_toString(err));
     exit(1);
 }
 
@@ -34,6 +34,7 @@ void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *addi
     va_start(va, additional);
     vprintf(additional, va);
     va_end(va);
+    printf("\n");
     exit(1);
 }
 

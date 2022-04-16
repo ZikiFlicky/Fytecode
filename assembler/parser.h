@@ -48,7 +48,6 @@ typedef enum Fy_ParserParseRuleType {
     Fy_ParserParseRuleType_TwoParams
 } Fy_ParserParseRuleType;
 
-// TODO: This currently only supports two parameters
 typedef struct Fy_ParserParseRule {
     Fy_ParserParseRuleType type;
     Fy_TokenType start_token; /* Type of token to be expected at start */

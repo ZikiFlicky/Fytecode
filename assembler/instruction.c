@@ -31,13 +31,6 @@ static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
     *reg_ptr = val;
 }
 
-// static Fy_Instruction_MovReg16Const *Fy_InstructionType_MovReg16Const_create(uint8_t *mem) {
-//     Fy_Instruction_MovReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Const, Fy_InstructionType_MovReg16Const);
-//     instruction->reg_id = mem[0];
-//     instruction->val = Fy_MemoryGet16(&mem[1]);
-//     return instruction;
-// }
-
 static void Fy_InstructionType_MovReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_MovReg16Reg16 *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addByte(generator, instruction->reg2_id);

@@ -238,44 +238,6 @@ Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
     Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction);
 
-    // switch (parser->token.type) {
-    // case Fy_TokenType_Mov:
-    //     if (!Fy_Parser_lex(parser))
-    //         Fy_Parser_error(parser, Fy_ParserError_UnexpectedEof);
-
-    //     if (Fy_TokenType_isReg16(parser->token.type)) {
-    //         Fy_ParserReg16 reg = Fy_TokenType_toReg16(parser->token.type);
-
-    //         // If we can't lex after the `mov reg` show error
-    //         if (!Fy_Parser_lex(parser))
-    //             Fy_Parser_error(parser, Fy_ParserError_UnexpectedEof);
-
-    //         // TODO: Check for isReg8 and tell that 8-bit register can't be moved to 16-bit register
-
-    //         if (parser->token.type == Fy_TokenType_Const) {
-    //             int16_t c = Fy_Token_toConst16(&parser->token, parser);
-    //             instruction = Fy_Instruction_New(Fy_InstructionType_MovReg16Const);
-    //             instruction->mov_reg16_const.reg_id = reg;
-    //             instruction->mov_reg16_const.const16 = c;
-    //         } else {
-    //             Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken);
-    //         }
-
-    //         // if (Fy_TokenType_isReg16(parser->token.type)) {
-    //         //     instruction = Fy_Instruction_New(Fy_InstructionType_)
-    //         // }
-    //     } else if (Fy_TokenType_isReg8(parser->token.type)) {
-    //         // TODO: implement this
-    //         FY_UNREACHABLE();
-    //     } else {
-    //         Fy_Parser_error(parser, Fy_ParserError_ExpectedReg);
-    //     }
-
-    //     break;
-    // default:
-    //     Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken);
-    // }
-
     FY_UNREACHABLE();
 }
 

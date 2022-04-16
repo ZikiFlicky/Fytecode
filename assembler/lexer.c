@@ -1,5 +1,13 @@
 #include "fy.h"
 
+static inline bool is_keyword_start_char(char c) {
+    return isalpha(c) || c == '_';
+}
+
+static inline bool is_keyword_char(char c) {
+    return is_keyword_start_char(c) || isdigit(c);
+}
+
 /* Convert Fy_LexerError to string */
 char *Fy_LexerError_toString(Fy_LexerError error) {
     switch (error) {
@@ -31,6 +39,10 @@ bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
         if (keyword[i] != tolower(lexer->stream[i]))
             return false;
     }
+
+    // The keyword cannot end with a keyword character (number, alphabetic etc)
+    if (is_keyword_char(lexer->stream[i]))
+        return false;
 
     // Set the token member
     lexer->token.type = type;
@@ -86,7 +98,7 @@ bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
 }
 
 bool Fy_Lexer_lexLabel(Fy_Lexer *lexer) {
-    if (!isalpha(lexer->stream[0]))
+    if (!is_keyword_start_char(lexer->stream[0]))
         return false;
     lexer->token.type = Fy_TokenType_Label;
     lexer->token.start = lexer->stream;
@@ -94,7 +106,7 @@ bool Fy_Lexer_lexLabel(Fy_Lexer *lexer) {
     do {
         ++lexer->stream;
         ++lexer->token.length;
-    } while (isalnum(lexer->stream[0]));
+    } while (is_keyword_char(lexer->stream[0]));
 
     return true;
 }

@@ -52,6 +52,7 @@ bool Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name, uint16_t *address_out) {
             *address_out = node->rel_address;
             return true;
         }
+        node = node->next;
     }
     // Not found
     return false;

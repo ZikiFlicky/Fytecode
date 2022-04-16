@@ -120,9 +120,18 @@ bool Fy_Parser_lex(Fy_Parser *parser) {
 }
 
 void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error) {
+    char *line_start;
     printf("ParserError[%zu,%zu]: %s\n",
             parser->lexer->line, parser->lexer->column,
             Fy_ParserError_toString(error));
+    printf("| ");
+    line_start = parser->lexer->stream + 1 - parser->lexer->column;
+    for (size_t i = 0; line_start[i] != '\n' && line_start[i] != '\0'; ++i)
+        putchar(line_start[i]);
+    printf("\n| ");
+    for (size_t i = 1; i < parser->lexer->column; ++i)
+        putchar(' ');
+    printf("^\n");
     exit(1);
 }
 

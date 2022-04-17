@@ -189,6 +189,19 @@ static void Fy_InstructionType_Je_run(Fy_VM *vm) {
         vm->reg_ip += 1 + 2; // Advance otherwise
 }
 
+static void Fy_InstructionType_Jl_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
+    Fy_Generator_addConst16(generator, instruction->address);
+}
+
+static void Fy_InstructionType_Jl_run(Fy_VM *vm) {
+    // FIXME: This should actually be relative to the code and not to the whole memory
+    // If we have the sign it means the result was negative, thus the lhs was smaller than the rhs
+    if (vm->flags & FY_FLAGS_SIGN)
+        vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    else // FIXME: Find a better way to handle no-jumps
+        vm->reg_ip += 1 + 2; // Advance otherwise
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -274,6 +287,13 @@ Fy_InstructionType Fy_InstructionType_Je = {
     .run_func = Fy_InstructionType_Je_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_Jl = {
+    .opcode = 12,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_Jl_write,
+    .run_func = Fy_InstructionType_Jl_run,
+    .advance_after_run = false
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -287,5 +307,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_CmpReg16Const,
     &Fy_InstructionType_CmpReg16Reg16,
     &Fy_InstructionType_Jmp,
-    &Fy_InstructionType_Je
+    &Fy_InstructionType_Je,
+    &Fy_InstructionType_Jl
 };

@@ -68,8 +68,9 @@ extern Fy_InstructionType Fy_InstructionType_CmpReg16Const;
 extern Fy_InstructionType Fy_InstructionType_CmpReg16Reg16;
 extern Fy_InstructionType Fy_InstructionType_Jmp;
 extern Fy_InstructionType Fy_InstructionType_Je;
+extern Fy_InstructionType Fy_InstructionType_Jl;
 
-extern Fy_InstructionType *Fy_instructionTypes[12];
+extern Fy_InstructionType *Fy_instructionTypes[13];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

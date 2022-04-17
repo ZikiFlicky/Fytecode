@@ -4,6 +4,7 @@ static Fy_BucketNode *Fy_BucketNode_New(char *name, uint16_t address) {
     Fy_BucketNode *bucket = malloc(sizeof(Fy_BucketNode));
     bucket->name = name;
     bucket->rel_address = address;
+    bucket->next = NULL;
     return bucket;
 }
 

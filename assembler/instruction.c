@@ -139,12 +139,12 @@ static void Fy_InstructionType_SubReg16Reg16_run(Fy_VM *vm) {
     *reg_ptr -= *reg2_ptr;
 }
 
-void Fy_InstructionType_CmpReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
+static void Fy_InstructionType_CmpReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
 }
 
-void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
+static void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg_id = base[1];
     uint16_t value = Fy_MemoryGet16(&base[2]);

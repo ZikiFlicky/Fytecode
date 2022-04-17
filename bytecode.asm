@@ -6,6 +6,8 @@ start: ; This is currently not needed
     add bx ax
     sub ax 3
     debug
+    sub bx ax
+    debug
 ;     jmp do_debug2
 ; do_debug:
 ;     debug

@@ -50,7 +50,10 @@ static void Fy_InstructionType_MovReg16Reg16_run(Fy_VM *vm) {
 
 static void Fy_InstructionType_Debug_run(Fy_VM *vm) {
     (void)vm;
-    printf("DEBUG!\n");
+    printf("DEBUG INFO:\n");
+    printf("AX: %.2X %.2X\n", vm->reg_ax & ((1 << 8) - 1), vm->reg_ax >> 8);
+    printf("BX: %.2X %.2X\n", vm->reg_bx & ((1 << 8) - 1), vm->reg_bx >> 8);
+    printf("IP: %.4X\n", vm->reg_ip);
 }
 
 static void Fy_InstructionType_EndProgram_run(Fy_VM *vm) {

@@ -199,6 +199,10 @@ char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Invalid instruction";
     case Fy_ParserError_SyntaxError:
         return "Syntax error";
+    case Fy_ParserError_CannotOpenFileForWrite:
+        return "Cannot open file for writing";
+    case Fy_ParserError_LabelNotFound:
+        return "Label not found";
     default:
         FY_UNREACHABLE();
     }
@@ -234,12 +238,22 @@ bool Fy_Parser_lex(Fy_Parser *parser) {
     }
 }
 
-void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error) {
+void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, ...) {
     char *line_start;
-    printf("ParserError[%zu,%zu]: %s\n",
+    printf("ParserError[%zu,%zu]: %s",
             parser->lexer->line, parser->lexer->column,
             Fy_ParserError_toString(error));
-    printf("| ");
+
+    // If there is additional text to be printed
+    if (additional) {
+        va_list va;
+        printf(": ");
+        va_start(va, additional);
+        vprintf(additional, va);
+        va_end(va);
+    }
+
+    printf("\n| ");
     line_start = parser->lexer->stream + 1 - parser->lexer->column;
     for (size_t i = 0; line_start[i] != '\n' && line_start[i] != '\0'; ++i)
         putchar(line_start[i]);
@@ -347,8 +361,8 @@ static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_Token *token_
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
     uint16_t address;
     if (!Fy_Labelmap_getEntry(&parser->labelmap, instruction->name, &address)) {
-        FY_UNREACHABLE();
-        // Fy_Parser_error(parser, Fy_ParserError_LabelNotFound);
+        // FIXME: This needs to have the right line and columns
+        Fy_Parser_error(parser, Fy_ParserError_LabelNotFound, "%s", instruction->name);
     }
     instruction->address = address;
 }
@@ -435,7 +449,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
     // TODO: Add clever error message that tells us why we were wrong
 
-    Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction);
+    Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction, NULL);
 
     FY_UNREACHABLE();
 }
@@ -450,7 +464,7 @@ bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     label_token = parser->token;
 
     if (!Fy_Parser_match(parser, Fy_TokenType_Colon))
-        Fy_Parser_error(parser, Fy_ParserError_SyntaxError);
+        Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
 
     label_string = Fy_Token_toLowercaseCStr(&label_token);
     Fy_Labelmap_addEntry(&parser->labelmap, label_string, parser->code_offset);
@@ -470,7 +484,7 @@ void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
     // Load last state if we didn't get a newline
     Fy_Parser_loadState(parser, &state);
     if (do_error)
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline);
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline, NULL);
 }
 
 /* Step 1: reading all of the instructions and creating a vector of them */
@@ -505,7 +519,7 @@ static void Fy_Parser_readInstructions(Fy_Parser *parser) {
             break;
         } else {
             Fy_Parser_loadState(parser, &backtrack);
-            Fy_Parser_error(parser, Fy_ParserError_SyntaxError);
+            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
         }
     }
 }
@@ -567,9 +581,8 @@ void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename) {
     FILE *file = fopen(filename, "w+");
     Fy_Generator generator;
 
-    // FIXME:
     if (!file)
-        FY_UNREACHABLE();
+        Fy_Parser_error(parser, Fy_ParserError_CannotOpenFileForWrite, "%s", filename);
 
     Fy_Parser_generateBytecode(parser, &generator);
     fwrite(generator.output, 1, generator.idx, file);

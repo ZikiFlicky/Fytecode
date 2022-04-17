@@ -29,7 +29,9 @@ enum Fy_ParserError {
     Fy_ParserError_ConstTooBig,
     Fy_ParserError_ExpectedNewline,
     Fy_ParserError_InvalidInstruction,
-    Fy_ParserError_SyntaxError
+    Fy_ParserError_SyntaxError,
+    Fy_ParserError_CannotOpenFileForWrite,
+    Fy_ParserError_LabelNotFound
 };
 
 struct Fy_Parser {
@@ -80,7 +82,7 @@ extern Fy_ParserParseRule *Fy_parserRules[];
 
 void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out);
 void Fy_Parser_parseAll(Fy_Parser *parser);
-void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error);
+void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, ...);
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);
 void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename);
 void Fy_Parser_logParsed(Fy_Parser *parser); /* NOTE: Debug function */

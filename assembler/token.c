@@ -61,7 +61,7 @@ int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
         positive += token->start[i] - '0';
 
         if (positive >= (1 << 15))
-            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig);
+            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL);
 
         ++i;
     } while (i < token->length);
@@ -87,7 +87,7 @@ int8_t Fy_Token_toConst8(Fy_Token *token, Fy_Parser *parser) {
         positive += token->start[i] - '0';
 
         if (positive >= (1 << 7))
-            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig);
+            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, "%zu", positive);
 
         ++i;
     } while (i < token->length);

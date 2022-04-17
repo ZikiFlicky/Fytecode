@@ -173,7 +173,6 @@ static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_
 static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     Fy_Instruction_MovReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Reg16, Fy_InstructionType_MovReg16Reg16);
     (void)parser;
-    // FIXME: This should be a different register type (VMRegister instead of ParserRegister)
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
     instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
     return (Fy_Instruction*)instruction;

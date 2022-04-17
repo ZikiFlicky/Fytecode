@@ -277,6 +277,8 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
     return true;
 }
 
+/* Parsing helpers */
+
 static Fy_Instruction *Fy_ParseOpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2, Fy_InstructionType *type) {
     Fy_Instruction_OpReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Const, *type);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
@@ -292,6 +294,14 @@ static Fy_Instruction *Fy_ParseOpReg16Reg16(Fy_Parser *parser, Fy_Token *token_a
     return (Fy_Instruction*)instruction;
 }
 
+static Fy_Instruction *Fy_ParseOpLabel(Fy_Parser *parser, Fy_Token *token_arg, Fy_InstructionType *type) {
+    Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, *type);
+    (void)parser;
+    instruction->name = Fy_Token_toLowercaseCStr(token_arg);
+    return (Fy_Instruction*)instruction;
+}
+
+/* Parsing functions */
 
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     return Fy_ParseOpReg16Const(parser, token_arg1, token_arg2, &Fy_InstructionType_MovReg16Const);
@@ -311,27 +321,6 @@ static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
     Fy_Instruction *instruction = FY_INSTRUCTION_NEW(Fy_Instruction, Fy_InstructionType_EndProgram);
     (void)parser;
     return instruction;
-}
-
-static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg) {
-    Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, Fy_InstructionType_Jmp);
-    (void)parser;
-    instruction->name = Fy_Token_toLowercaseCStr(token_arg);
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg) {
-    Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, Fy_InstructionType_Je);
-    (void)parser;
-    instruction->name = Fy_Token_toLowercaseCStr(token_arg);
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg) {
-    Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, Fy_InstructionType_Jl);
-    (void)parser;
-    instruction->name = Fy_Token_toLowercaseCStr(token_arg);
-    return (Fy_Instruction*)instruction;
 }
 
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
@@ -357,6 +346,20 @@ static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_Token *token_
 static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     return Fy_ParseOpReg16Reg16(parser, token_arg1, token_arg2, &Fy_InstructionType_CmpReg16Reg16);
 }
+
+static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg) {
+    return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Jmp);
+}
+
+static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg) {
+    return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Je);
+}
+
+static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg) {
+    return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Jl);
+}
+
+/* Processing functions */
 
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
     uint16_t address;

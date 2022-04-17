@@ -1,8 +1,8 @@
 start: ; This is currently not needed
-    mov ax -1
-    mov bx 4
+    mov ax -2
+    mov bx -3
     cmp ax bx
-    jl do_debug
+    jg do_debug
     jmp dont_do
 do_debug:
     debug

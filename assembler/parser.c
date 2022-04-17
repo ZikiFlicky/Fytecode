@@ -5,15 +5,16 @@ static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_
 static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
-static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
-static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg);
-static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -166,6 +167,16 @@ Fy_ParserParseRule Fy_parseRuleJl = {
     .func_one_param = Fy_ParseJl,
     .func_process = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel
 };
+Fy_ParserParseRule Fy_parseRuleJg = {
+    .type = Fy_ParserParseRuleType_OneParam,
+    .start_token = Fy_TokenType_Jg,
+    .arg1 = {
+        .type = Fy_ParserArgType_Label
+    },
+    .func_one_param = Fy_ParseJg,
+    .func_process = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel
+};
+
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
@@ -180,7 +191,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleCmpReg16Reg16,
     &Fy_parseRuleJmp,
     &Fy_parseRuleJe,
-    &Fy_parseRuleJl
+    &Fy_parseRuleJl,
+    &Fy_parseRuleJg
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -357,6 +369,10 @@ static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg) {
 
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg) {
     return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Jl);
+}
+
+static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg) {
+    return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Jg);
 }
 
 /* Processing functions */

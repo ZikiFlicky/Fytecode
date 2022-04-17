@@ -18,6 +18,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Jmp,
     Fy_TokenType_Je,
     Fy_TokenType_Jl,
+    Fy_TokenType_Jg,
     Fy_TokenType_End,
     Fy_TokenType_Ax,
     Fy_TokenType_Bx,

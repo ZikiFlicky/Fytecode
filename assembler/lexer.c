@@ -169,6 +169,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "jl", Fy_TokenType_Jl))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "jg", Fy_TokenType_Jg))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "end", Fy_TokenType_End))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))

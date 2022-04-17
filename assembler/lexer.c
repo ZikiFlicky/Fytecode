@@ -169,6 +169,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "add", Fy_TokenType_Add))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "ax", Fy_TokenType_Ax))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "bx", Fy_TokenType_Bx))

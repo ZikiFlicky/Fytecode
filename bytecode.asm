@@ -1,12 +1,15 @@
 start: ; This is currently not needed
     mov ax 123
+    debug
     mov bx ax
-    jmp dodebug2
-
-dodebug:
     debug
-dodebug2:
+    add bx 3
     debug
+;     jmp do_debug2
+; do_debug:
+;     debug
+; do_debug2:
+;     debug
 
     ; End program
     end

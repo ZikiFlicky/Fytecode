@@ -16,7 +16,7 @@ Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size) {
 
 static void Fy_InstructionType_MovReg16Const_write(Fy_Generator *generator, Fy_Instruction_MovReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addConst16(generator, instruction->val);
+    Fy_Generator_addConst16(generator, instruction->value);
 }
 
 static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
@@ -69,8 +69,23 @@ static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
     vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
 }
 
-/* Type definitions */
+static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_Instruction_AddReg16Const *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addConst16(generator, instruction->value);
+}
 
+static void Fy_InstructionType_AddReg16Const_run(Fy_VM *vm) {
+    uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
+    uint8_t reg_id = base[1];
+    uint16_t value = Fy_MemoryGet16(&base[2]);
+    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
+    if (!reg_ptr) {
+        FY_UNREACHABLE();
+    }
+    *reg_ptr += value;
+}
+
+/* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
     .additional_size = 3,
@@ -106,11 +121,19 @@ Fy_InstructionType Fy_InstructionType_Jmp = {
     .run_func = Fy_InstructionType_Jmp_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_AddReg16Const = {
+    .opcode = 5,
+    .additional_size = 3,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_AddReg16Const_write,
+    .run_func = Fy_InstructionType_AddReg16Const_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
     &Fy_InstructionType_MovReg16Reg16,
     &Fy_InstructionType_Debug,
     &Fy_InstructionType_EndProgram,
-    &Fy_InstructionType_Jmp
+    &Fy_InstructionType_Jmp,
+    &Fy_InstructionType_AddReg16Const
 };

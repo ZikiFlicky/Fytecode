@@ -6,8 +6,9 @@ static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 
-/* Process-function declarations */
+/* Process-function (parsing step 2) declarations */
 static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction);
 
 /* Define rules */
@@ -59,13 +60,27 @@ Fy_ParserParseRule Fy_parseRuleJmp = {
     .func_one_param = Fy_ParseJmp,
     .func_process = (Fy_InstructionProcessFunc)Fy_ProcessJmp
 };
+Fy_ParserParseRule Fy_parseRuleAddReg16Const = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Add,
+    .arg1 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .arg2 = {
+        .type = Fy_ParserArgType_Constant
+    },
+    .func_two_params = Fy_ParseAddReg16Const,
+    .func_process = NULL
+};
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
     &Fy_parseRuleMovReg16Reg16,
     &Fy_parseRuleDebug,
     &Fy_parseRuleEnd,
-    &Fy_parseRuleJmp
+    &Fy_parseRuleJmp,
+    &Fy_parseRuleAddReg16Const
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -151,7 +166,7 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     Fy_Instruction_MovReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Const, Fy_InstructionType_MovReg16Const);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->val = Fy_Token_toConst16(token_arg2, parser);
+    instruction->value = Fy_Token_toConst16(token_arg2, parser);
     return (Fy_Instruction*)instruction;
 }
 
@@ -180,6 +195,13 @@ static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg) {
     Fy_Instruction_Jmp *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_Jmp, Fy_InstructionType_Jmp);
     (void)parser;
     instruction->name = Fy_Token_toLowercaseCStr(token_arg);
+    return (Fy_Instruction*)instruction;
+}
+
+static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    Fy_Instruction_AddReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_AddReg16Const, Fy_InstructionType_AddReg16Const);
+    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
+    instruction->value = Fy_Token_toConst16(token_arg2, parser);
     return (Fy_Instruction*)instruction;
 }
 

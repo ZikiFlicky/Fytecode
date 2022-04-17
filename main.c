@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        Fy_VM_Init(stream, length, &vm);
+        Fy_VM_Init(stream, length, 0x100, &vm);
         Fy_VM_runAll(&vm);
 
         free(stream);

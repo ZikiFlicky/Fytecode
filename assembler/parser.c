@@ -15,6 +15,7 @@ static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_Token *token_arg);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -176,6 +177,15 @@ Fy_ParserParseRule Fy_parseRuleJg = {
     .func_one_param = Fy_ParseJg,
     .func_process = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel
 };
+Fy_ParserParseRule Fy_parseRulePushConst = {
+    .type = Fy_ParserParseRuleType_OneParam,
+    .start_token = Fy_TokenType_Push,
+    .arg1 = {
+        .type = Fy_ParserArgType_Constant
+    },
+    .func_one_param = Fy_ParsePushConst,
+    .func_process = NULL
+};
 
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
@@ -192,7 +202,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleJmp,
     &Fy_parseRuleJe,
     &Fy_parseRuleJl,
-    &Fy_parseRuleJg
+    &Fy_parseRuleJg,
+    &Fy_parseRulePushConst
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -373,6 +384,12 @@ static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg) {
 
 static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg) {
     return Fy_ParseOpLabel(parser, token_arg, &Fy_InstructionType_Jg);
+}
+
+static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_Token *token_arg) {
+    Fy_Instruction_PushConst *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_PushConst, Fy_InstructionType_PushConst);
+    instruction->value = Fy_Token_toConst16(token_arg, parser);
+    return (Fy_Instruction*)instruction;
 }
 
 /* Processing functions */

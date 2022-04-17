@@ -1,19 +1,5 @@
 #include "fy.h"
 
-void Fy_VM_Init(uint8_t *generated, uint16_t length, Fy_VM *out) {
-    out->mem_space_bottom = malloc((1 << 16) * sizeof(uint8_t));
-    memcpy(out->mem_space_bottom, generated, length * sizeof(uint8_t));
-    out->code_offset = 0;
-    out->code_size = length;
-    out->reg_ax = 0;
-    out->reg_bx = 0;
-    out->reg_cx = 0;
-    out->reg_dx = 0;
-    out->reg_ip = 0;
-    out->running = true;
-    out->flags = 0;
-}
-
 static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     switch (error) {
     case Fy_RuntimeError_RegNotFound:
@@ -23,6 +9,23 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     default:
         FY_UNREACHABLE();
     }
+}
+
+void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM *out) {
+    out->mem_space_bottom = malloc((1 << 16) * sizeof(uint8_t));
+    memcpy(out->mem_space_bottom, generated, length * sizeof(uint8_t));
+    out->code_offset = 0;
+    out->code_size = length;
+    out->stack_offset = out->code_offset + out->code_size + 0x100 + stack_size; // The 0x100 is for padding
+    out->stack_size = stack_size; // In bytes
+    out->reg_ax = 0;
+    out->reg_bx = 0;
+    out->reg_cx = 0;
+    out->reg_dx = 0;
+    out->reg_ip = 0;
+    out->reg_sp = out->stack_offset;
+    out->running = true;
+    out->flags = 0;
 }
 
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err) {
@@ -95,4 +98,28 @@ void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
 /* Set the ip register to the given address relative to the code's start point in memory */
 void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address) {
     vm->reg_ip = vm->code_offset + address;
+}
+
+void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value) {
+    // FIXME: Do some stack overflow error
+    if (vm->stack_offset - vm->reg_sp > vm->stack_size)
+        FY_UNREACHABLE();
+
+    *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp] = value;
+
+    vm->reg_sp -= 2;
+}
+
+uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
+    uint16_t value;
+
+    // FIXME: Do some stack underflow error
+    if (vm->reg_sp >= vm->stack_offset)
+        FY_UNREACHABLE();
+
+    value = *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp];
+
+    vm->reg_sp += 2;
+
+    return value;
 }

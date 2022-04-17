@@ -181,6 +181,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "cmp", Fy_TokenType_Cmp))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "push", Fy_TokenType_Push))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "ax", Fy_TokenType_Ax))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "bx", Fy_TokenType_Bx))

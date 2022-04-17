@@ -57,6 +57,7 @@ static void Fy_InstructionType_Debug_run(Fy_VM *vm) {
     printf("CX: %.2X %.2X\n", vm->reg_cx & ((1 << 8) - 1), vm->reg_cx >> 8);
     printf("DX: %.2X %.2X\n", vm->reg_dx & ((1 << 8) - 1), vm->reg_dx >> 8);
     printf("IP: %.4X\n", vm->reg_ip);
+    printf("SP: %.4X\n", vm->reg_sp);
     printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);
     printf("FLAG_SIGN: %d\n", vm->flags & FY_FLAGS_SIGN ? 1 : 0);
 }
@@ -212,6 +213,15 @@ static void Fy_InstructionType_Jg_run(Fy_VM *vm) {
         vm->reg_ip += 1 + 2; // Advance otherwise
 }
 
+static void Fy_InstructionType_PushConst_write(Fy_Generator *generator, Fy_Instruction_PushConst *instruction) {
+    Fy_Generator_addConst16(generator, instruction->value);
+}
+
+static void Fy_InstructionType_PushConst_run(Fy_VM *vm) {
+    uint16_t value = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    Fy_VM_pushToStack(vm, value);
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -311,6 +321,13 @@ Fy_InstructionType Fy_InstructionType_Jg = {
     .run_func = Fy_InstructionType_Jg_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_PushConst = {
+    .opcode = 14,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_PushConst_write,
+    .run_func = Fy_InstructionType_PushConst_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -326,5 +343,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_Jmp,
     &Fy_InstructionType_Je,
     &Fy_InstructionType_Jl,
-    &Fy_InstructionType_Jg
+    &Fy_InstructionType_Jg,
+    &Fy_InstructionType_PushConst
 };

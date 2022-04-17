@@ -7,6 +7,7 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, Fy_VM *out) {
     out->reg_ax = 0;
     out->reg_bx = 0;
     out->reg_cx = 0;
+    out->reg_dx = 0;
     out->reg_ip = 0;
     out->running = true;
     out->flags = 0;
@@ -48,6 +49,8 @@ uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
         return &vm->reg_bx;
     case Fy_Reg16_Cx:
         return &vm->reg_cx;
+    case Fy_Reg16_Dx:
+        return &vm->reg_dx;
     default:
         return NULL;
     }

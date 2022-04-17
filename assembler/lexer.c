@@ -183,6 +183,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "cx", Fy_TokenType_Cx))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "dx", Fy_TokenType_Dx))
+        return true;
 
     if (Fy_Lexer_lexConst(lexer))
         return true;

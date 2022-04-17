@@ -19,9 +19,11 @@ struct Fy_VM {
     uint8_t *mem_space_bottom;
     /* Size of code */
     uint16_t code_size;
+    /* Registers */
     uint16_t reg_ax;
     uint16_t reg_bx;
     uint16_t reg_cx;
+    uint16_t reg_dx;
     uint16_t reg_ip;
     /* Is running? */
     bool running;

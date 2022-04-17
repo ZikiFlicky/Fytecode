@@ -1,19 +1,21 @@
 start: ; This is currently not needed
 
-    mov ax 1
+    mov ax 0
     mov bx 1
+    mov dx 10 ; amount of rounds
 fib:
-    cmp ax 13
+    cmp dx 0
     je end_fib
-    debug
 
     mov cx ax
     add cx bx
     mov ax bx
     mov bx cx
 
+    sub dx 1
     jmp fib
 end_fib:
+    debug
 
 ;     jmp do_debug2
 ; do_debug:

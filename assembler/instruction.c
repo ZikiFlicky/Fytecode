@@ -54,6 +54,8 @@ static void Fy_InstructionType_Debug_run(Fy_VM *vm) {
     printf("AX: %.2X %.2X\n", vm->reg_ax & ((1 << 8) - 1), vm->reg_ax >> 8);
     printf("BX: %.2X %.2X\n", vm->reg_bx & ((1 << 8) - 1), vm->reg_bx >> 8);
     printf("IP: %.4X\n", vm->reg_ip);
+    printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);
+    printf("FLAG_SIGN: %d\n", vm->flags & FY_FLAGS_SIGN ? 1 : 0);
 }
 
 static void Fy_InstructionType_EndProgram_run(Fy_VM *vm) {
@@ -137,6 +139,23 @@ static void Fy_InstructionType_SubReg16Reg16_run(Fy_VM *vm) {
     *reg_ptr -= *reg2_ptr;
 }
 
+void Fy_InstructionType_CmpReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addConst16(generator, instruction->value);
+}
+
+void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
+    uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
+    uint8_t reg_id = base[1];
+    uint16_t value = Fy_MemoryGet16(&base[2]);
+    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
+    uint16_t res;
+    if (!reg_ptr)
+        FY_UNREACHABLE();
+    res = *reg_ptr - value;
+    Fy_VM_setResult16InFlags(vm, *((int16_t*)&res));
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -201,6 +220,13 @@ Fy_InstructionType Fy_InstructionType_SubReg16Reg16 = {
     .run_func = Fy_InstructionType_SubReg16Reg16_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_CmpReg16Const = {
+    .opcode = 9,
+    .additional_size = 3,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_CmpReg16Const_write,
+    .run_func = Fy_InstructionType_CmpReg16Const_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -211,5 +237,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_AddReg16Const,
     &Fy_InstructionType_AddReg16Reg16,
     &Fy_InstructionType_SubReg16Const,
-    &Fy_InstructionType_SubReg16Reg16
+    &Fy_InstructionType_SubReg16Reg16,
+    &Fy_InstructionType_CmpReg16Const
 };

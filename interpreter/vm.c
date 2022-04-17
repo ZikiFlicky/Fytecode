@@ -8,6 +8,7 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, Fy_VM *out) {
     out->reg_bx = 0;
     out->reg_ip = 0;
     out->running = true;
+    out->flags = 0;
 }
 
 static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
@@ -70,4 +71,16 @@ void Fy_VM_runAll(Fy_VM *vm) {
     while (vm->running) {
         Fy_VM_runInstruction(vm);
     }
+}
+
+void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
+    if (res == 0)
+        vm->flags |= FY_FLAGS_ZERO; // Enable
+    else
+        vm->flags &= ~FY_FLAGS_ZERO; // Disable
+
+    if (res < 0)
+        vm->flags |= FY_FLAGS_SIGN; // Enable
+    else
+        vm->flags &= ~FY_FLAGS_SIGN; // Disable
 }

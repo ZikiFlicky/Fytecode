@@ -1,12 +1,7 @@
 start: ; This is currently not needed
-    mov ax 5
-    ; debug
-    mov bx ax
     debug
-    add bx ax
-    sub ax 3
-    debug
-    sub bx ax
+    mov ax 2
+    cmp ax 3
     debug
 ;     jmp do_debug2
 ; do_debug:

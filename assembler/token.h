@@ -14,6 +14,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Add,
     Fy_TokenType_Sub,
     Fy_TokenType_Cmp,
+    Fy_TokenType_Je,
     Fy_TokenType_Debug,
     Fy_TokenType_Jmp,
     Fy_TokenType_End,

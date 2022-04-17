@@ -63,15 +63,6 @@ static void Fy_InstructionType_EndProgram_run(Fy_VM *vm) {
     vm->running = false;
 }
 
-static void Fy_InstructionType_Jmp_write(Fy_Generator *generator, Fy_Instruction_Jmp *instruction) {
-    Fy_Generator_addConst16(generator, instruction->address);
-}
-
-static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
-    // FIXME: This should actually be relative to the code and not to the whole memory
-    vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
-}
-
 static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
@@ -175,6 +166,28 @@ void Fy_InstructionType_CmpReg16Reg16_run(Fy_VM *vm) {
     Fy_VM_setResult16InFlags(vm, *reg_ptr - *reg2_ptr);
 }
 
+static void Fy_InstructionType_Jmp_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
+    Fy_Generator_addConst16(generator, instruction->address);
+}
+
+static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
+    // FIXME: This should actually be relative to the code and not to the whole memory
+    vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+}
+
+static void Fy_InstructionType_Je_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
+    Fy_Generator_addConst16(generator, instruction->address);
+}
+
+static void Fy_InstructionType_Je_run(Fy_VM *vm) {
+    // FIXME: This should actually be relative to the code and not to the whole memory
+    // If the zero flag is on
+    if (vm->flags & FY_FLAGS_ZERO)
+        vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    else // FIXME: Find a better way to handle no-jumps
+        vm->reg_ip += 1 + 2; // Advance otherwise
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -204,54 +217,61 @@ Fy_InstructionType Fy_InstructionType_EndProgram = {
     .run_func = Fy_InstructionType_EndProgram_run,
     .advance_after_run = true
 };
-Fy_InstructionType Fy_InstructionType_Jmp = {
-    .opcode = 4,
-    .additional_size = 2,
-    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_Jmp_write,
-    .run_func = Fy_InstructionType_Jmp_run,
-    .advance_after_run = false
-};
 Fy_InstructionType Fy_InstructionType_AddReg16Const = {
-    .opcode = 5,
+    .opcode = 4,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_AddReg16Const_write,
     .run_func = Fy_InstructionType_AddReg16Const_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_AddReg16Reg16 = {
-    .opcode = 6,
+    .opcode = 5,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_AddReg16Reg16_write,
     .run_func = Fy_InstructionType_AddReg16Reg16_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_SubReg16Const = {
-    .opcode = 7,
+    .opcode = 6,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_SubReg16Const_write,
     .run_func = Fy_InstructionType_SubReg16Const_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_SubReg16Reg16 = {
-    .opcode = 8,
+    .opcode = 7,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_SubReg16Reg16_write,
     .run_func = Fy_InstructionType_SubReg16Reg16_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_CmpReg16Const = {
-    .opcode = 9,
+    .opcode = 8,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_CmpReg16Const_write,
     .run_func = Fy_InstructionType_CmpReg16Const_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_CmpReg16Reg16 = {
-    .opcode = 10,
+    .opcode = 9,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_CmpReg16Reg16_write,
     .run_func = Fy_InstructionType_CmpReg16Reg16_run,
     .advance_after_run = true
+};
+Fy_InstructionType Fy_InstructionType_Jmp = {
+    .opcode = 10,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_Jmp_write,
+    .run_func = Fy_InstructionType_Jmp_run,
+    .advance_after_run = false
+};
+Fy_InstructionType Fy_InstructionType_Je = {
+    .opcode = 11,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_Je_write,
+    .run_func = Fy_InstructionType_Je_run,
+    .advance_after_run = false
 };
 
 Fy_InstructionType *Fy_instructionTypes[] = {
@@ -259,11 +279,12 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Reg16,
     &Fy_InstructionType_Debug,
     &Fy_InstructionType_EndProgram,
-    &Fy_InstructionType_Jmp,
     &Fy_InstructionType_AddReg16Const,
     &Fy_InstructionType_AddReg16Reg16,
     &Fy_InstructionType_SubReg16Const,
     &Fy_InstructionType_SubReg16Reg16,
     &Fy_InstructionType_CmpReg16Const,
-    &Fy_InstructionType_CmpReg16Reg16
+    &Fy_InstructionType_CmpReg16Reg16,
+    &Fy_InstructionType_Jmp,
+    &Fy_InstructionType_Je
 };

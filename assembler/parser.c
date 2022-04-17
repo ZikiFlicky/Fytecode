@@ -7,6 +7,7 @@ static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction);
@@ -73,6 +74,20 @@ Fy_ParserParseRule Fy_parseRuleAddReg16Const = {
     .func_two_params = Fy_ParseAddReg16Const,
     .func_process = NULL
 };
+Fy_ParserParseRule Fy_parseRuleAddReg16Reg16 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Add,
+    .arg1 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .arg2 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .func_two_params = Fy_ParseAddReg16Reg16,
+    .func_process = NULL
+};
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
@@ -80,7 +95,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleDebug,
     &Fy_parseRuleEnd,
     &Fy_parseRuleJmp,
-    &Fy_parseRuleAddReg16Const
+    &Fy_parseRuleAddReg16Const,
+    &Fy_parseRuleAddReg16Reg16
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -201,6 +217,14 @@ static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_
     Fy_Instruction_AddReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_AddReg16Const, Fy_InstructionType_AddReg16Const);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
     instruction->value = Fy_Token_toConst16(token_arg2, parser);
+    return (Fy_Instruction*)instruction;
+}
+
+static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    Fy_Instruction_AddReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_AddReg16Reg16, Fy_InstructionType_AddReg16Reg16);
+    (void)parser;
+    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
+    instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
     return (Fy_Instruction*)instruction;
 }
 

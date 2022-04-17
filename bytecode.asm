@@ -1,9 +1,9 @@
 start: ; This is currently not needed
-    mov ax 123
-    debug
+    mov ax 5
+    ; debug
     mov bx ax
     debug
-    add bx 3
+    add bx ax
     debug
 ;     jmp do_debug2
 ; do_debug:

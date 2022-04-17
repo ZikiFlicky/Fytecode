@@ -32,7 +32,7 @@ enum Fy_ParserError {
     Fy_ParserError_SyntaxError
 };
 
-typedef struct Fy_Parser {
+struct Fy_Parser {
     Fy_Lexer *lexer;
     Fy_Token token;
 
@@ -43,7 +43,7 @@ typedef struct Fy_Parser {
     uint16_t code_offset;
 
     Fy_Labelmap labelmap;
-} Fy_Parser;
+};
 
 
 enum Fy_ParserArgType {

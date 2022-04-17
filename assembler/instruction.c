@@ -172,8 +172,7 @@ static void Fy_InstructionType_Jmp_write(Fy_Generator *generator, Fy_Instruction
 }
 
 static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
-    // FIXME: This should actually be relative to the code and not to the whole memory
-    vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    Fy_VM_setIpToRelAddress(vm, Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]));
 }
 
 static void Fy_InstructionType_Je_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
@@ -181,10 +180,9 @@ static void Fy_InstructionType_Je_write(Fy_Generator *generator, Fy_Instruction_
 }
 
 static void Fy_InstructionType_Je_run(Fy_VM *vm) {
-    // FIXME: This should actually be relative to the code and not to the whole memory
     // If the zero flag is on
     if (vm->flags & FY_FLAGS_ZERO)
-        vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+        Fy_VM_setIpToRelAddress(vm, Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]));
     else // FIXME: Find a better way to handle no-jumps
         vm->reg_ip += 1 + 2; // Advance otherwise
 }
@@ -194,10 +192,9 @@ static void Fy_InstructionType_Jl_write(Fy_Generator *generator, Fy_Instruction_
 }
 
 static void Fy_InstructionType_Jl_run(Fy_VM *vm) {
-    // FIXME: This should actually be relative to the code and not to the whole memory
     // If we have the sign it means the result was negative, thus the lhs was smaller than the rhs
     if (vm->flags & FY_FLAGS_SIGN)
-        vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+        Fy_VM_setIpToRelAddress(vm, Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]));
     else // FIXME: Find a better way to handle no-jumps
         vm->reg_ip += 1 + 2; // Advance otherwise
 }

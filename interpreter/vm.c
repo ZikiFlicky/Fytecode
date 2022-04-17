@@ -3,6 +3,7 @@
 void Fy_VM_Init(uint8_t *generated, uint16_t length, Fy_VM *out) {
     out->mem_space_bottom = malloc((1 << 16) * sizeof(uint8_t));
     memcpy(out->mem_space_bottom, generated, length * sizeof(uint8_t));
+    out->code_offset = 0;
     out->code_size = length;
     out->reg_ax = 0;
     out->reg_bx = 0;
@@ -89,4 +90,9 @@ void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
         vm->flags |= FY_FLAGS_SIGN; // Enable
     else
         vm->flags &= ~FY_FLAGS_SIGN; // Disable
+}
+
+/* Set the ip register to the given address relative to the code's start point in memory */
+void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address) {
+    vm->reg_ip = vm->code_offset + address;
 }

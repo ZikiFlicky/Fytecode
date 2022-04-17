@@ -17,6 +17,8 @@ typedef enum Fy_RuntimeError {
 struct Fy_VM {
     /* Pointer to bottom of allocated memory space */
     uint8_t *mem_space_bottom;
+    /* Address in which code starts */
+    uint16_t code_offset;
     /* Size of code */
     uint16_t code_size;
     /* Registers */
@@ -36,5 +38,6 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err);
 void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...);
 void Fy_VM_runAll(Fy_VM *vm);
 void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
+void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address);
 
 #endif /* FY_VM_H */

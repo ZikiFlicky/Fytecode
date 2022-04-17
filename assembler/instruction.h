@@ -14,13 +14,9 @@ typedef struct Fy_Parser Fy_Parser;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef struct Fy_Instruction Fy_Instruction;
 typedef struct Fy_InstructionType Fy_InstructionType;
-typedef struct Fy_Instruction_MovReg16Const Fy_Instruction_MovReg16Const;
-typedef struct Fy_Instruction_MovReg16Reg16 Fy_Instruction_MovReg16Reg16;
+typedef struct Fy_Instruction_OpReg16Const Fy_Instruction_OpReg16Const;
+typedef struct Fy_Instruction_OpReg16Reg16 Fy_Instruction_OpReg16Reg16;
 typedef struct Fy_Instruction_Jmp Fy_Instruction_Jmp;
-typedef struct Fy_Instruction_AddReg16Const Fy_Instruction_AddReg16Const;
-typedef struct Fy_Instruction_AddReg16Reg16 Fy_Instruction_AddReg16Reg16;
-typedef struct Fy_Instruction_SubReg16Const Fy_Instruction_SubReg16Const;
-typedef struct Fy_Instruction_SubReg16Reg16 Fy_Instruction_SubReg16Reg16;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
 typedef void (*Fy_InstructionRunFunc)(Fy_VM *vm);
 
@@ -41,13 +37,13 @@ struct Fy_Instruction {
 };
 
 /* Inheriting instructions */
-struct Fy_Instruction_MovReg16Const {
+struct Fy_Instruction_OpReg16Const {
     FY_INSTRUCTION_BASE;
     uint8_t reg_id;
     uint16_t value;
 };
 
-struct Fy_Instruction_MovReg16Reg16 {
+struct Fy_Instruction_OpReg16Reg16 {
     FY_INSTRUCTION_BASE;
     uint8_t reg_id;
     uint8_t reg2_id;
@@ -57,30 +53,6 @@ struct Fy_Instruction_Jmp {
     FY_INSTRUCTION_BASE;
     char *name;
     uint16_t address;
-};
-
-struct Fy_Instruction_AddReg16Const {
-    FY_INSTRUCTION_BASE;
-    uint8_t reg_id;
-    uint16_t value;
-};
-
-struct Fy_Instruction_AddReg16Reg16 {
-    FY_INSTRUCTION_BASE;
-    uint8_t reg_id;
-    uint8_t reg2_id;
-};
-
-struct Fy_Instruction_SubReg16Const {
-    FY_INSTRUCTION_BASE;
-    uint8_t reg_id;
-    uint16_t value;
-};
-
-struct Fy_Instruction_SubReg16Reg16 {
-    FY_INSTRUCTION_BASE;
-    uint8_t reg_id;
-    uint8_t reg2_id;
 };
 
 /* Instruction types */

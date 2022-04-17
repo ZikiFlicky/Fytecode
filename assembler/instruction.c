@@ -14,7 +14,7 @@ Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size) {
 
 /* Instruction type functions */
 
-static void Fy_InstructionType_MovReg16Const_write(Fy_Generator *generator, Fy_Instruction_MovReg16Const *instruction) {
+static void Fy_InstructionType_MovReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
 }
@@ -30,7 +30,7 @@ static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
     *reg_ptr = val;
 }
 
-static void Fy_InstructionType_MovReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_MovReg16Reg16 *instruction) {
+static void Fy_InstructionType_MovReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addByte(generator, instruction->reg2_id);
 }
@@ -69,7 +69,7 @@ static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
     vm->reg_ip = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
 }
 
-static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_Instruction_AddReg16Const *instruction) {
+static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
 }
@@ -85,7 +85,7 @@ static void Fy_InstructionType_AddReg16Const_run(Fy_VM *vm) {
     *reg_ptr += value;
 }
 
-static void Fy_InstructionType_AddReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_AddReg16Reg16 *instruction) {
+static void Fy_InstructionType_AddReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addByte(generator, instruction->reg2_id);
 }
@@ -103,7 +103,7 @@ static void Fy_InstructionType_AddReg16Reg16_run(Fy_VM *vm) {
     *reg_ptr += *reg2_ptr;
 }
 
-static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_Instruction_SubReg16Const *instruction) {
+static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
 }
@@ -119,7 +119,7 @@ static void Fy_InstructionType_SubReg16Const_run(Fy_VM *vm) {
     *reg_ptr -= value;
 }
 
-static void Fy_InstructionType_SubReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_SubReg16Reg16 *instruction) {
+static void Fy_InstructionType_SubReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addByte(generator, instruction->reg2_id);
 }

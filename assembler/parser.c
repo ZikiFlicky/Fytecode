@@ -210,19 +210,28 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
     return true;
 }
 
-static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_MovReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Const, Fy_InstructionType_MovReg16Const);
+static Fy_Instruction *Fy_ParseOpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2, Fy_InstructionType *type) {
+    Fy_Instruction_OpReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Const, *type);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
     instruction->value = Fy_Token_toConst16(token_arg2, parser);
     return (Fy_Instruction*)instruction;
 }
 
-static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_MovReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_MovReg16Reg16, Fy_InstructionType_MovReg16Reg16);
+static Fy_Instruction *Fy_ParseOpReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2, Fy_InstructionType *type) {
+    Fy_Instruction_OpReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Reg16, *type);
     (void)parser;
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
     instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
     return (Fy_Instruction*)instruction;
+}
+
+
+static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    return Fy_ParseOpReg16Const(parser, token_arg1, token_arg2, &Fy_InstructionType_MovReg16Const);
+}
+
+static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    return Fy_ParseOpReg16Reg16(parser, token_arg1, token_arg2, &Fy_InstructionType_MovReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
@@ -245,33 +254,19 @@ static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_Token *token_arg) {
 }
 
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_AddReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_AddReg16Const, Fy_InstructionType_AddReg16Const);
-    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->value = Fy_Token_toConst16(token_arg2, parser);
-    return (Fy_Instruction*)instruction;
+    return Fy_ParseOpReg16Const(parser, token_arg1, token_arg2, &Fy_InstructionType_AddReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_AddReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_AddReg16Reg16, Fy_InstructionType_AddReg16Reg16);
-    (void)parser;
-    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
-    return (Fy_Instruction*)instruction;
+    return Fy_ParseOpReg16Reg16(parser, token_arg1, token_arg2, &Fy_InstructionType_AddReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_SubReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_SubReg16Const, Fy_InstructionType_SubReg16Const);
-    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->value = Fy_Token_toConst16(token_arg2, parser);
-    return (Fy_Instruction*)instruction;
+    return Fy_ParseOpReg16Const(parser, token_arg1, token_arg2, &Fy_InstructionType_SubReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
-    Fy_Instruction_SubReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_SubReg16Reg16, Fy_InstructionType_SubReg16Reg16);
-    (void)parser;
-    instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
-    instruction->reg2_id = Fy_TokenType_toReg16(token_arg2->type);
-    return (Fy_Instruction*)instruction;
+    return Fy_ParseOpReg16Reg16(parser, token_arg1, token_arg2, &Fy_InstructionType_SubReg16Reg16);
 }
 
 static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction) {

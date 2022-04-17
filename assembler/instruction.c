@@ -53,6 +53,7 @@ static void Fy_InstructionType_Debug_run(Fy_VM *vm) {
     printf("DEBUG INFO:\n");
     printf("AX: %.2X %.2X\n", vm->reg_ax & ((1 << 8) - 1), vm->reg_ax >> 8);
     printf("BX: %.2X %.2X\n", vm->reg_bx & ((1 << 8) - 1), vm->reg_bx >> 8);
+    printf("CX: %.2X %.2X\n", vm->reg_cx & ((1 << 8) - 1), vm->reg_cx >> 8);
     printf("IP: %.4X\n", vm->reg_ip);
     printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);
     printf("FLAG_SIGN: %d\n", vm->flags & FY_FLAGS_SIGN ? 1 : 0);

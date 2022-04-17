@@ -19,6 +19,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_End,
     Fy_TokenType_Ax,
     Fy_TokenType_Bx,
+    Fy_TokenType_Cx,
     Fy_TokenType_Label,
     Fy_TokenType_Const,
     Fy_TokenType_Newline,

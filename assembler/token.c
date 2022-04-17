@@ -2,7 +2,8 @@
 
 Fy_TokenType Fy_reg16Tokens[] = {
     Fy_TokenType_Ax,
-    Fy_TokenType_Bx
+    Fy_TokenType_Bx,
+    Fy_TokenType_Cx
 };
 
 bool Fy_TokenType_isReg8(Fy_TokenType type) {
@@ -16,6 +17,7 @@ bool Fy_TokenType_isReg16(Fy_TokenType type) {
     switch (type) {
     case Fy_TokenType_Ax:
     case Fy_TokenType_Bx:
+    case Fy_TokenType_Cx:
         return true;
     default:
         return false;
@@ -28,6 +30,8 @@ Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
         return Fy_Reg16_Ax;
     case Fy_TokenType_Bx:
         return Fy_Reg16_Bx;
+    case Fy_TokenType_Cx:
+        return Fy_Reg16_Cx;
     default:
         FY_UNREACHABLE();
     }

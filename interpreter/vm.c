@@ -6,6 +6,7 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, Fy_VM *out) {
     out->code_size = length;
     out->reg_ax = 0;
     out->reg_bx = 0;
+    out->reg_cx = 0;
     out->reg_ip = 0;
     out->running = true;
     out->flags = 0;
@@ -41,10 +42,12 @@ void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *addi
 
 uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
     switch (reg) {
-    case 0: // Ax
+    case Fy_Reg16_Ax:
         return &vm->reg_ax;
-    case 1:
+    case Fy_Reg16_Bx:
         return &vm->reg_bx;
+    case Fy_Reg16_Cx:
+        return &vm->reg_cx;
     default:
         return NULL;
     }

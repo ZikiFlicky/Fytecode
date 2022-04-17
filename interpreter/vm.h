@@ -21,6 +21,7 @@ struct Fy_VM {
     uint16_t code_size;
     uint16_t reg_ax;
     uint16_t reg_bx;
+    uint16_t reg_cx;
     uint16_t reg_ip;
     /* Is running? */
     bool running;

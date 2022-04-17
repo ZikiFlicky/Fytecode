@@ -11,6 +11,7 @@ static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_
 static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction);
@@ -131,6 +132,20 @@ Fy_ParserParseRule Fy_parseRuleCmpReg16Const = {
     .func_two_params = Fy_ParseCmpReg16Const,
     .func_process = NULL
 };
+Fy_ParserParseRule Fy_parseRuleCmpReg16Reg16 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Cmp,
+    .arg1 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .arg2 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .func_two_params = Fy_ParseCmpReg16Reg16,
+    .func_process = NULL
+};
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Const,
@@ -142,7 +157,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleAddReg16Reg16,
     &Fy_parseRuleSubReg16Const,
     &Fy_parseRuleSubReg16Reg16,
-    &Fy_parseRuleCmpReg16Const
+    &Fy_parseRuleCmpReg16Const,
+    &Fy_parseRuleCmpReg16Reg16
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -286,6 +302,10 @@ static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_Token *token_
 
 static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     return Fy_ParseOpReg16Const(parser, token_arg1, token_arg2, &Fy_InstructionType_CmpReg16Const);
+}
+
+static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    return Fy_ParseOpReg16Reg16(parser, token_arg1, token_arg2, &Fy_InstructionType_CmpReg16Reg16);
 }
 
 static void Fy_ProcessJmp(Fy_Parser *parser, Fy_Instruction_Jmp *instruction) {

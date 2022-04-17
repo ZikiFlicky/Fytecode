@@ -156,6 +156,24 @@ static void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
     Fy_VM_setResult16InFlags(vm, *((int16_t*)&res));
 }
 
+static void Fy_InstructionType_CmpReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addByte(generator, instruction->reg2_id);
+}
+
+void Fy_InstructionType_CmpReg16Reg16_run(Fy_VM *vm) {
+    uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
+    uint8_t reg = base[1];
+    uint8_t reg2 = base[2];
+    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+    uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
+    // Register not found
+    if (!reg_ptr || !reg2_ptr) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
+    }
+    Fy_VM_setResult16InFlags(vm, *reg_ptr - *reg2_ptr);
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -227,6 +245,13 @@ Fy_InstructionType Fy_InstructionType_CmpReg16Const = {
     .run_func = Fy_InstructionType_CmpReg16Const_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_CmpReg16Reg16 = {
+    .opcode = 10,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_CmpReg16Reg16_write,
+    .run_func = Fy_InstructionType_CmpReg16Reg16_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -238,5 +263,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_AddReg16Reg16,
     &Fy_InstructionType_SubReg16Const,
     &Fy_InstructionType_SubReg16Reg16,
-    &Fy_InstructionType_CmpReg16Const
+    &Fy_InstructionType_CmpReg16Const,
+    &Fy_InstructionType_CmpReg16Reg16
 };

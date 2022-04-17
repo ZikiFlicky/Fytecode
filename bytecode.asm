@@ -1,7 +1,8 @@
 start: ; This is currently not needed
     debug
-    mov ax 2
-    cmp ax 3
+    mov ax -1
+    mov bx 2
+    cmp ax bx
     debug
 ;     jmp do_debug2
 ; do_debug:

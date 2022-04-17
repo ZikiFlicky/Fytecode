@@ -103,6 +103,22 @@ static void Fy_InstructionType_AddReg16Reg16_run(Fy_VM *vm) {
     *reg_ptr += *reg2_ptr;
 }
 
+static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_Instruction_SubReg16Const *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addConst16(generator, instruction->value);
+}
+
+static void Fy_InstructionType_SubReg16Const_run(Fy_VM *vm) {
+    uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
+    uint8_t reg_id = base[1];
+    uint16_t value = Fy_MemoryGet16(&base[2]);
+    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
+    if (!reg_ptr) {
+        FY_UNREACHABLE();
+    }
+    *reg_ptr -= value;
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -153,6 +169,13 @@ Fy_InstructionType Fy_InstructionType_AddReg16Reg16 = {
     .run_func = Fy_InstructionType_AddReg16Reg16_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_SubReg16Const = {
+    .opcode = 7,
+    .additional_size = 3,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_SubReg16Const_write,
+    .run_func = Fy_InstructionType_SubReg16Const_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -161,5 +184,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_EndProgram,
     &Fy_InstructionType_Jmp,
     &Fy_InstructionType_AddReg16Const,
-    &Fy_InstructionType_AddReg16Reg16
+    &Fy_InstructionType_AddReg16Reg16,
+    &Fy_InstructionType_SubReg16Const
 };

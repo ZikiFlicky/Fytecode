@@ -4,6 +4,7 @@ start: ; This is currently not needed
     mov bx ax
     debug
     add bx ax
+    sub ax 3
     debug
 ;     jmp do_debug2
 ; do_debug:

@@ -252,7 +252,6 @@ static void Fy_InstructionType_Pop_run(Fy_VM *vm) {
         Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
 
     *reg_ptr = Fy_VM_popFromStack(vm);
-    printf("%d\n", *reg_ptr);
 }
 
 /* Type definitions */

@@ -1,6 +1,8 @@
 #ifndef FY_TOKEN_H
 #define FY_TOKEN_H
 
+#include "../interpreter/registers.h"
+
 #include <stddef.h>
 #include <inttypes.h>
 #include <stdbool.h>

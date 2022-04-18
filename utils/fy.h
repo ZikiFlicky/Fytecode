@@ -12,8 +12,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "defines.h"
-
 #include "../assembler/token.h"
 #include "../assembler/lexer.h"
 #include "../assembler/parser.h"
@@ -22,6 +20,7 @@
 #include "../assembler/labelmap.h"
 
 #include "../interpreter/vm.h"
+#include "../interpreter/registers.h"
 
 #define FY_UNREACHABLE() assert(0)
 

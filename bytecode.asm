@@ -12,6 +12,8 @@ start: ; This is currently not needed
     mov ax 3
     push ax
     debug
+    pop bx
+    debug
 
 ;     jmp do_debug2
 ; do_debug:

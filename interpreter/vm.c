@@ -102,12 +102,12 @@ void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address) {
 
 void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value) {
     // FIXME: Do some stack overflow error
-    if (vm->stack_offset - vm->reg_sp > vm->stack_size)
+    if (vm->stack_offset - vm->reg_sp >= vm->stack_size)
         FY_UNREACHABLE();
 
-    *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp] = value;
-
     vm->reg_sp -= 2;
+
+    *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp] = value;
 }
 
 uint16_t Fy_VM_popFromStack(Fy_VM *vm) {

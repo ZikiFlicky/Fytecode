@@ -41,8 +41,7 @@ Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
     }
 }
 
-/* Convert Fy_Token with type Fy_TokenType_Const to 16-bit integer */
-int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
+static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parser) {
     bool is_neg;
     size_t i = 0;
     size_t positive = 0;
@@ -60,7 +59,7 @@ int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
         positive *= 10;
         positive += token->start[i] - '0';
 
-        if (positive >= (1 << 15))
+        if (positive >= (size_t)(1 << (is_neg ? width - 1 : width)))
             Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL);
 
         ++i;
@@ -69,30 +68,14 @@ int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
     return (int16_t)((is_neg ? -1 : 1) * positive);
 }
 
+/* Convert Fy_Token with type Fy_TokenType_Const to 16-bit integer */
+int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
+    return Fy_Token_toConst(token, 16, parser);
+}
+
 /* Convert Fy_Token with type Fy_TokenType_Const to 8-bit integer */
 int8_t Fy_Token_toConst8(Fy_Token *token, Fy_Parser *parser) {
-    bool is_neg;
-    size_t i = 0;
-    size_t positive = 0;
-
-    assert(token->type == Fy_TokenType_Const);
-
-    if (token->start[0] == '-') {
-        is_neg = true;
-        ++i;
-    }
-
-    do {
-        positive *= 10;
-        positive += token->start[i] - '0';
-
-        if (positive >= (1 << 7))
-            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, "%zu", positive);
-
-        ++i;
-    } while (i < token->length);
-
-    return (int8_t)((is_neg ? -1 : 1) * positive);
+    return (int8_t)Fy_Token_toConst(token, 8, parser);
 }
 
 /* Returns whether the token is of type `arg_type` given */

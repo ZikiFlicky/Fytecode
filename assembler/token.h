@@ -43,6 +43,7 @@ typedef struct Fy_Token {
 extern Fy_TokenType Fy_reg16Tokens[];
 
 int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser);
+int8_t Fy_Token_toConst8(Fy_Token *token, Fy_Parser *parser);
 Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type);
 char *Fy_Token_toLowercaseCStr(Fy_Token *token);
 bool Fy_TokenType_isPossibleArg(Fy_TokenType token_type, Fy_ParserArgType arg_type);

@@ -7,8 +7,10 @@ start: ; This is currently not needed
 ; do_debug:
 ;     debug
 ; dont_do:
-    debug
     push 3
+
+    mov ax 3
+    push ax
     debug
 
 ;     jmp do_debug2

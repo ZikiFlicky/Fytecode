@@ -222,6 +222,22 @@ static void Fy_InstructionType_PushConst_run(Fy_VM *vm) {
     Fy_VM_pushToStack(vm, value);
 }
 
+static void Fy_InstructionType_PushReg16_write(Fy_Generator *generator, Fy_Instruction_PushReg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_InstructionType_PushReg16_run(Fy_VM *vm) {
+    uint8_t reg = vm->mem_space_bottom[vm->reg_ip + 1];
+    uint16_t *reg_ptr;
+
+    reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+    // If register not found
+    if (!reg_ptr)
+        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+
+    Fy_VM_pushToStack(vm, *reg_ptr);
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -328,6 +344,13 @@ Fy_InstructionType Fy_InstructionType_PushConst = {
     .run_func = Fy_InstructionType_PushConst_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_PushReg16 = {
+    .opcode = 15,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_PushReg16_write,
+    .run_func = Fy_InstructionType_PushReg16_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -344,5 +367,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_Je,
     &Fy_InstructionType_Jl,
     &Fy_InstructionType_Jg,
-    &Fy_InstructionType_PushConst
+    &Fy_InstructionType_PushConst,
+    &Fy_InstructionType_PushReg16
 };

@@ -16,6 +16,7 @@ static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg);
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_Token *token_arg);
+static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_Token *token_arg);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -186,6 +187,16 @@ Fy_ParserParseRule Fy_parseRulePushConst = {
     .func_one_param = Fy_ParsePushConst,
     .func_process = NULL
 };
+Fy_ParserParseRule Fy_parseRulePushReg16 = {
+    .type = Fy_ParserParseRuleType_OneParam,
+    .start_token = Fy_TokenType_Push,
+    .arg1 = {
+        .type = Fy_ParserArgType_Reg16,
+        .possible_tokens = NULL
+    },
+    .func_one_param = Fy_ParsePushReg16,
+    .func_process = NULL
+};
 
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
@@ -203,7 +214,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleJe,
     &Fy_parseRuleJl,
     &Fy_parseRuleJg,
-    &Fy_parseRulePushConst
+    &Fy_parseRulePushConst,
+    &Fy_parseRulePushReg16
 };
 
 char *Fy_ParserError_toString(Fy_ParserError error) {
@@ -389,6 +401,13 @@ static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_Token *token_arg) {
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_Token *token_arg) {
     Fy_Instruction_PushConst *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_PushConst, Fy_InstructionType_PushConst);
     instruction->value = Fy_Token_toConst16(token_arg, parser);
+    return (Fy_Instruction*)instruction;
+}
+
+static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_Token *token_arg) {
+    Fy_Instruction_PushReg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_PushReg16, Fy_InstructionType_PushReg16);
+    (void)parser;
+    instruction->reg_id = Fy_TokenType_toReg16(token_arg->type);
     return (Fy_Instruction*)instruction;
 }
 

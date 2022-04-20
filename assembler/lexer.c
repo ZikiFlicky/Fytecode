@@ -63,7 +63,7 @@ bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
 void Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
     bool removing = true;
     while (removing) {
-        int8_t c = lexer->stream[0];
+        char c = lexer->stream[0];
         if (c == ' ' || c == '\t') {
             ++lexer->stream;
             ++lexer->column;

@@ -28,20 +28,16 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM 
     out->flags = 0;
 }
 
-// TODO: Merge the two functions
-void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err) {
+void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     (void)vm;
     printf("RuntimeError: %s\n", Fy_RuntimeError_toString(err));
-    exit(1);
-}
-
-void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
-    va_list va;
-    (void)vm;
-    printf("RuntimeError: %s: ", Fy_RuntimeError_toString(err));
-    va_start(va, additional);
-    vprintf(additional, va);
-    va_end(va);
+    if (additional) {
+        va_list va;
+        printf(": ");
+        va_start(va, additional);
+        vprintf(additional, va);
+        va_end(va);
+    }
     printf("\n");
     exit(1);
 }
@@ -63,7 +59,7 @@ static uint8_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
         reg_ptr = vm->reg_dx;
         break;
     default:
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
         FY_UNREACHABLE();
     }
 
@@ -107,7 +103,7 @@ static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
     case Fy_Reg8_Dl:
         return &vm->reg_dx[0];
     default:
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
         FY_UNREACHABLE();
     }
 }
@@ -138,7 +134,7 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
         }
     }
     // If we got here, we didn't match any opcode and this is an invalid instruction
-    Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_InvalidOpcode, "'%.2x'", opcode);
+    Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "'%.2x'", opcode);
 }
 
 void Fy_VM_runAll(Fy_VM *vm) {

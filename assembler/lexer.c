@@ -154,10 +154,10 @@ bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
     lexer->token.type = Fy_TokenType_Newline;
     lexer->stream = lexer->stream;
     lexer->token.length = 0;
-    lexer->column = 1;
     do {
         ++lexer->stream;
         ++lexer->line;
+        lexer->column = 1;
         ++lexer->token.length;
         Fy_Lexer_removeWhitespace(lexer);
     } while (lexer->stream[0] == '\n');

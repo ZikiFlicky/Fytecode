@@ -8,6 +8,10 @@ static inline bool is_keyword_char(char c) {
     return is_keyword_start_char(c) || isdigit(c);
 }
 
+static inline bool is_bin_char(char c) {
+    return c == '0' || c == '1';
+}
+
 /* Convert Fy_LexerError to string */
 char *Fy_LexerError_toString(Fy_LexerError error) {
     switch (error) {
@@ -81,11 +85,40 @@ bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
 
     if (lexer->stream[0] == '-')
         ++i;
-    if (!isdigit(lexer->stream[i]))
-        return false;
-    do {
-        ++i;
-    } while (isdigit(lexer->stream[i]));
+
+    if (lexer->stream[i] == '0' && lexer->stream[i + 1] == 'x') {
+        i += 2;
+        if (!isxdigit(lexer->stream[i]))
+            return false;
+        do {
+            ++i;
+        } while (isxdigit(lexer->stream[i]));
+
+        // If ended with a character
+        if (is_keyword_char(lexer->stream[i]) && !isxdigit(lexer->stream[i]))
+            return false;
+    } else if (lexer->stream[i] == '0' && lexer->stream[i + 1] == 'b') {
+        i += 2;
+        if (!is_bin_char(lexer->stream[i]))
+            return false;
+        do {
+            ++i;
+        } while (is_bin_char(lexer->stream[i]));
+
+        // If ended with a character
+        if (is_keyword_char(lexer->stream[i]) && !is_bin_char(lexer->stream[i]))
+            return false;
+    } else {
+        if (!isdigit(lexer->stream[i]))
+            return false;
+        do {
+            ++i;
+        } while (isdigit(lexer->stream[i]));
+
+        // If ended with a character
+        if (is_keyword_char(lexer->stream[i]) && !isdigit(lexer->stream[i]))
+            return false;
+    }
 
     lexer->token.type = Fy_TokenType_Const;
     lexer->token.start = lexer->stream;

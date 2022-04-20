@@ -56,10 +56,20 @@ Fy_Reg8 Fy_TokenType_toReg8(Fy_TokenType type) {
     }
 }
 
+static size_t char_to_number(char c) {
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    else if (tolower(c) >= 'a' && tolower(c) <= 'f')
+        return 10 + tolower(c) - 'a';
+    else
+        FY_UNREACHABLE();
+}
+
 static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parser) {
     bool is_neg;
     size_t i = 0;
     size_t positive = 0;
+    size_t base;
 
     assert(token->type == Fy_TokenType_Const);
 
@@ -70,9 +80,19 @@ static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parse
         is_neg = false;
     }
 
+    if (token->start[0] == '0' && token->start[1] == 'x') {
+        base = 16;
+        i += 2;
+    } else if (token->start[0] == '0' && token->start[1] == 'b') {
+        base = 2;
+        i += 2;
+    } else {
+        base = 10;
+    }
+
     do {
-        positive *= 10;
-        positive += token->start[i] - '0';
+        positive *= base;
+        positive += char_to_number(token->start[i]);
 
         if (positive >= (size_t)(1 << (is_neg ? width - 1 : width)))
             Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL);

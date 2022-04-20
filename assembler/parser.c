@@ -519,6 +519,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         if (rule->type == Fy_ParserParseRuleType_NoParams) {
             Fy_Instruction *instruction = rule->func_no_params(parser);
             instruction->parse_rule = rule;
+            instruction->start_state = start_backtrack;
             return instruction;
         }
 
@@ -550,6 +551,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         if (rule->type == Fy_ParserParseRuleType_OneParam) {
             Fy_Instruction *instruction = rule->func_one_param(parser, &token_arg1);
             instruction->parse_rule = rule;
+            instruction->start_state = start_backtrack;
             return instruction;
         }
 
@@ -568,6 +570,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         if (rule->type == Fy_ParserParseRuleType_TwoParams) {
             Fy_Instruction *instruction = rule->func_two_params(parser, &token_arg1, &token_arg2);
             instruction->parse_rule = rule;
+            instruction->start_state = start_backtrack;
             return instruction;
         }
 
@@ -656,6 +659,7 @@ static void Fy_Parser_readInstructions(Fy_Parser *parser) {
 static void Fy_Parser_processInstructions(Fy_Parser *parser) {
     for (size_t i = 0; i < parser->amount_used; ++i) {
         Fy_Instruction *instruction = parser->instructions[i];
+        Fy_Parser_loadState(parser, &instruction->start_state);
         if (instruction->parse_rule->func_process) {
             instruction->parse_rule->func_process(parser, instruction);
         }

@@ -22,11 +22,14 @@ start: ; This is currently not needed
     mov ah bh
     mov ax 0xFf
     debug
-;     jmp do_debug2
+;    asdasd
+;    asda jmp do_debug2
 ; do_debug:
 ;     debug
 ; do_debug2:
 ;     debug
+
+    jmp asdsd
 
     ; End program
     end

@@ -2,6 +2,7 @@
 #define FY_INSTRUCTION_H
 
 #include "generator.h"
+#include "parser.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -38,6 +39,7 @@ struct Fy_InstructionType {
 struct Fy_Instruction {
     Fy_InstructionType *type;
     Fy_ParserParseRule *parse_rule;
+    Fy_ParserState start_state;
 };
 
 /* Inheriting instructions */

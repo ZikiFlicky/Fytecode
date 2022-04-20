@@ -3,7 +3,6 @@
 
 #include "lexer.h"
 #include "generator.h"
-#include "instruction.h"
 #include "labelmap.h"
 
 #include <stddef.h>

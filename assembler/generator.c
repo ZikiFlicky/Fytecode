@@ -22,7 +22,7 @@ void Fy_Generator_addByte(Fy_Generator *generator, uint8_t b) {
     generator->output[generator->idx++] = b;
 }
 
-void Fy_Generator_addConst16(Fy_Generator *generator, uint16_t w) {
+void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w) {
     Fy_Generator_makeSpace(generator, 2);
     // Little endianness
     generator->output[generator->idx] = w & 0xff;

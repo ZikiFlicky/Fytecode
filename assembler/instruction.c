@@ -15,7 +15,7 @@ Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size) {
 /* Instruction type functions */
 static void Fy_InstructionType_MovReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addConst16(generator, instruction->value);
+    Fy_Generator_addWord(generator, instruction->value);
 }
 
 static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
@@ -58,7 +58,7 @@ static void Fy_InstructionType_EndProgram_run(Fy_VM *vm) {
 
 static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addConst16(generator, instruction->value);
+    Fy_Generator_addWord(generator, instruction->value);
 }
 
 static void Fy_InstructionType_AddReg16Const_run(Fy_VM *vm) {
@@ -89,7 +89,7 @@ static void Fy_InstructionType_AddReg16Reg16_run(Fy_VM *vm) {
 
 static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addConst16(generator, instruction->value);
+    Fy_Generator_addWord(generator, instruction->value);
 }
 
 static void Fy_InstructionType_SubReg16Const_run(Fy_VM *vm) {
@@ -120,7 +120,7 @@ static void Fy_InstructionType_SubReg16Reg16_run(Fy_VM *vm) {
 
 static void Fy_InstructionType_CmpReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addConst16(generator, instruction->value);
+    Fy_Generator_addWord(generator, instruction->value);
 }
 
 static void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
@@ -153,7 +153,7 @@ void Fy_InstructionType_CmpReg16Reg16_run(Fy_VM *vm) {
 }
 
 static void Fy_InstructionType_Jmp_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
-    Fy_Generator_addConst16(generator, instruction->address);
+    Fy_Generator_addWord(generator, instruction->address);
 }
 
 static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
@@ -161,7 +161,7 @@ static void Fy_InstructionType_Jmp_run(Fy_VM *vm) {
 }
 
 static void Fy_InstructionType_Je_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
-    Fy_Generator_addConst16(generator, instruction->address);
+    Fy_Generator_addWord(generator, instruction->address);
 }
 
 static void Fy_InstructionType_Je_run(Fy_VM *vm) {
@@ -173,7 +173,7 @@ static void Fy_InstructionType_Je_run(Fy_VM *vm) {
 }
 
 static void Fy_InstructionType_Jl_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
-    Fy_Generator_addConst16(generator, instruction->address);
+    Fy_Generator_addWord(generator, instruction->address);
 }
 
 static void Fy_InstructionType_Jl_run(Fy_VM *vm) {
@@ -185,7 +185,7 @@ static void Fy_InstructionType_Jl_run(Fy_VM *vm) {
 }
 
 static void Fy_InstructionType_Jg_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
-    Fy_Generator_addConst16(generator, instruction->address);
+    Fy_Generator_addWord(generator, instruction->address);
 }
 
 static void Fy_InstructionType_Jg_run(Fy_VM *vm) {
@@ -197,7 +197,7 @@ static void Fy_InstructionType_Jg_run(Fy_VM *vm) {
 }
 
 static void Fy_InstructionType_PushConst_write(Fy_Generator *generator, Fy_Instruction_PushConst *instruction) {
-    Fy_Generator_addConst16(generator, instruction->value);
+    Fy_Generator_addWord(generator, instruction->value);
 }
 
 static void Fy_InstructionType_PushConst_run(Fy_VM *vm) {

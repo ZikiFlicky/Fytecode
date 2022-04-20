@@ -19,6 +19,7 @@ start: ; This is currently not needed
     mov al 3
     add ax 1
     mov bh 22
+    mov ah bh
     debug
 ;     jmp do_debug2
 ; do_debug:

@@ -241,6 +241,20 @@ static void Fy_InstructionType_MovReg8Const_run(Fy_VM *vm) {
     Fy_VM_setReg8(vm, reg, val);
 }
 
+static void Fy_InstructionType_MovReg8Reg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8Reg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addByte(generator, instruction->reg2_id);
+}
+
+static void Fy_InstructionType_MovReg8Reg8_run(Fy_VM *vm) {
+    uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
+    uint8_t reg = base[1];
+    uint8_t reg2 = base[2];
+    uint8_t val = Fy_VM_getReg8(vm, reg2);
+
+    Fy_VM_setReg8(vm, reg, val);
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -368,6 +382,13 @@ Fy_InstructionType Fy_InstructionType_MovReg8Const = {
     .run_func = Fy_InstructionType_MovReg8Const_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_MovReg8Reg8 = {
+    .opcode = 18,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg8Reg8_write,
+    .run_func = Fy_InstructionType_MovReg8Reg8_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -387,5 +408,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_PushConst,
     &Fy_InstructionType_PushReg16,
     &Fy_InstructionType_Pop,
-    &Fy_InstructionType_MovReg8Const
+    &Fy_InstructionType_MovReg8Const,
+    &Fy_InstructionType_MovReg8Reg8
 };

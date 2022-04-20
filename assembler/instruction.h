@@ -15,6 +15,7 @@ typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef struct Fy_Instruction Fy_Instruction;
 typedef struct Fy_InstructionType Fy_InstructionType;
 typedef struct Fy_Instruction_OpReg8Const Fy_Instruction_OpReg8Const;
+typedef struct Fy_Instruction_OpReg8Reg8 Fy_Instruction_OpReg8Reg8;
 typedef struct Fy_Instruction_OpReg16Const Fy_Instruction_OpReg16Const;
 typedef struct Fy_Instruction_OpReg16Reg16 Fy_Instruction_OpReg16Reg16;
 typedef struct Fy_Instruction_OpLabel Fy_Instruction_OpLabel;
@@ -44,6 +45,12 @@ struct Fy_Instruction_OpReg8Const {
     FY_INSTRUCTION_BASE;
     uint8_t reg_id;
     uint8_t value;
+};
+
+struct Fy_Instruction_OpReg8Reg8 {
+    FY_INSTRUCTION_BASE;
+    uint8_t reg_id;
+    uint8_t reg2_id;
 };
 
 struct Fy_Instruction_OpReg16Const {
@@ -93,8 +100,9 @@ extern Fy_InstructionType Fy_InstructionType_PushConst;
 extern Fy_InstructionType Fy_InstructionType_PushReg16;
 extern Fy_InstructionType Fy_InstructionType_Pop;
 extern Fy_InstructionType Fy_InstructionType_MovReg8Const;
+extern Fy_InstructionType Fy_InstructionType_MovReg8Reg8;
 
-extern Fy_InstructionType *Fy_instructionTypes[18];
+extern Fy_InstructionType *Fy_instructionTypes[19];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

@@ -2,6 +2,7 @@
 
 /* Parse-function (step 1) declarations */
 static Fy_Instruction *Fy_ParseMovReg8Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
+static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
@@ -35,6 +36,20 @@ Fy_ParserParseRule Fy_parseRuleMovReg8Const = {
         .type = Fy_ParserArgType_Constant
     },
     .func_two_params = Fy_ParseMovReg8Const,
+    .func_process = NULL
+};
+Fy_ParserParseRule Fy_parseRuleMovReg8Reg8 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Mov,
+    .arg1 = {
+        .type = Fy_ParserArgType_Reg8,
+        .possible_tokens = NULL
+    },
+    .arg2 = {
+        .type = Fy_ParserArgType_Reg8,
+        .possible_tokens = NULL
+    },
+    .func_two_params = Fy_ParseMovReg8Reg8,
     .func_process = NULL
 };
 Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
@@ -226,6 +241,7 @@ Fy_ParserParseRule Fy_parseRulePop = {
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg8Const,
+    &Fy_parseRuleMovReg8Reg8,
     &Fy_parseRuleMovReg16Const,
     &Fy_parseRuleMovReg16Reg16,
     &Fy_parseRuleAddReg16Const,
@@ -347,6 +363,14 @@ static Fy_Instruction *Fy_ParseOpReg8Const(Fy_Parser *parser, Fy_Token *token_ar
     return (Fy_Instruction*)instruction;
 }
 
+static Fy_Instruction *Fy_ParseOpReg8Reg8(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2, Fy_InstructionType *type) {
+    Fy_Instruction_OpReg8Reg8 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg8Reg8, *type);
+    (void)parser;
+    instruction->reg_id = Fy_TokenType_toReg8(token_arg1->type);
+    instruction->reg2_id = Fy_TokenType_toReg8(token_arg2->type);
+    return (Fy_Instruction*)instruction;
+}
+
 static Fy_Instruction *Fy_ParseOpReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2, Fy_InstructionType *type) {
     Fy_Instruction_OpReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Const, *type);
     instruction->reg_id = Fy_TokenType_toReg16(token_arg1->type);
@@ -379,6 +403,10 @@ static Fy_Instruction *Fy_ParseOpReg16(Fy_Parser *parser, Fy_Token *token_arg, F
 /* Parsing functions */
 static Fy_Instruction *Fy_ParseMovReg8Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
     return Fy_ParseOpReg8Const(parser, token_arg1, token_arg2, &Fy_InstructionType_MovReg8Const);
+}
+
+static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {
+    return Fy_ParseOpReg8Reg8(parser, token_arg1, token_arg2, &Fy_InstructionType_MovReg8Reg8);
 }
 
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2) {

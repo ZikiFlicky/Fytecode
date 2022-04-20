@@ -83,6 +83,9 @@ void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
     // Little endian
     reg_ptr[0] = value & 0xFF;
     reg_ptr[1] = value >> 8;
+
+    // Set flags matching the operation
+    Fy_VM_setResult16InFlags(vm, value);
 }
 
 static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
@@ -117,6 +120,8 @@ uint8_t Fy_VM_getReg8(Fy_VM *vm, uint8_t reg) {
 void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
     uint8_t *reg_ptr = Fy_VM_getReg8Ptr(vm, reg);
     *reg_ptr = value;
+    // Set flags matching the operation
+    Fy_VM_setResult8InFlags(vm, value);
 }
 
 static void Fy_VM_runInstruction(Fy_VM *vm) {
@@ -143,6 +148,18 @@ void Fy_VM_runAll(Fy_VM *vm) {
 }
 
 void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
+    if (res == 0)
+        vm->flags |= FY_FLAGS_ZERO; // Enable
+    else
+        vm->flags &= ~FY_FLAGS_ZERO; // Disable
+
+    if (res < 0)
+        vm->flags |= FY_FLAGS_SIGN; // Enable
+    else
+        vm->flags &= ~FY_FLAGS_SIGN; // Disable
+}
+
+void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res) {
     if (res == 0)
         vm->flags |= FY_FLAGS_ZERO; // Enable
     else

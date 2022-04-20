@@ -45,6 +45,7 @@ void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value);
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err);
 void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...);
 void Fy_VM_runAll(Fy_VM *vm);
+void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res);
 void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
 void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address);
 void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value);

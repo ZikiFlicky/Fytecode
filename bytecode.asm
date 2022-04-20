@@ -7,14 +7,19 @@ start: ; This is currently not needed
 ; do_debug:
 ;     debug
 ; dont_do:
-    push 3
-
-    mov ax 3
-    push ax
+    ; push 3
+    ; pop ax
+    ; mov ax 3
+    ; debug
+    ; mov bx ax
+    ; add bx ax
+    ; debug
+    ; sub ax bx
+    ; debug
+    mov al 3
+    add ax 1
+    mov bh 22
     debug
-    pop bx
-    debug
-
 ;     jmp do_debug2
 ; do_debug:
 ;     debug

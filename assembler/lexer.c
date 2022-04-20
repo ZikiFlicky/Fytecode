@@ -193,6 +193,22 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "dx", Fy_TokenType_Dx))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "ah", Fy_TokenType_Ah))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "al", Fy_TokenType_Al))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "bh", Fy_TokenType_Bh))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "bl", Fy_TokenType_Bl))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "ch", Fy_TokenType_Ch))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "cl", Fy_TokenType_Cl))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "dh", Fy_TokenType_Dh))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "dl", Fy_TokenType_Dl))
+        return true;
 
     if (Fy_Lexer_lexConst(lexer))
         return true;

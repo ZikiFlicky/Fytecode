@@ -7,24 +7,16 @@ Fy_TokenType Fy_reg16Tokens[] = {
     Fy_TokenType_Dx
 };
 
-bool Fy_TokenType_isReg8(Fy_TokenType type) {
-    switch (type) {
-    default:
-        return false;
-    }
-}
-
-bool Fy_TokenType_isReg16(Fy_TokenType type) {
-    switch (type) {
-    case Fy_TokenType_Ax:
-    case Fy_TokenType_Bx:
-    case Fy_TokenType_Cx:
-    case Fy_TokenType_Dx:
-        return true;
-    default:
-        return false;
-    }
-}
+Fy_TokenType Fy_reg8Tokens[] = {
+    Fy_TokenType_Ah,
+    Fy_TokenType_Al,
+    Fy_TokenType_Bh,
+    Fy_TokenType_Bl,
+    Fy_TokenType_Ch,
+    Fy_TokenType_Cl,
+    Fy_TokenType_Dh,
+    Fy_TokenType_Dl
+};
 
 Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
     switch (type) {
@@ -36,6 +28,29 @@ Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
         return Fy_Reg16_Cx;
     case Fy_TokenType_Dx:
         return Fy_Reg16_Dx;
+    default:
+        FY_UNREACHABLE();
+    }
+}
+
+Fy_Reg8 Fy_TokenType_toReg8(Fy_TokenType type) {
+    switch (type) {
+    case Fy_TokenType_Ah:
+        return Fy_Reg8_Ah;
+    case Fy_TokenType_Al:
+        return Fy_Reg8_Al;
+    case Fy_TokenType_Bh:
+        return Fy_Reg8_Bh;
+    case Fy_TokenType_Bl:
+        return Fy_Reg8_Bl;
+    case Fy_TokenType_Ch:
+        return Fy_Reg8_Ch;
+    case Fy_TokenType_Cl:
+        return Fy_Reg8_Cl;
+    case Fy_TokenType_Dh:
+        return Fy_Reg8_Dh;
+    case Fy_TokenType_Dl:
+        return Fy_Reg8_Dl;
     default:
         FY_UNREACHABLE();
     }
@@ -94,7 +109,12 @@ bool Fy_TokenType_isPossibleArg(Fy_TokenType token_type, Fy_ParserArgType arg_ty
         else
             return false;
     case Fy_ParserArgType_Reg8:
-        FY_UNREACHABLE(); // FIXME: Not implemented yet
+        for (size_t i = 0; i < sizeof(Fy_reg8Tokens) / sizeof(Fy_TokenType); ++i) {
+            if (token_type == Fy_reg8Tokens[i]) {
+                return true;
+            }
+        }
+        return false;
     case Fy_ParserArgType_Label:
         if (token_type == Fy_TokenType_Label)
             return true;

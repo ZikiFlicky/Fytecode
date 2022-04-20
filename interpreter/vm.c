@@ -18,16 +18,17 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM 
     out->code_size = length;
     out->stack_offset = out->code_offset + out->code_size + 0x100 + stack_size; // The 0x100 is for padding
     out->stack_size = stack_size; // In bytes
-    out->reg_ax = 0;
-    out->reg_bx = 0;
-    out->reg_cx = 0;
-    out->reg_dx = 0;
+    out->reg_ax[0] = out->reg_ax[1] = 0;
+    out->reg_bx[0] = out->reg_bx[1] = 0;
+    out->reg_cx[0] = out->reg_cx[1] = 0;
+    out->reg_dx[0] = out->reg_dx[1] = 0;
     out->reg_ip = 0;
     out->reg_sp = out->stack_offset;
     out->running = true;
     out->flags = 0;
 }
 
+// TODO: Merge the two functions
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err) {
     (void)vm;
     printf("RuntimeError: %s\n", Fy_RuntimeError_toString(err));
@@ -45,19 +46,77 @@ void Fy_VM_runtimeErrorAdditionalText(Fy_VM *vm, Fy_RuntimeError err, char *addi
     exit(1);
 }
 
-uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
+static uint8_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
+    uint8_t *reg_ptr;
+
     switch (reg) {
     case Fy_Reg16_Ax:
-        return &vm->reg_ax;
+        reg_ptr = vm->reg_ax;
+        break;
     case Fy_Reg16_Bx:
-        return &vm->reg_bx;
+        reg_ptr = vm->reg_bx;
+        break;
     case Fy_Reg16_Cx:
-        return &vm->reg_cx;
+        reg_ptr = vm->reg_cx;
+        break;
     case Fy_Reg16_Dx:
-        return &vm->reg_dx;
+        reg_ptr = vm->reg_dx;
+        break;
     default:
-        return NULL;
+        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+        FY_UNREACHABLE();
     }
+
+    return reg_ptr;
+}
+
+uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
+    uint8_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+
+    // Little-endian
+    return reg_ptr[0] + (reg_ptr[1] << 8);
+}
+
+void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
+    uint8_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+
+    // Little endian
+    reg_ptr[0] = value & 0xFF;
+    reg_ptr[1] = value >> 8;
+}
+
+static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
+    switch (reg) {
+    case Fy_Reg8_Ah:
+        return &vm->reg_ax[1];
+    case Fy_Reg8_Al:
+        return &vm->reg_ax[0];
+    case Fy_Reg8_Bh:
+        return &vm->reg_bx[1];
+    case Fy_Reg8_Bl:
+        return &vm->reg_bx[0];
+    case Fy_Reg8_Ch:
+        return &vm->reg_cx[1];
+    case Fy_Reg8_Cl:
+        return &vm->reg_cx[0];
+    case Fy_Reg8_Dh:
+        return &vm->reg_dx[1];
+    case Fy_Reg8_Dl:
+        return &vm->reg_dx[0];
+    default:
+        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+        FY_UNREACHABLE();
+    }
+}
+
+uint8_t Fy_VM_getReg8(Fy_VM *vm, uint8_t reg) {
+    uint8_t *reg_ptr = Fy_VM_getReg8Ptr(vm, reg);
+    return *reg_ptr;
+}
+
+void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
+    uint8_t *reg_ptr = Fy_VM_getReg8Ptr(vm, reg);
+    *reg_ptr = value;
 }
 
 static void Fy_VM_runInstruction(Fy_VM *vm) {

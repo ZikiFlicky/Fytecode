@@ -13,7 +13,6 @@ Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size) {
 }
 
 /* Instruction type functions */
-
 static void Fy_InstructionType_MovReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addConst16(generator, instruction->value);
@@ -23,11 +22,7 @@ static void Fy_InstructionType_MovReg16Const_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg = base[1];
     uint16_t val = Fy_MemoryGet16(&base[2]);
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    // Register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-    *reg_ptr = val;
+    Fy_VM_setReg16(vm, reg, val);
 }
 
 static void Fy_InstructionType_MovReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
@@ -39,23 +34,18 @@ static void Fy_InstructionType_MovReg16Reg16_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg = base[1];
     uint8_t reg2 = base[2];
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
-    // Register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-    if (!reg2_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg2);
-    *reg_ptr = *reg2_ptr;
+    uint16_t value;
+    value = Fy_VM_getReg16(vm, reg2);
+    Fy_VM_setReg16(vm, reg, value);
 }
 
 static void Fy_InstructionType_Debug_run(Fy_VM *vm) {
     (void)vm;
     printf("DEBUG INFO:\n");
-    printf("AX: %.2X %.2X\n", vm->reg_ax & ((1 << 8) - 1), vm->reg_ax >> 8);
-    printf("BX: %.2X %.2X\n", vm->reg_bx & ((1 << 8) - 1), vm->reg_bx >> 8);
-    printf("CX: %.2X %.2X\n", vm->reg_cx & ((1 << 8) - 1), vm->reg_cx >> 8);
-    printf("DX: %.2X %.2X\n", vm->reg_dx & ((1 << 8) - 1), vm->reg_dx >> 8);
+    printf("AX: %.2X %.2X\n", vm->reg_ax[0], vm->reg_ax[1]);
+    printf("BX: %.2X %.2X\n", vm->reg_bx[0], vm->reg_bx[1]);
+    printf("CX: %.2X %.2X\n", vm->reg_cx[0], vm->reg_cx[1]);
+    printf("DX: %.2X %.2X\n", vm->reg_dx[0], vm->reg_dx[1]);
     printf("IP: %.4X\n", vm->reg_ip);
     printf("SP: %.4X\n", vm->reg_sp);
     printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);
@@ -73,12 +63,11 @@ static void Fy_InstructionType_AddReg16Const_write(Fy_Generator *generator, Fy_I
 
 static void Fy_InstructionType_AddReg16Const_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
-    uint8_t reg_id = base[1];
-    uint16_t value = Fy_MemoryGet16(&base[2]);
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg_id);
-    *reg_ptr += value;
+    uint8_t reg = base[1];
+    uint16_t base_value;
+    uint16_t added_value = Fy_MemoryGet16(&base[2]);
+    base_value = Fy_VM_getReg16(vm, reg);
+    Fy_VM_setReg16(vm, reg, base_value + added_value);
 }
 
 static void Fy_InstructionType_AddReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
@@ -90,14 +79,12 @@ static void Fy_InstructionType_AddReg16Reg16_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg = base[1];
     uint8_t reg2 = base[2];
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
-    // Register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-    if (!reg2_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg2);
-    *reg_ptr += *reg2_ptr;
+    uint16_t reg_value;
+    uint16_t reg2_value;
+
+    reg_value = Fy_VM_getReg16(vm, reg);
+    reg2_value = Fy_VM_getReg16(vm, reg2);
+    Fy_VM_setReg16(vm, reg, reg_value + reg2_value);
 }
 
 static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
@@ -107,12 +94,11 @@ static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_I
 
 static void Fy_InstructionType_SubReg16Const_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
-    uint8_t reg_id = base[1];
-    uint16_t value = Fy_MemoryGet16(&base[2]);
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg_id);
-    *reg_ptr -= value;
+    uint8_t reg = base[1];
+    uint16_t base_value;
+    uint16_t sub_value = Fy_MemoryGet16(&base[2]);
+    base_value = Fy_VM_getReg16(vm, reg);
+    Fy_VM_setReg16(vm, reg, base_value - sub_value);
 }
 
 static void Fy_InstructionType_SubReg16Reg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16Reg16 *instruction) {
@@ -124,14 +110,12 @@ static void Fy_InstructionType_SubReg16Reg16_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg = base[1];
     uint8_t reg2 = base[2];
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
-    // Register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-    if (!reg2_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg2);
-    *reg_ptr -= *reg2_ptr;
+    uint16_t reg_value;
+    uint16_t reg2_value;
+
+    reg_value = Fy_VM_getReg16(vm, reg);
+    reg2_value = Fy_VM_getReg16(vm, reg2);
+    Fy_VM_setReg16(vm, reg, reg_value - reg2_value);
 }
 
 static void Fy_InstructionType_CmpReg16Const_write(Fy_Generator *generator, Fy_Instruction_OpReg16Const *instruction) {
@@ -143,11 +127,11 @@ static void Fy_InstructionType_CmpReg16Const_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg_id = base[1];
     uint16_t value = Fy_MemoryGet16(&base[2]);
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg_id);
+    uint16_t reg_value;
     uint16_t res;
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg_id);
-    res = *reg_ptr - value;
+
+    reg_value = Fy_VM_getReg16(vm, reg_id);
+    res = reg_value - value;
     Fy_VM_setResult16InFlags(vm, *((int16_t*)&res));
 }
 
@@ -160,13 +144,12 @@ void Fy_InstructionType_CmpReg16Reg16_run(Fy_VM *vm) {
     uint8_t *base = &vm->mem_space_bottom[vm->reg_ip];
     uint8_t reg = base[1];
     uint8_t reg2 = base[2];
-    uint16_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    uint16_t *reg2_ptr = Fy_VM_getReg16Ptr(vm, reg2);
-    // Register not found
-    if (!reg_ptr || !reg2_ptr) {
-        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound);
-    }
-    Fy_VM_setResult16InFlags(vm, *reg_ptr - *reg2_ptr);
+    uint16_t reg_value;
+    uint16_t reg2_value;
+
+    reg_value = Fy_VM_getReg16(vm, reg);
+    reg2_value = Fy_VM_getReg16(vm, reg2);
+    Fy_VM_setResult16InFlags(vm, reg_value - reg2_value);
 }
 
 static void Fy_InstructionType_Jmp_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
@@ -228,14 +211,10 @@ static void Fy_InstructionType_PushReg16_write(Fy_Generator *generator, Fy_Instr
 
 static void Fy_InstructionType_PushReg16_run(Fy_VM *vm) {
     uint8_t reg = vm->mem_space_bottom[vm->reg_ip + 1];
-    uint16_t *reg_ptr;
+    uint16_t reg_value;
 
-    reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    // If register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-
-    Fy_VM_pushToStack(vm, *reg_ptr);
+    reg_value = Fy_VM_getReg16(vm, reg);
+    Fy_VM_pushToStack(vm, reg_value);
 }
 
 static void Fy_InstructionType_Pop_write(Fy_Generator *generator, Fy_Instruction_OpReg16 *instruction) {
@@ -244,14 +223,9 @@ static void Fy_InstructionType_Pop_write(Fy_Generator *generator, Fy_Instruction
 
 static void Fy_InstructionType_Pop_run(Fy_VM *vm) {
     uint8_t reg = vm->mem_space_bottom[vm->reg_ip + 1];
-    uint16_t *reg_ptr;
+    uint16_t popped = Fy_VM_popFromStack(vm); // FIXME: This should happen only after the register was verified to be valid
 
-    reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
-    // If register not found
-    if (!reg_ptr)
-        Fy_VM_runtimeErrorAdditionalText(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-
-    *reg_ptr = Fy_VM_popFromStack(vm);
+    Fy_VM_setReg16(vm, reg, popped);
 }
 
 /* Type definitions */

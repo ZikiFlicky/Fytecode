@@ -28,6 +28,14 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Bx,
     Fy_TokenType_Cx,
     Fy_TokenType_Dx,
+    Fy_TokenType_Ah,
+    Fy_TokenType_Al,
+    Fy_TokenType_Bh,
+    Fy_TokenType_Bl,
+    Fy_TokenType_Ch,
+    Fy_TokenType_Cl,
+    Fy_TokenType_Dh,
+    Fy_TokenType_Dl,
     Fy_TokenType_Label,
     Fy_TokenType_Const,
     Fy_TokenType_Newline,
@@ -40,10 +48,9 @@ typedef struct Fy_Token {
     size_t length;
 } Fy_Token;
 
-extern Fy_TokenType Fy_reg16Tokens[];
-
-int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser);
 int8_t Fy_Token_toConst8(Fy_Token *token, Fy_Parser *parser);
+int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser);
+Fy_Reg8 Fy_TokenType_toReg8(Fy_TokenType type);
 Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type);
 char *Fy_Token_toLowercaseCStr(Fy_Token *token);
 bool Fy_TokenType_isPossibleArg(Fy_TokenType token_type, Fy_ParserArgType arg_type);

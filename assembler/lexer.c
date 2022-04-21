@@ -139,6 +139,7 @@ bool Fy_Lexer_lexLabel(Fy_Lexer *lexer) {
     do {
         ++lexer->stream;
         ++lexer->token.length;
+        ++lexer->column;
     } while (is_keyword_char(lexer->stream[0]));
 
     return true;

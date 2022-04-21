@@ -255,6 +255,17 @@ static void Fy_InstructionType_MovReg8Reg8_run(Fy_VM *vm) {
     Fy_VM_setReg8(vm, reg, val);
 }
 
+static void Fy_InstructionType_Call_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {
+    Fy_Generator_addWord(generator, instruction->address);
+}
+
+static void Fy_InstructionType_Call_run(Fy_VM *vm) {
+    uint16_t rel_addr = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    // Add 3 because we want to return to the next instruction
+    Fy_VM_pushToStack(vm, vm->reg_ip + 3);
+    Fy_VM_setIpToRelAddress(vm, rel_addr);
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -389,6 +400,13 @@ Fy_InstructionType Fy_InstructionType_MovReg8Reg8 = {
     .run_func = Fy_InstructionType_MovReg8Reg8_run,
     .advance_after_run = true
 };
+Fy_InstructionType Fy_InstructionType_Call = {
+    .opcode = 19,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_Call_write,
+    .run_func = Fy_InstructionType_Call_run,
+    .advance_after_run = false
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -409,5 +427,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_PushReg16,
     &Fy_InstructionType_Pop,
     &Fy_InstructionType_MovReg8Const,
-    &Fy_InstructionType_MovReg8Reg8
+    &Fy_InstructionType_MovReg8Reg8,
+    &Fy_InstructionType_Call
 };

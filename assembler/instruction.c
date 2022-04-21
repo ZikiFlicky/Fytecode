@@ -266,6 +266,11 @@ static void Fy_InstructionType_Call_run(Fy_VM *vm) {
     Fy_VM_setIpToRelAddress(vm, rel_addr);
 }
 
+static void Fy_InstructionType_Ret_run(Fy_VM *vm) {
+    uint16_t addr = Fy_VM_popFromStack(vm);
+    vm->reg_ip = addr;
+}
+
 /* Type definitions */
 Fy_InstructionType Fy_InstructionType_MovReg16Const = {
     .opcode = 0,
@@ -407,6 +412,13 @@ Fy_InstructionType Fy_InstructionType_Call = {
     .run_func = Fy_InstructionType_Call_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_Ret = {
+    .opcode = 20,
+    .additional_size = 0,
+    .write_func = NULL,
+    .run_func = Fy_InstructionType_Ret_run,
+    .advance_after_run = false
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -428,5 +440,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_Pop,
     &Fy_InstructionType_MovReg8Const,
     &Fy_InstructionType_MovReg8Reg8,
-    &Fy_InstructionType_Call
+    &Fy_InstructionType_Call,
+    &Fy_InstructionType_Ret
 };

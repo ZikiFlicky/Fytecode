@@ -22,6 +22,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Jl,
     Fy_TokenType_Jg,
     Fy_TokenType_Call,
+    Fy_TokenType_Ret,
     Fy_TokenType_Push,
     Fy_TokenType_Pop,
     Fy_TokenType_End,

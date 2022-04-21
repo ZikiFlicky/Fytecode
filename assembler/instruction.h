@@ -104,8 +104,9 @@ extern Fy_InstructionType Fy_InstructionType_Pop;
 extern Fy_InstructionType Fy_InstructionType_MovReg8Const;
 extern Fy_InstructionType Fy_InstructionType_MovReg8Reg8;
 extern Fy_InstructionType Fy_InstructionType_Call;
+extern Fy_InstructionType Fy_InstructionType_Ret;
 
-extern Fy_InstructionType *Fy_instructionTypes[20];
+extern Fy_InstructionType *Fy_instructionTypes[21];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

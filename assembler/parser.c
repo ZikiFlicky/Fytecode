@@ -629,6 +629,7 @@ static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
 
 static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     char *label_string;
+    uint16_t start_offset = parser->code_offset;
 
     if (!Fy_Parser_match(parser, Fy_TokenType_Proc))
         return false;
@@ -656,7 +657,7 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
             Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken, NULL);
     }
 
-    Fy_Labelmap_addEntry(&parser->labelmap, label_string, parser->code_offset);
+    Fy_Labelmap_addEntry(&parser->labelmap, label_string, start_offset);
 
     return true;
 }

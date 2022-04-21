@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include "generator.h"
 #include "labelmap.h"
+#include "ast.h"
 
 #include <stddef.h>
 #include <inttypes.h>
@@ -11,7 +12,8 @@
 typedef struct Fy_ParserState Fy_ParserState;
 typedef enum Fy_ParserError Fy_ParserError;
 typedef struct Fy_Parser Fy_Parser;
-typedef enum Fy_ParserArgType Fy_ParserArgType;
+typedef enum Fy_InstructionArgType Fy_InstructionArgType;
+typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
@@ -48,11 +50,23 @@ struct Fy_Parser {
 };
 
 
-enum Fy_ParserArgType {
-    Fy_ParserArgType_Reg16 = 1,
-    Fy_ParserArgType_Reg8,
-    Fy_ParserArgType_Constant,
-    Fy_ParserArgType_Label
+enum Fy_InstructionArgType {
+    Fy_InstructionArgType_Reg16 = 1,
+    Fy_InstructionArgType_Reg8,
+    Fy_InstructionArgType_Constant,
+    Fy_InstructionArgType_Label,
+    Fy_InstructionArgType_Memory
+};
+
+struct Fy_InstructionArg {
+    Fy_InstructionArgType type;
+    union {
+        uint8_t as_reg16;
+        uint8_t as_reg8;
+        uint16_t as_const;
+        char *as_label;
+        Fy_InlineValue as_memory;
+    };
 };
 
 enum Fy_ParserParseRuleType {
@@ -64,15 +78,12 @@ enum Fy_ParserParseRuleType {
 struct Fy_ParserParseRule {
     Fy_ParserParseRuleType type;
     Fy_TokenType start_token; /* Type of token to be expected at start */
-    struct {
-        Fy_ParserArgType type;
-        Fy_TokenType *possible_tokens; /* All of the possible tokens to be found after */
-    } arg1, arg2;
+    Fy_InstructionArgType arg1_type, arg2_type;
     /* A function that always returns a valid ParserInstruction based on the given token */
     union {
         Fy_Instruction *(*func_no_params)(Fy_Parser*);
-        Fy_Instruction *(*func_one_param)(Fy_Parser*, Fy_Token*);
-        Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_Token*, Fy_Token*);
+        Fy_Instruction *(*func_one_param)(Fy_Parser*, Fy_InstructionArg*);
+        Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_InstructionArg*, Fy_InstructionArg*);
     };
     /* Process instruction after full file parsing */
     Fy_InstructionProcessFunc func_process;

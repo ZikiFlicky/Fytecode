@@ -14,6 +14,7 @@
 
 #include "../assembler/token.h"
 #include "../assembler/lexer.h"
+#include "../assembler/ast.h"
 #include "../assembler/parser.h"
 #include "../assembler/generator.h"
 #include "../assembler/instruction.h"

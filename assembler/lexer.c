@@ -192,6 +192,22 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     }
 
+    if (lexer->stream[0] == '[') {
+        lexer->token.type = Fy_TokenType_LeftBracket;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        return true;
+    }
+
+    if (lexer->stream[0] == ']') {
+        lexer->token.type = Fy_TokenType_RightBracket;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        return true;
+    }
+
     if (Fy_Lexer_lexNewline(lexer))
         return true;
 

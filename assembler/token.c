@@ -18,19 +18,22 @@ Fy_TokenType Fy_reg8Tokens[] = {
     Fy_TokenType_Dl
 };
 
-Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
-    switch (type) {
-    case Fy_TokenType_Ax:
-        return Fy_Reg16_Ax;
-    case Fy_TokenType_Bx:
-        return Fy_Reg16_Bx;
-    case Fy_TokenType_Cx:
-        return Fy_Reg16_Cx;
-    case Fy_TokenType_Dx:
-        return Fy_Reg16_Dx;
-    default:
-        FY_UNREACHABLE();
+bool Fy_TokenType_isReg8(Fy_TokenType type) {
+    for (size_t i = 0; i < sizeof(Fy_reg8Tokens) / sizeof(Fy_TokenType); ++i) {
+        if (type == Fy_reg8Tokens[i]) {
+            return true;
+        }
     }
+    return false;
+}
+
+bool Fy_TokenType_isReg16(Fy_TokenType type) {
+    for (size_t i = 0; i < sizeof(Fy_reg16Tokens) / sizeof(Fy_TokenType); ++i) {
+        if (type == Fy_reg16Tokens[i]) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Fy_Reg8 Fy_TokenType_toReg8(Fy_TokenType type) {
@@ -51,6 +54,21 @@ Fy_Reg8 Fy_TokenType_toReg8(Fy_TokenType type) {
         return Fy_Reg8_Dh;
     case Fy_TokenType_Dl:
         return Fy_Reg8_Dl;
+    default:
+        FY_UNREACHABLE();
+    }
+}
+
+Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
+    switch (type) {
+    case Fy_TokenType_Ax:
+        return Fy_Reg16_Ax;
+    case Fy_TokenType_Bx:
+        return Fy_Reg16_Bx;
+    case Fy_TokenType_Cx:
+        return Fy_Reg16_Cx;
+    case Fy_TokenType_Dx:
+        return Fy_Reg16_Dx;
     default:
         FY_UNREACHABLE();
     }
@@ -111,38 +129,6 @@ int16_t Fy_Token_toConst16(Fy_Token *token, Fy_Parser *parser) {
 /* Convert Fy_Token with type Fy_TokenType_Const to 8-bit integer */
 int8_t Fy_Token_toConst8(Fy_Token *token, Fy_Parser *parser) {
     return (int8_t)Fy_Token_toConst(token, 8, parser);
-}
-
-/* Returns whether the token is of type `arg_type` given */
-bool Fy_TokenType_isPossibleArg(Fy_TokenType token_type, Fy_ParserArgType arg_type) {
-    switch (arg_type) {
-    case Fy_ParserArgType_Reg16:
-        for (size_t i = 0; i < sizeof(Fy_reg16Tokens) / sizeof(Fy_TokenType); ++i) {
-            if (token_type == Fy_reg16Tokens[i]) {
-                return true;
-            }
-        }
-        return false;
-    case Fy_ParserArgType_Constant:
-        if (token_type == Fy_TokenType_Const)
-            return true;
-        else
-            return false;
-    case Fy_ParserArgType_Reg8:
-        for (size_t i = 0; i < sizeof(Fy_reg8Tokens) / sizeof(Fy_TokenType); ++i) {
-            if (token_type == Fy_reg8Tokens[i]) {
-                return true;
-            }
-        }
-        return false;
-    case Fy_ParserArgType_Label:
-        if (token_type == Fy_TokenType_Label)
-            return true;
-        else
-            return false;
-    default:
-        FY_UNREACHABLE();
-    }
 }
 
 char *Fy_Token_toLowercaseCStr(Fy_Token *token) {

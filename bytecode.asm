@@ -13,5 +13,8 @@ proc func
     nop
     nop
     nop
+    jmp somehting
+    ret 22
+somehting:
     ret 2
 endp func

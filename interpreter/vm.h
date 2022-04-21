@@ -38,7 +38,10 @@ struct Fy_VM {
 };
 
 void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM *out);
+uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address);
+uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address);
 uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg);
+void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value);
 void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value);
 uint8_t Fy_VM_getReg8(Fy_VM *vm, uint8_t reg);
 void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value);

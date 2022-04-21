@@ -42,6 +42,21 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     exit(1);
 }
 
+uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address) {
+    // assert(address <= vm->mem_size - 1);
+    return vm->mem_space_bottom[address];
+}
+
+uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address) {
+    // assert(address <= vm->mem_size - 2);
+    // Little endian
+    return vm->mem_space_bottom[address] + (vm->mem_space_bottom[address + 1] << 8);
+}
+
+void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
+    *(uint16_t*)&vm->mem_space_bottom[address] = value;
+}
+
 static uint8_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
     uint8_t *reg_ptr;
 
@@ -121,15 +136,14 @@ void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
 }
 
 static void Fy_VM_runInstruction(Fy_VM *vm) {
-    uint8_t opcode = vm->mem_space_bottom[vm->reg_ip];
+    uint8_t opcode = Fy_VM_getMem8(vm, vm->reg_ip);
     for (size_t i = 0; i < sizeof(Fy_instructionTypes) / sizeof(Fy_InstructionType*); ++i) {
         Fy_InstructionType *type = Fy_instructionTypes[i];
         if (opcode == type->opcode) {
+            uint16_t address = vm->reg_ip + 1;
+            vm->reg_ip += 1 + type->additional_size;
             if (type->run_func)
-                type->run_func(vm);
-            // If we are told to advance after running the instruction (disabled in jumps)
-            if (type->advance_after_run)
-                vm->reg_ip += 1 + type->additional_size;
+                type->run_func(vm, address);
             return;
         }
     }
@@ -179,7 +193,7 @@ void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value) {
 
     vm->reg_sp -= 2;
 
-    *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp] = value;
+    Fy_VM_setMem16(vm, vm->reg_sp, value);
 }
 
 uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
@@ -189,7 +203,7 @@ uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
     if (vm->reg_sp >= vm->stack_offset)
         FY_UNREACHABLE();
 
-    value = *(uint16_t*)&vm->mem_space_bottom[vm->reg_sp];
+    value = Fy_VM_getMem16(vm, vm->reg_sp);
 
     vm->reg_sp += 2;
 

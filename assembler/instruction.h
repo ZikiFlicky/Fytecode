@@ -23,7 +23,7 @@ typedef struct Fy_Instruction_OpLabel Fy_Instruction_OpLabel;
 typedef struct Fy_Instruction_OpConst16 Fy_Instruction_OpConst16;
 typedef struct Fy_Instruction_OpReg16 Fy_Instruction_OpReg16;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
-typedef void (*Fy_InstructionRunFunc)(Fy_VM *vm);
+typedef void (*Fy_InstructionRunFunc)(Fy_VM *vm, uint16_t);
 
 /* Stores information about an instruction */
 struct Fy_InstructionType {
@@ -32,7 +32,6 @@ struct Fy_InstructionType {
     Fy_InstructionWriteFunc write_func;
     /* Parses and runs instruction from memory pointer on virtual machine */
     Fy_InstructionRunFunc run_func;
-    bool advance_after_run;
 };
 
 /* Base instruction */

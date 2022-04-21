@@ -618,6 +618,9 @@ static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     if (!Fy_Parser_match(parser, Fy_TokenType_Colon))
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
 
+    // Advance newline if there is
+    Fy_Parser_expectNewline(parser, false);
+
     label_string = Fy_Token_toLowercaseCStr(&label_token);
     Fy_Labelmap_addEntry(&parser->labelmap, label_string, parser->code_offset);
 

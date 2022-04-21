@@ -347,6 +347,15 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     Fy_Labelmap_Init(&out->labelmap);
 }
 
+void Fy_Parser_Destruct(Fy_Parser *parser) {
+    for (size_t i = 0; i < parser->amount_used; ++i) {
+        Fy_Instruction *instruction = parser->instructions[i];
+        free(instruction);
+    }
+    free(parser->instructions);
+    Fy_Labelmap_Destruct(&parser->labelmap);
+}
+
 static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     out_state->stream = parser->lexer->stream;
     out_state->line = parser->lexer->line;
@@ -391,6 +400,8 @@ void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, 
     for (size_t i = 1; i < parser->lexer->column; ++i)
         putchar(' ');
     printf("^\n");
+
+    Fy_Parser_Destruct(parser);
     exit(1);
 }
 
@@ -570,6 +581,7 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
         Fy_Parser_error(parser, Fy_ParserError_LabelNotFound, "%s", instruction->name);
     }
     instruction->address = address;
+    free(instruction->name);
 }
 
 /* General parsing functions */
@@ -739,7 +751,7 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
             endp_label_string = Fy_Token_toLowercaseCStr(&parser->token);
             if (strcmp(label_string, endp_label_string) != 0)
                 Fy_Parser_error(parser, Fy_ParserError_UnexpectedLabel, "Expected '%s'", label_string);
-
+            free(endp_label_string);
             Fy_Parser_expectNewline(parser, true);
             break;
         }
@@ -859,6 +871,7 @@ void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename) {
 
     Fy_Parser_generateBytecode(parser, &generator);
     fwrite(generator.output, 1, generator.idx, file);
+    Fy_Generator_Deallocate(&generator);
 
     fclose(file);
 }

@@ -23,7 +23,7 @@ typedef struct Fy_Instruction_OpLabel Fy_Instruction_OpLabel;
 typedef struct Fy_Instruction_OpConst16 Fy_Instruction_OpConst16;
 typedef struct Fy_Instruction_OpReg16 Fy_Instruction_OpReg16;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
-typedef void (*Fy_InstructionRunFunc)(Fy_VM *vm, uint16_t);
+typedef void (*Fy_InstructionRunFunc)(Fy_VM*, uint16_t);
 
 /* Stores information about an instruction */
 struct Fy_InstructionType {

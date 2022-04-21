@@ -8,9 +8,25 @@ static Fy_BucketNode *Fy_BucketNode_New(char *name, uint16_t address) {
     return bucket;
 }
 
+static void Fy_BucketNode_Delete(Fy_BucketNode *node) {
+    free(node->name);
+    free(node);
+}
+
 void Fy_Labelmap_Init(Fy_Labelmap *out) {
     for (size_t i = 0; i < FY_LABELMAP_AMOUNT_BUCKETS; ++i)
         out->buckets[i] = NULL;
+}
+
+void Fy_Labelmap_Destruct(Fy_Labelmap *map) {
+    for (size_t i = 0; i < FY_LABELMAP_AMOUNT_BUCKETS; ++i) {
+        Fy_BucketNode *node = map->buckets[i];
+        while (node) {
+            Fy_BucketNode *next = node->next;
+            Fy_BucketNode_Delete(node);
+            node = next;
+        }
+    }
 }
 
 static size_t Fy_HashLabelmapKey(char *key) {

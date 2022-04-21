@@ -12,6 +12,7 @@ typedef struct Fy_Generator {
 } Fy_Generator;
 
 void Fy_Generator_Init(Fy_Generator *out);
+void Fy_Generator_Deallocate(Fy_Generator *generator);
 void Fy_Generator_addByte(Fy_Generator *generator, uint8_t b);
 void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w);
 void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instuction);

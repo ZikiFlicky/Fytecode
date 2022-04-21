@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
 
         Fy_Parser_generateToFile(&parser, argv[3]);
 
+        Fy_Parser_Destruct(&parser);
+
         free(stream);
     } else if (strcmp(argv[1], "-r") == 0) {
         uint8_t *stream;

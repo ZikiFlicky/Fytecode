@@ -6,6 +6,11 @@ void Fy_Generator_Init(Fy_Generator *out) {
     out->output = NULL;
 }
 
+void Fy_Generator_Deallocate(Fy_Generator *generator) {
+    if (generator->output)
+        free(generator->output);
+}
+
 /* Make enough space for a string if needed, or do nothing */
 void Fy_Generator_makeSpace(Fy_Generator *generator, size_t length) {
     if (generator->allocated == 0) {

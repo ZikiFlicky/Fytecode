@@ -20,6 +20,7 @@ struct Fy_Labelmap {
 };
 
 void Fy_Labelmap_Init(Fy_Labelmap *out);
+void Fy_Labelmap_Destruct(Fy_Labelmap *map);
 bool Fy_Labelmap_addEntry(Fy_Labelmap *map, char *name, uint16_t address);
 bool Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name, uint16_t *address_out);
 

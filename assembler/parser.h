@@ -81,6 +81,7 @@ struct Fy_ParserParseRule {
 extern Fy_ParserParseRule *Fy_parserRules[];
 
 void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out);
+void Fy_Parser_Destruct(Fy_Parser *parser);
 void Fy_Parser_parseAll(Fy_Parser *parser);
 void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, ...);
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);

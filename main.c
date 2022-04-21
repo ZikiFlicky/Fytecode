@@ -20,6 +20,7 @@ static char *Fy_LoadTextFile(char *name) {
     stream = malloc((length + 1) * sizeof(char));
     fread(stream, sizeof(char), length, file);
     fclose(file);
+    stream[length] = '\0';
 
     return stream;
 }

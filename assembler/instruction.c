@@ -196,7 +196,7 @@ static void Fy_InstructionType_Jg_run(Fy_VM *vm) {
         vm->reg_ip += 1 + 2; // Advance otherwise
 }
 
-static void Fy_InstructionType_PushConst_write(Fy_Generator *generator, Fy_Instruction_PushConst *instruction) {
+static void Fy_InstructionType_PushConst_write(Fy_Generator *generator, Fy_Instruction_OpConst16 *instruction) {
     Fy_Generator_addWord(generator, instruction->value);
 }
 
@@ -269,6 +269,18 @@ static void Fy_InstructionType_Call_run(Fy_VM *vm) {
 static void Fy_InstructionType_Ret_run(Fy_VM *vm) {
     uint16_t addr = Fy_VM_popFromStack(vm);
     vm->reg_ip = addr;
+}
+
+static void Fy_InstructionType_RetConst16_write(Fy_Generator *generator, Fy_Instruction_OpConst16 *instruction) {
+    Fy_Generator_addWord(generator, instruction->value);
+}
+
+static void Fy_InstructionType_RetConst16_run(Fy_VM *vm) {
+    uint16_t addr = Fy_VM_popFromStack(vm);
+    uint16_t to_change = Fy_MemoryGet16(&vm->mem_space_bottom[vm->reg_ip + 1]);
+    vm->reg_ip = addr;
+    // FIXME: Check if this overflows the stack
+    vm->reg_sp += to_change;
 }
 
 /* Type definitions */
@@ -419,6 +431,13 @@ Fy_InstructionType Fy_InstructionType_Ret = {
     .run_func = Fy_InstructionType_Ret_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_RetConst16 = {
+    .opcode = 21,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_RetConst16_write,
+    .run_func = Fy_InstructionType_RetConst16_run,
+    .advance_after_run = false
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg16Const,
@@ -441,5 +460,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg8Const,
     &Fy_InstructionType_MovReg8Reg8,
     &Fy_InstructionType_Call,
-    &Fy_InstructionType_Ret
+    &Fy_InstructionType_Ret,
+    &Fy_InstructionType_RetConst16
 };

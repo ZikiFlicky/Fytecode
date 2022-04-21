@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
 
         Fy_VM_Init(stream, length, 0x100, &vm);
         Fy_VM_runAll(&vm);
+        Fy_VM_Destruct(&vm);
 
         free(stream);
     } else if (strcmp(argv[1], "-h")) {

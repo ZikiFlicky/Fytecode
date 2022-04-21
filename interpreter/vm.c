@@ -28,6 +28,10 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM 
     out->flags = 0;
 }
 
+void Fy_VM_Destruct(Fy_VM *vm) {
+    free(vm->mem_space_bottom);
+}
+
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     (void)vm;
     printf("RuntimeError: %s", Fy_RuntimeError_toString(err));
@@ -39,6 +43,7 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
         va_end(va);
     }
     printf("\n");
+    Fy_VM_Destruct(vm);
     exit(1);
 }
 

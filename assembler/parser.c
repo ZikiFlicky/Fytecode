@@ -282,11 +282,13 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
 }
 
 void Fy_Parser_Destruct(Fy_Parser *parser) {
-    for (size_t i = 0; i < parser->amount_used; ++i) {
-        Fy_Instruction *instruction = parser->instructions[i];
-        free(instruction);
+    if (parser->amount_allocated > 0) {
+        for (size_t i = 0; i < parser->amount_used; ++i) {
+            Fy_Instruction *instruction = parser->instructions[i];
+            free(instruction);
+        }
+        free(parser->instructions);
     }
-    free(parser->instructions);
     Fy_Labelmap_Destruct(&parser->labelmap);
 }
 

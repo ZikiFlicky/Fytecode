@@ -30,7 +30,7 @@ void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM 
 
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     (void)vm;
-    printf("RuntimeError: %s\n", Fy_RuntimeError_toString(err));
+    printf("RuntimeError: %s", Fy_RuntimeError_toString(err));
     if (additional) {
         va_list va;
         printf(": ");

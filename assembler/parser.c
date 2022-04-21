@@ -530,19 +530,21 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
 
 /* General parsing functions */
 
-void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
+static bool Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
     Fy_ParserState state;
     Fy_Parser_dumpState(parser, &state);
 
     if (!Fy_Parser_lex(parser))
-        return; // Eof = Eol for us
+        return true; // Eof = Eol for us
     if (parser->token.type == Fy_TokenType_Newline)
-        return;
+        return true;
 
     // Load last state if we didn't get a newline
     Fy_Parser_loadState(parser, &state);
     if (do_error)
         Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline, NULL);
+
+    return false;
 }
 
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
@@ -568,7 +570,12 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 
         // If we take no params
         if (rule->type == Fy_ParserParseRuleType_NoParams) {
-            Fy_Instruction *instruction = rule->func_no_params(parser);
+            Fy_Instruction *instruction;
+            if (!Fy_Parser_expectNewline(parser, false)) {
+                Fy_Parser_loadState(parser, &backtrack);
+                continue;
+            }
+            instruction = rule->func_no_params(parser);
             instruction->parse_rule = rule;
             instruction->start_state = start_backtrack;
             return instruction;
@@ -600,7 +607,12 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         token_arg1 = parser->token;
 
         if (rule->type == Fy_ParserParseRuleType_OneParam) {
-            Fy_Instruction *instruction = rule->func_one_param(parser, &token_arg1);
+            Fy_Instruction *instruction;
+            if (!Fy_Parser_expectNewline(parser, false)) {
+                Fy_Parser_loadState(parser, &backtrack);
+                continue;
+            }
+            instruction = rule->func_one_param(parser, &token_arg1);
             instruction->parse_rule = rule;
             instruction->start_state = start_backtrack;
             return instruction;
@@ -619,7 +631,12 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         token_arg2 = parser->token;
 
         if (rule->type == Fy_ParserParseRuleType_TwoParams) {
-            Fy_Instruction *instruction = rule->func_two_params(parser, &token_arg1, &token_arg2);
+            Fy_Instruction *instruction;
+            if (!Fy_Parser_expectNewline(parser, false)) {
+                Fy_Parser_loadState(parser, &backtrack);
+                continue;
+            }
+            instruction = rule->func_two_params(parser, &token_arg1, &token_arg2);
             instruction->parse_rule = rule;
             instruction->start_state = start_backtrack;
             return instruction;
@@ -695,13 +712,13 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
 static bool Fy_Parser_parseLine(Fy_Parser *parser) {
     Fy_Instruction *instruction;
 
+    Fy_Parser_expectNewline(parser, false);
+
     if (Fy_Parser_parseLabel(parser))
         return true;
 
     if (Fy_Parser_parseProc(parser))
         return true;
-
-    Fy_Parser_expectNewline(parser, false);
 
     if ((instruction = Fy_Parser_parseInstruction(parser))) {
         if (parser->amount_allocated == 0)
@@ -712,7 +729,6 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
         parser->instructions[parser->amount_used++] = instruction;
         // Update offset
         parser->code_offset += 1 + instruction->type->additional_size;
-        Fy_Parser_expectNewline(parser, true);
         return true;
     }
 

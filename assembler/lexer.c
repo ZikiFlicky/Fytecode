@@ -195,6 +195,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (Fy_Lexer_lexNewline(lexer))
         return true;
 
+    if (Fy_Lexer_matchKeyword(lexer, "nop", Fy_TokenType_Nop))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "jmp", Fy_TokenType_Jmp))

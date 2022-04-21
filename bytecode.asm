@@ -10,5 +10,8 @@ do_end:
 
 proc func
     ; debug
+    nop
+    nop
+    nop
     ret 2
 endp func

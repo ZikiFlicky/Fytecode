@@ -125,8 +125,8 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
     for (size_t i = 0; i < sizeof(Fy_instructionTypes) / sizeof(Fy_InstructionType*); ++i) {
         Fy_InstructionType *type = Fy_instructionTypes[i];
         if (opcode == type->opcode) {
-            assert(type->run_func);
-            type->run_func(vm);
+            if (type->run_func)
+                type->run_func(vm);
             // If we are told to advance after running the instruction (disabled in jumps)
             if (type->advance_after_run)
                 vm->reg_ip += 1 + type->additional_size;

@@ -12,7 +12,8 @@ typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_ParserArgType Fy_ParserArgType;
 
 typedef enum Fy_TokenType {
-    Fy_TokenType_Mov = 1,
+    Fy_TokenType_Nop = 1,
+    Fy_TokenType_Mov,
     Fy_TokenType_Add,
     Fy_TokenType_Sub,
     Fy_TokenType_Cmp,

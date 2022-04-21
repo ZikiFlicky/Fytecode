@@ -84,9 +84,9 @@ struct Fy_Instruction_OpReg16 {
 };
 
 /* Instruction types */
+extern Fy_InstructionType Fy_InstructionType_Nop;
 extern Fy_InstructionType Fy_InstructionType_MovReg16Const;
 extern Fy_InstructionType Fy_InstructionType_MovReg16Reg16;
-extern Fy_InstructionType Fy_InstructionType_Debug;
 extern Fy_InstructionType Fy_InstructionType_EndProgram;
 extern Fy_InstructionType Fy_InstructionType_AddReg16Const;
 extern Fy_InstructionType Fy_InstructionType_AddReg16Reg16;
@@ -106,8 +106,9 @@ extern Fy_InstructionType Fy_InstructionType_MovReg8Reg8;
 extern Fy_InstructionType Fy_InstructionType_Call;
 extern Fy_InstructionType Fy_InstructionType_Ret;
 extern Fy_InstructionType Fy_InstructionType_RetConst16;
+extern Fy_InstructionType Fy_InstructionType_Debug;
 
-extern Fy_InstructionType *Fy_instructionTypes[22];
+extern Fy_InstructionType *Fy_instructionTypes[23];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

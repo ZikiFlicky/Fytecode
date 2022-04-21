@@ -284,25 +284,25 @@ static void Fy_InstructionType_RetConst16_run(Fy_VM *vm) {
 }
 
 /* Type definitions */
-Fy_InstructionType Fy_InstructionType_MovReg16Const = {
+Fy_InstructionType Fy_InstructionType_Nop = {
     .opcode = 0,
+    .additional_size = 0,
+    .write_func = NULL,
+    .run_func = NULL,
+    .advance_after_run = true
+};
+Fy_InstructionType Fy_InstructionType_MovReg16Const = {
+    .opcode = 1,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Const_write,
     .run_func = Fy_InstructionType_MovReg16Const_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_MovReg16Reg16 = {
-    .opcode = 1,
+    .opcode = 2,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Reg16_write,
     .run_func = Fy_InstructionType_MovReg16Reg16_run,
-    .advance_after_run = true
-};
-Fy_InstructionType Fy_InstructionType_Debug = {
-    .opcode = 2,
-    .additional_size = 0,
-    .write_func = NULL,
-    .run_func = Fy_InstructionType_Debug_run,
     .advance_after_run = true
 };
 Fy_InstructionType Fy_InstructionType_EndProgram = {
@@ -438,11 +438,18 @@ Fy_InstructionType Fy_InstructionType_RetConst16 = {
     .run_func = Fy_InstructionType_RetConst16_run,
     .advance_after_run = false
 };
+Fy_InstructionType Fy_InstructionType_Debug = {
+    .opcode = 22,
+    .additional_size = 0,
+    .write_func = NULL,
+    .run_func = Fy_InstructionType_Debug_run,
+    .advance_after_run = true
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
+    &Fy_InstructionType_Nop,
     &Fy_InstructionType_MovReg16Const,
     &Fy_InstructionType_MovReg16Reg16,
-    &Fy_InstructionType_Debug,
     &Fy_InstructionType_EndProgram,
     &Fy_InstructionType_AddReg16Const,
     &Fy_InstructionType_AddReg16Reg16,
@@ -461,5 +468,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_MovReg8Reg8,
     &Fy_InstructionType_Call,
     &Fy_InstructionType_Ret,
-    &Fy_InstructionType_RetConst16
+    &Fy_InstructionType_RetConst16,
+    &Fy_InstructionType_Debug
 };

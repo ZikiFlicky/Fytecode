@@ -35,10 +35,10 @@ static void Fy_InstructionType_MovReg16Reg16_run(Fy_VM *vm, uint16_t address) {
 static void Fy_InstructionType_Debug_run(Fy_VM *vm, uint16_t address) {
     (void)address;
     printf("DEBUG INFO:\n");
-    printf("AX: %.2X %.2X\n", vm->reg_ax[0], vm->reg_ax[1]);
-    printf("BX: %.2X %.2X\n", vm->reg_bx[0], vm->reg_bx[1]);
-    printf("CX: %.2X %.2X\n", vm->reg_cx[0], vm->reg_cx[1]);
-    printf("DX: %.2X %.2X\n", vm->reg_dx[0], vm->reg_dx[1]);
+    printf("AX: (h)%.2X (l)%.2X\n", vm->reg_ax[1], vm->reg_ax[0]);
+    printf("BX: (h)%.2X (l)%.2X\n", vm->reg_bx[1], vm->reg_bx[0]);
+    printf("CX: (h)%.2X (l)%.2X\n", vm->reg_cx[1], vm->reg_cx[0]);
+    printf("DX: (h)%.2X (l)%.2X\n", vm->reg_dx[1], vm->reg_dx[0]);
     printf("IP: %.4X\n", vm->reg_ip);
     printf("SP: %.4X\n", vm->reg_sp);
     printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);

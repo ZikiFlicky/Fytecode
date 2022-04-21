@@ -2,6 +2,7 @@ start: ; This is currently not needed
     push 0xF3
     push 3
     call func
+    debugstack
     pop ax
     debug ; expects AX: F3 00
 do_end:

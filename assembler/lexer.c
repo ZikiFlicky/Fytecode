@@ -199,6 +199,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "debugstack", Fy_TokenType_DebugStack))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "jmp", Fy_TokenType_Jmp))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "je", Fy_TokenType_Je))

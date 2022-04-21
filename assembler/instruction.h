@@ -106,8 +106,9 @@ extern Fy_InstructionType Fy_InstructionType_Call;
 extern Fy_InstructionType Fy_InstructionType_Ret;
 extern Fy_InstructionType Fy_InstructionType_RetConst16;
 extern Fy_InstructionType Fy_InstructionType_Debug;
+extern Fy_InstructionType Fy_InstructionType_DebugStack;
 
-extern Fy_InstructionType *Fy_instructionTypes[23];
+extern Fy_InstructionType *Fy_instructionTypes[24];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

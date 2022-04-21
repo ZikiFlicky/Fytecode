@@ -45,6 +45,23 @@ static void Fy_InstructionType_Debug_run(Fy_VM *vm, uint16_t address) {
     printf("FLAG_SIGN: %d\n", vm->flags & FY_FLAGS_SIGN ? 1 : 0);
 }
 
+static void Fy_InstructionType_DebugStack_run(Fy_VM *vm, uint16_t address) {
+    (void)address;
+    // if in range
+    if (vm->reg_sp <= vm->stack_offset && vm->reg_sp >= (vm->stack_offset - vm->stack_size)) {
+        printf("STACK INFO:\n");
+        printf("%d items, %d bytes\n", (vm->stack_offset - vm->reg_sp) / 2, vm->stack_offset - vm->reg_sp);
+
+        for (uint16_t addr = vm->stack_offset; addr > vm->reg_sp;) {
+            addr -= 2;
+            printf("%.4x: %.4X\n", addr, Fy_VM_getMem16(vm, addr));
+        }
+    } else {
+        printf("NO STACK INFO\n");
+    }
+
+}
+
 static void Fy_InstructionType_EndProgram_run(Fy_VM *vm, uint16_t address) {
     (void)address;
     vm->running = false;
@@ -403,6 +420,12 @@ Fy_InstructionType Fy_InstructionType_Debug = {
     .write_func = NULL,
     .run_func = Fy_InstructionType_Debug_run
 };
+Fy_InstructionType Fy_InstructionType_DebugStack = {
+    .opcode = 23,
+    .additional_size = 0,
+    .write_func = NULL,
+    .run_func = Fy_InstructionType_DebugStack_run
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_Nop,
@@ -427,5 +450,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_Call,
     &Fy_InstructionType_Ret,
     &Fy_InstructionType_RetConst16,
-    &Fy_InstructionType_Debug
+    &Fy_InstructionType_Debug,
+    &Fy_InstructionType_DebugStack
 };

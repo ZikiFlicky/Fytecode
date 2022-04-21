@@ -7,6 +7,7 @@ static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_Token *token_ar
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
+static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
 static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_Token *token_arg1, Fy_Token *token_arg2);
@@ -96,6 +97,12 @@ Fy_ParserParseRule Fy_parseRuleDebug = {
     .type = Fy_ParserParseRuleType_NoParams,
     .start_token = Fy_TokenType_Debug,
     .func_no_params = Fy_ParseDebug,
+    .func_process = NULL
+};
+Fy_ParserParseRule Fy_parseRuleDebugStack = {
+    .type = Fy_ParserParseRuleType_NoParams,
+    .start_token = Fy_TokenType_DebugStack,
+    .func_no_params = Fy_ParseDebugStack,
     .func_process = NULL
 };
 Fy_ParserParseRule Fy_parseRuleEnd = {
@@ -290,6 +297,7 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleCmpReg16Const,
     &Fy_parseRuleCmpReg16Reg16,
     &Fy_parseRuleDebug,
+    &Fy_parseRuleDebugStack,
     &Fy_parseRuleEnd,
     &Fy_parseRuleJmp,
     &Fy_parseRuleJe,
@@ -479,6 +487,10 @@ static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_Token *token_
 
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
     return Fy_ParseOpNoParams(parser, &Fy_InstructionType_Debug);
+}
+
+static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser) {
+    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_DebugStack);
 }
 
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {

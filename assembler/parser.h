@@ -30,7 +30,8 @@ enum Fy_ParserError {
     Fy_ParserError_InvalidInstruction,
     Fy_ParserError_SyntaxError,
     Fy_ParserError_CannotOpenFileForWrite,
-    Fy_ParserError_LabelNotFound
+    Fy_ParserError_LabelNotFound,
+    Fy_ParserError_UnexpectedLabel
 };
 
 struct Fy_Parser {

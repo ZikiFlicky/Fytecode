@@ -24,6 +24,9 @@ static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_Token *token_arg);
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 
+/* Function to parse anything found in text */
+static bool Fy_Parser_parseLine(Fy_Parser *parser);
+
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleMovReg8Const = {
     .type = Fy_ParserParseRuleType_TwoParams,
@@ -261,7 +264,7 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRulePop
 };
 
-char *Fy_ParserError_toString(Fy_ParserError error) {
+static char *Fy_ParserError_toString(Fy_ParserError error) {
     switch (error) {
     case Fy_ParserError_UnexpectedToken:
         return "Unexpected token";
@@ -281,6 +284,8 @@ char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Cannot open file for writing";
     case Fy_ParserError_LabelNotFound:
         return "Label not found";
+    case Fy_ParserError_UnexpectedLabel:
+        return "Unexpected label";
     default:
         FY_UNREACHABLE();
     }
@@ -295,19 +300,19 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     Fy_Labelmap_Init(&out->labelmap);
 }
 
-void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
+static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     out_state->stream = parser->lexer->stream;
     out_state->line = parser->lexer->line;
     out_state->column = parser->lexer->column;
 }
 
-void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
+static void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
     parser->lexer->stream = state->stream;
     parser->lexer->line = state->line;
     parser->lexer->column = state->column;
 }
 
-bool Fy_Parser_lex(Fy_Parser *parser) {
+static bool Fy_Parser_lex(Fy_Parser *parser) {
     if (Fy_Lexer_lex(parser->lexer)) {
         parser->token = parser->lexer->token;
         return true;
@@ -343,7 +348,7 @@ void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, 
 }
 
 /* Returns a boolean specifying whether a token of the given type was found. */
-bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
+static bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
     Fy_ParserState backtrack;
     Fy_Parser_dumpState(parser, &backtrack);
 
@@ -494,6 +499,23 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
     instruction->address = address;
 }
 
+/* General parsing functions */
+
+void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
+    Fy_ParserState state;
+    Fy_Parser_dumpState(parser, &state);
+
+    if (!Fy_Parser_lex(parser))
+        return; // Eof = Eol for us
+    if (parser->token.type == Fy_TokenType_Newline)
+        return;
+
+    // Load last state if we didn't get a newline
+    Fy_Parser_loadState(parser, &state);
+    if (do_error)
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline, NULL);
+}
+
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack, backtrack;
     Fy_TokenType start_token;
@@ -585,7 +607,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 }
 
 /* Returns whether we parsed a label */
-bool Fy_Parser_parseLabel(Fy_Parser *parser) {
+static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     Fy_Token label_token;
     char *label_string;
 
@@ -602,55 +624,84 @@ bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     return true;
 }
 
-void Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
-    Fy_ParserState state;
-    Fy_Parser_dumpState(parser, &state);
+static bool Fy_Parser_parseProc(Fy_Parser *parser) {
+    char *label_string;
 
-    if (!Fy_Parser_lex(parser))
-        return; // Eof = Eol for us
-    if (parser->token.type == Fy_TokenType_Newline)
-        return;
+    if (!Fy_Parser_match(parser, Fy_TokenType_Proc))
+        return false;
 
-    // Load last state if we didn't get a newline
-    Fy_Parser_loadState(parser, &state);
-    if (do_error)
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedNewline, NULL);
+    printf("PROC\n");
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+        Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
+
+    label_string = Fy_Token_toLowercaseCStr(&parser->token);
+
+    Fy_Parser_expectNewline(parser, true);
+
+    for (;;) {
+        if (Fy_Parser_match(parser, Fy_TokenType_Endp)) {
+            char *endp_label_string;
+            if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+                Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
+            endp_label_string = Fy_Token_toLowercaseCStr(&parser->token);
+            if (strcmp(label_string, endp_label_string) != 0)
+                Fy_Parser_error(parser, Fy_ParserError_UnexpectedLabel, "Expected '%s'", label_string);
+
+            Fy_Parser_expectNewline(parser, true);
+            break;
+        }
+        if (!Fy_Parser_parseLine(parser))
+            Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken, NULL);
+    }
+
+    Fy_Labelmap_addEntry(&parser->labelmap, label_string, parser->code_offset);
+
+    return true;
+}
+
+/* Parse label, procedure or instruction */
+static bool Fy_Parser_parseLine(Fy_Parser *parser) {
+    Fy_Instruction *instruction;
+
+    if (Fy_Parser_parseLabel(parser))
+        return true;
+
+    if (Fy_Parser_parseProc(parser))
+        return true;
+
+    Fy_Parser_expectNewline(parser, false);
+
+    if ((instruction = Fy_Parser_parseInstruction(parser))) {
+        if (parser->amount_allocated == 0)
+            parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_Instruction*));
+        else if (parser->amount_used == parser->amount_allocated)
+            parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_Instruction*));
+
+        parser->instructions[parser->amount_used++] = instruction;
+        // Update offset
+        parser->code_offset += 1 + instruction->type->additional_size;
+        Fy_Parser_expectNewline(parser, true);
+        return true;
+    }
+
+    return false;
 }
 
 /* Step 1: reading all of the instructions and creating a vector of them */
 static void Fy_Parser_readInstructions(Fy_Parser *parser) {
+    Fy_ParserState backtrack;
+
     // If there is a newline, advance it
     Fy_Parser_expectNewline(parser, false);
 
-    for (;;) {
-        Fy_Instruction *instruction;
-        Fy_ParserState backtrack;
+    while (Fy_Parser_parseLine(parser))
+        ;
 
-        if (Fy_Parser_parseLabel(parser))
-            continue;
-
-        Fy_Parser_expectNewline(parser, false);
-
-        if ((instruction = Fy_Parser_parseInstruction(parser))) {
-            if (parser->amount_allocated == 0)
-                parser->instructions = malloc((parser->amount_allocated = 8) * sizeof(Fy_Instruction*));
-            else if (parser->amount_used == parser->amount_allocated)
-                parser->instructions = realloc(parser->instructions, (parser->amount_allocated += 8) * sizeof(Fy_Instruction*));
-
-            parser->instructions[parser->amount_used++] = instruction;
-            // Update offset
-            parser->code_offset += 1 + instruction->type->additional_size;
-            Fy_Parser_expectNewline(parser, true);
-            continue;
-        }
-
-        Fy_Parser_dumpState(parser, &backtrack);
-        if (!Fy_Parser_lex(parser)) {
-            break;
-        } else {
-            Fy_Parser_loadState(parser, &backtrack);
-            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
-        }
+    Fy_Parser_dumpState(parser, &backtrack);
+    if (Fy_Parser_lex(parser)) {
+        Fy_Parser_loadState(parser, &backtrack);
+        Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
     }
 }
 

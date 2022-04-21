@@ -29,7 +29,15 @@ start: ; This is currently not needed
 ; do_debug2:
 ;     debug
 
-    jmp asdsd
+    jmp func
 
+do_end:
     ; End program
     end
+
+proc func
+    proc func2
+    endp f
+    debug
+    jmp do_end
+endp func

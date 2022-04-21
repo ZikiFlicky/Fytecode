@@ -242,6 +242,10 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "dl", Fy_TokenType_Dl))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "proc", Fy_TokenType_Proc))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "endp", Fy_TokenType_Endp))
+        return true;
 
     if (Fy_Lexer_lexConst(lexer))
         return true;

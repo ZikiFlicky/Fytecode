@@ -630,8 +630,6 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     if (!Fy_Parser_match(parser, Fy_TokenType_Proc))
         return false;
 
-    printf("PROC\n");
-
     if (!Fy_Parser_match(parser, Fy_TokenType_Label))
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL);
 

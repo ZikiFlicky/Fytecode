@@ -104,7 +104,7 @@ static void Fy_InstructionType_SubReg16Const_write(Fy_Generator *generator, Fy_I
 static void Fy_InstructionType_SubReg16Const_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t base_value;
-    uint16_t sub_value = Fy_VM_getMem16(vm, address);
+    uint16_t sub_value = Fy_VM_getMem16(vm, address + 1);
     base_value = Fy_VM_getReg16(vm, reg);
     Fy_VM_setReg16(vm, reg, base_value - sub_value);
 }

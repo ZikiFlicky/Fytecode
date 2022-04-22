@@ -25,6 +25,7 @@ static Fy_Instruction *Fy_ParseRetConst16(Fy_Parser *parser, Fy_InstructionArg *
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg);
+static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -206,6 +207,14 @@ Fy_ParserParseRule Fy_parseRuleRetConst16 = {
     .func_one_param = Fy_ParseRetConst16,
     .func_process = NULL
 };
+Fy_ParserParseRule Fy_parseRuleMovReg16Mem = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Mov,
+    .arg1_type = Fy_InstructionArgType_Reg16,
+    .arg2_type = Fy_InstructionArgType_Memory,
+    .func_two_params = Fy_ParseMovReg16Mem,
+    .func_process = NULL
+};
 
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
@@ -232,7 +241,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRulePop,
     &Fy_parseRuleCall,
     &Fy_parseRuleRet,
-    &Fy_parseRuleRetConst16
+    &Fy_parseRuleRetConst16,
+    &Fy_parseRuleMovReg16Mem
 };
 
 static void Fy_InstructionArg_Destruct(Fy_InstructionArg *arg) {
@@ -413,6 +423,14 @@ static Fy_Instruction *Fy_ParseOpConst16(Fy_Parser *parser, Fy_InstructionArg *a
     return (Fy_Instruction*)instruction;
 }
 
+static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
+    Fy_Instruction_OpReg16Mem *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Mem, *type);
+    (void)parser;
+    instruction->reg_id = arg1->as_reg16;
+    instruction->address = arg2->as_reg16;
+    return (Fy_Instruction*)instruction;
+}
+
 /* Parsing functions */
 static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser) {
     (void)parser;
@@ -509,6 +527,10 @@ static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_InstructionArg *a
 
 static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg) {
     return Fy_ParseOpReg16(parser, arg, &Fy_InstructionType_Pop);
+}
+
+static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_InstructionType_MovReg16Mem);
 }
 
 /* Processing functions */

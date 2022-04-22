@@ -7,7 +7,7 @@ void Fy_Generator_Init(Fy_Generator *out) {
 }
 
 void Fy_Generator_Deallocate(Fy_Generator *generator) {
-    if (generator->output)
+    if (generator->idx > 0)
         free(generator->output);
 }
 

@@ -24,7 +24,7 @@ void Fy_AST_eval(Fy_AST *ast, Fy_InlineValue *out) {
         Fy_InlineValue rhs;
         Fy_AST_eval(ast->lhs, &lhs);
         Fy_AST_eval(ast->rhs, &rhs);
-        out->numeric = lhs.numeric + rhs.numeric;
+        out->numeric = lhs.numeric - rhs.numeric;
         break;
     }
     default:

@@ -427,7 +427,7 @@ static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *
     Fy_Instruction_OpReg16Mem *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Mem, *type);
     (void)parser;
     instruction->reg_id = arg1->as_reg16;
-    instruction->address = arg2->as_reg16;
+    instruction->address = arg2->as_memory.numeric;
     return (Fy_Instruction*)instruction;
 }
 

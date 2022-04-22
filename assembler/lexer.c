@@ -209,6 +209,10 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     }
 
     if (lexer->stream[0] == '-') {
+        // If this is actually a constant
+        if (Fy_Lexer_lexConst(lexer))
+            return true;
+
         lexer->token.type = Fy_TokenType_Minus;
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;

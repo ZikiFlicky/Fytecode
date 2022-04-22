@@ -8,6 +8,7 @@ typedef struct Fy_InlineValue Fy_InlineValue;
 
 typedef enum Fy_ASTType {
     Fy_ASTType_Number = 1,
+    Fy_ASTType_Bx,
     Fy_ASTType_Add,
     Fy_ASTType_Sub
 } Fy_ASTType;
@@ -25,6 +26,7 @@ struct Fy_AST {
 
 struct Fy_InlineValue {
     int16_t numeric;
+    int16_t times_bx;
 };
 
 Fy_AST *Fy_AST_New(Fy_ASTType type);

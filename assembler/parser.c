@@ -427,6 +427,7 @@ static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *
     Fy_Instruction_OpReg16Mem *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Mem, *type);
     (void)parser;
     instruction->reg_id = arg1->as_reg16;
+    instruction->amount_bx = arg2->as_memory.times_bx;
     instruction->address = arg2->as_memory.numeric;
     return (Fy_Instruction*)instruction;
 }
@@ -577,7 +578,10 @@ static Fy_AST *Fy_Parser_parseLiteralExpr(Fy_Parser *parser) {
         Fy_AST *literal_expr = Fy_AST_New(Fy_ASTType_Number);
         literal_expr->as_number = literal;
         return literal_expr;
-    } default:
+    }
+    case Fy_TokenType_Bx:
+        return Fy_AST_New(Fy_ASTType_Bx);
+    default:
         Fy_Parser_loadState(parser, &backtrack);
         return NULL;
     }

@@ -284,13 +284,16 @@ static void Fy_InstructionType_RetConst16_run(Fy_VM *vm, uint16_t address) {
 
 static void Fy_InstructionType_MovReg16Mem_write(Fy_Generator *generator, Fy_Instruction_OpReg16Mem *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addWord(generator, instruction->amount_bx);
     Fy_Generator_addWord(generator, instruction->address);
 }
 
 static void Fy_InstructionType_MovReg16Mem_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
-    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 1);
-    uint16_t value = Fy_VM_getMem16(vm, mem_addr);
+    uint16_t amount_bx = Fy_VM_getMem16(vm, address + 1);
+    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 3);
+    uint16_t full_addr = Fy_VM_getReg16(vm, Fy_Reg16_Bx) * (*(int16_t*)&amount_bx) + (*(int16_t*)&mem_addr);
+    uint16_t value = Fy_VM_getMem16(vm, full_addr);
     Fy_VM_setReg16(vm, reg_id, value);
 }
 
@@ -441,7 +444,7 @@ Fy_InstructionType Fy_InstructionType_DebugStack = {
 };
 Fy_InstructionType Fy_InstructionType_MovReg16Mem = {
     .opcode = 24,
-    .additional_size = 3, // regid + address
+    .additional_size = 5,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Mem_write,
     .run_func = Fy_InstructionType_MovReg16Mem_run
 };

@@ -7,7 +7,8 @@ start: ; This is currently not needed
     ; debug ; expects AX: F3 00
 ; do_end:
 
-    mov ax [0x4 - 0x2 + 0x2]
+    mov bx -1
+    mov ax [0xC - 0x1 + 0x2 - 0x3 + 0x2 + bx + bx]
     debug
 
     ; End program

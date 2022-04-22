@@ -86,6 +86,7 @@ struct Fy_Instruction_OpReg16 {
 struct Fy_Instruction_OpReg16Mem {
     FY_INSTRUCTION_BASE;
     uint8_t reg_id;
+    uint16_t amount_bx;
     uint16_t address;
 };
 

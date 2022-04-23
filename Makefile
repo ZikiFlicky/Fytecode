@@ -31,7 +31,7 @@ $(BUILDDIR)/$(NAME): $(OBJECTS)
 %.o: assembler/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
 
-%.o: interpreter/%.c $(BUILDDIR)
+%.o: vm/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
 
 clean:

@@ -20,8 +20,8 @@
 #include "../assembler/instruction.h"
 #include "../assembler/labelmap.h"
 
-#include "../interpreter/vm.h"
-#include "../interpreter/registers.h"
+#include "../vm/vm.h"
+#include "../vm/registers.h"
 
 #define FY_UNREACHABLE() assert(0)
 

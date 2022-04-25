@@ -228,6 +228,14 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     }
 
+    if (lexer->stream[0] == ',') {
+        lexer->token.type = Fy_TokenType_Comma;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        return true;
+    }
+
     if (Fy_Lexer_lexNewline(lexer))
         return true;
 
@@ -290,6 +298,14 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (Fy_Lexer_matchKeyword(lexer, "proc", Fy_TokenType_Proc))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "endp", Fy_TokenType_Endp))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "data", Fy_TokenType_Data))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "eb", Fy_TokenType_Eb))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "ew", Fy_TokenType_Ew))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "code", Fy_TokenType_Code))
         return true;
 
     if (Fy_Lexer_lexConst(lexer))

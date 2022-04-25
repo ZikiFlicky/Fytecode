@@ -25,33 +25,6 @@ static char *Fy_LoadTextFile(char *name) {
     return stream;
 }
 
-/*
- * Reads all of the binary file into `stream_out` and puts size in out_size.
- * Returns false on failure.
- */
-bool Fy_LoadBinaryFile(char *name, uint8_t **stream_out, uint16_t *out_size) {
-    FILE *file;
-    uint16_t length;
-    uint8_t *stream;
-
-    file = fopen(name, "r");
-    if (!file)
-        return false;
-
-    fseek(file, 0, SEEK_END);
-    length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    stream = malloc(length * sizeof(uint8_t));
-    fread(stream, sizeof(uint8_t), length, file);
-    fclose(file);
-
-    *stream_out = stream;
-    *out_size = length;
-
-    return true;
-}
-
 static void Fy_PrintHelp(void) {
     puts("Welcome to the Fytecode engine!");
     puts("usage: fy -h | -c source output | -r file [--warn-undefined]");
@@ -80,7 +53,7 @@ int main(int argc, char **argv) {
         if (!stream) {
             printf("Couldn't open file '%s' for read\n", argv[2]);
             return 1;
-    }
+        }
 
         Fy_Lexer_Init(stream, &lexer);
         Fy_Parser_Init(&lexer, &parser);
@@ -92,8 +65,7 @@ int main(int argc, char **argv) {
 
         free(stream);
     } else if (strcmp(argv[1], "-r") == 0) {
-        uint8_t *stream;
-        uint16_t length;
+        Fy_BytecodeFileStream bc;
         Fy_VM vm;
 
         if (argc != 3) {
@@ -101,16 +73,16 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        if (!Fy_LoadBinaryFile(argv[2], &stream, &length)) {
+        if (!Fy_OpenBytecodeFile(argv[2], &bc)) {
             printf("Couldn't load binary file '%s' for read\n", argv[2]);
             return 1;
         }
 
-        Fy_VM_Init(stream, length, 0x100, &vm);
+        Fy_VM_Init(&bc, &vm);
         Fy_VM_runAll(&vm);
         Fy_VM_Destruct(&vm);
 
-        free(stream);
+        Fy_BytecodeFileStream_Destruct(&bc);
     } else if (strcmp(argv[1], "-h")) {
         Fy_PrintHelp();
     } else {

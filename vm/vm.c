@@ -1,5 +1,56 @@
 #include "fy.h"
 
+/*
+ * Reads all of the binary file into `out`.
+ * Returns false on failure.
+ */
+bool Fy_OpenBytecodeFile(char *filename, Fy_BytecodeFileStream *out) {
+    FILE *file;
+    uint16_t length;
+    uint8_t *stream;
+
+    file = fopen(filename, "r");
+    if (!file)
+        return false;
+
+    fseek(file, 0, SEEK_END);
+    length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    stream = malloc(length * sizeof(uint8_t));
+    fread(stream, sizeof(uint8_t), length, file);
+    fclose(file);
+
+    out->code = stream;
+    out->length = length;
+    out->idx = 0;
+
+    return true;
+}
+
+void Fy_BytecodeFileStream_Destruct(Fy_BytecodeFileStream *bc) {
+    if (bc->length > 0)
+        free(bc->code);
+}
+
+uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc) {
+    uint16_t w;
+    if (bc->idx + 2 > bc->length)
+        FY_UNREACHABLE(); // FIXME: Error
+    w = bc->code[bc->idx] + (bc->code[bc->idx + 1] << 8);
+    bc->idx += 2;
+    return w;
+}
+
+void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out) {
+    if (bc->idx + amount > bc->length) {
+        printf("%d/%d\n", bc->idx + amount, bc->length);
+        FY_UNREACHABLE();
+    }
+    memcpy(out, &bc->code[bc->idx], amount);
+    bc->idx += amount;
+}
+
 static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     switch (error) {
     case Fy_RuntimeError_RegNotFound:
@@ -11,19 +62,31 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     }
 }
 
-void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM *out) {
+void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
+    uint16_t data_size, code_size, stack_size;
+    uint16_t data_offset, code_offset, stack_offset;
+
     out->mem_space_bottom = malloc((1 << 16) * sizeof(uint8_t));
-    memcpy(out->mem_space_bottom, generated, length * sizeof(uint8_t));
-    out->code_offset = 0;
-    out->code_size = length;
-    out->stack_offset = out->code_offset + out->code_size + 0x100 + stack_size; // The 0x100 is for padding
+    // Parse header
+    data_size = Fy_BytecodeFileStream_readWord(bc);
+    code_size = Fy_BytecodeFileStream_readWord(bc);
+    stack_size = Fy_BytecodeFileStream_readWord(bc);
+    data_offset = 0;
+    code_offset = data_offset + data_size + 0x100; // The 0x100 is for padding
+    stack_offset = code_offset + code_size + 0x100 + stack_size;
+    Fy_BytecodeFileStream_writeBytesInto(bc, data_size, &out->mem_space_bottom[data_offset]);
+    Fy_BytecodeFileStream_writeBytesInto(bc, code_size, &out->mem_space_bottom[code_offset]);
+
+    out->data_offset = data_offset;
+    out->code_offset = code_offset;
+    out->stack_offset = stack_offset;
     out->stack_size = stack_size; // In bytes
     out->reg_ax[0] = out->reg_ax[1] = 0;
     out->reg_bx[0] = out->reg_bx[1] = 0;
     out->reg_cx[0] = out->reg_cx[1] = 0;
     out->reg_dx[0] = out->reg_dx[1] = 0;
-    out->reg_ip = 0;
-    out->reg_sp = out->stack_offset;
+    out->reg_ip = code_offset;
+    out->reg_sp = stack_offset;
     out->running = true;
     out->flags = 0;
 }

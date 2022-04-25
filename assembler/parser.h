@@ -15,6 +15,7 @@ typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_InstructionArgType Fy_InstructionArgType;
 typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
+typedef struct Fy_DataVariables Fy_DataVariables;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
 
@@ -33,22 +34,27 @@ enum Fy_ParserError {
     Fy_ParserError_SyntaxError,
     Fy_ParserError_CannotOpenFileForWrite,
     Fy_ParserError_LabelNotFound,
-    Fy_ParserError_UnexpectedLabel
+    Fy_ParserError_UnexpectedLabel,
+    Fy_ParserError_ExpectedDifferentToken,
+    Fy_ParserError_LabelNotCode,
+    Fy_ParserError_LabelNotVariable,
+    Fy_ParserError_LabelAlreadyExists
 };
 
 struct Fy_Parser {
     Fy_Lexer *lexer;
     Fy_Token token;
+    uint8_t *data_part;
+    uint16_t data_allocated, data_size;
 
     size_t amount_used, amount_allocated;
     Fy_Instruction **instructions;
 
     /* Offset to next instruction. Stored for label management */
-    uint16_t code_offset;
+    uint16_t code_size;
 
     Fy_Labelmap labelmap;
 };
-
 
 enum Fy_InstructionArgType {
     Fy_InstructionArgType_Reg16 = 1,

@@ -23,6 +23,7 @@ typedef struct Fy_Instruction_OpLabel Fy_Instruction_OpLabel;
 typedef struct Fy_Instruction_OpConst16 Fy_Instruction_OpConst16;
 typedef struct Fy_Instruction_OpReg16 Fy_Instruction_OpReg16;
 typedef struct Fy_Instruction_OpReg16Mem Fy_Instruction_OpReg16Mem;
+typedef struct Fy_Instruction_OpReg16Var Fy_Instruction_OpReg16Var;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
 typedef void (*Fy_InstructionRunFunc)(Fy_VM*, uint16_t);
 
@@ -90,6 +91,13 @@ struct Fy_Instruction_OpReg16Mem {
     uint16_t address;
 };
 
+struct Fy_Instruction_OpReg16Var {
+    FY_INSTRUCTION_BASE;
+    uint8_t reg_id;
+    char *varname;
+    uint16_t address;
+};
+
 /* Instruction types */
 extern Fy_InstructionType Fy_InstructionType_Nop;
 extern Fy_InstructionType Fy_InstructionType_MovReg16Const;
@@ -116,8 +124,9 @@ extern Fy_InstructionType Fy_InstructionType_RetConst16;
 extern Fy_InstructionType Fy_InstructionType_Debug;
 extern Fy_InstructionType Fy_InstructionType_DebugStack;
 extern Fy_InstructionType Fy_InstructionType_MovReg16Mem;
+extern Fy_InstructionType Fy_InstructionType_MovReg16Var;
 
-extern Fy_InstructionType *Fy_instructionTypes[25];
+extern Fy_InstructionType *Fy_instructionTypes[26];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

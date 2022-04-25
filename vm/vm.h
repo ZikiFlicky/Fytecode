@@ -8,19 +8,26 @@
 #define FY_FLAGS_SIGN (1 << 1)
 
 typedef struct Fy_VM Fy_VM;
+typedef enum Fy_RuntimeError Fy_RuntimeError;
+typedef struct Fy_BytecodeFileStream Fy_BytecodeFileStream;
 
-typedef enum Fy_RuntimeError {
+struct Fy_BytecodeFileStream {
+    uint8_t *code;
+    uint16_t length, idx;
+};
+
+enum Fy_RuntimeError {
     Fy_RuntimeError_RegNotFound = 1,
     Fy_RuntimeError_InvalidOpcode
-} Fy_RuntimeError;
+};
 
 struct Fy_VM {
     /* Pointer to bottom of allocated memory space */
     uint8_t *mem_space_bottom;
+    /* Address in which data starts */
+    uint16_t data_offset;
     /* Address in which code starts */
     uint16_t code_offset;
-    /* Size of code */
-    uint16_t code_size;
     /* Address in which stack starts */
     uint16_t stack_offset;
     /* Size of stack (in bytes) */
@@ -37,7 +44,12 @@ struct Fy_VM {
     uint8_t flags;
 };
 
-void Fy_VM_Init(uint8_t *generated, uint16_t length, uint16_t stack_size, Fy_VM *out);
+bool Fy_OpenBytecodeFile(char *filename, Fy_BytecodeFileStream *out);
+void Fy_BytecodeFileStream_Destruct(Fy_BytecodeFileStream *bc);
+uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc);
+void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out);
+
+void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out);
 void Fy_VM_Destruct(Fy_VM *vm);
 uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address);
 uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address);

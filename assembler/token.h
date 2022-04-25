@@ -49,7 +49,12 @@ typedef enum Fy_TokenType {
     Fy_TokenType_LeftBracket,
     Fy_TokenType_RightBracket,
     Fy_TokenType_Plus,
-    Fy_TokenType_Minus
+    Fy_TokenType_Minus,
+    Fy_TokenType_Comma,
+    Fy_TokenType_Data,
+    Fy_TokenType_Code,
+    Fy_TokenType_Eb,
+    Fy_TokenType_Ew
 } Fy_TokenType;
 
 typedef struct Fy_Token {

@@ -62,6 +62,14 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     }
 }
 
+/* Align word to be bigger by a or more and dividable by a */
+static uint16_t Fy_alignWord(uint16_t w, uint16_t a) {
+    if (w % a == 0)
+        return w + a;
+    else
+        return w + (a - w % a) + a;
+}
+
 void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     uint16_t data_size, code_size, stack_size;
     uint16_t data_offset, code_offset, stack_offset;
@@ -72,8 +80,8 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     code_size = Fy_BytecodeFileStream_readWord(bc);
     stack_size = Fy_BytecodeFileStream_readWord(bc);
     data_offset = 0;
-    code_offset = data_offset + data_size + 0x100; // The 0x100 is for padding
-    stack_offset = code_offset + code_size + 0x100 + stack_size;
+    code_offset = Fy_alignWord(data_offset + data_size, 0x100);
+    stack_offset = Fy_alignWord(code_offset + code_size + stack_size, 0x100);
     Fy_BytecodeFileStream_writeBytesInto(bc, data_size, &out->mem_space_bottom[data_offset]);
     Fy_BytecodeFileStream_writeBytesInto(bc, code_size, &out->mem_space_bottom[code_offset]);
 

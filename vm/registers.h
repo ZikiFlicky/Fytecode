@@ -9,7 +9,8 @@ enum Fy_Reg16 {
     Fy_Reg16_Bx,
     Fy_Reg16_Cx,
     Fy_Reg16_Dx,
-    Fy_Reg16_Sp
+    Fy_Reg16_Sp,
+    Fy_Reg16_Bp
 };
 
 enum Fy_Reg8 {

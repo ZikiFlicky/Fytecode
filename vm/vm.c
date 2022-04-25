@@ -87,6 +87,7 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     out->reg_dx[0] = out->reg_dx[1] = 0;
     out->reg_ip = code_offset;
     out->reg_sp = stack_offset;
+    out->reg_bp = 0;
     out->running = true;
     out->flags = 0;
 }
@@ -153,6 +154,9 @@ static uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
     switch (reg) {
     case Fy_Reg16_Sp:
         reg_ptr = &vm->reg_sp;
+        break;
+    case Fy_Reg16_Bp:
+        reg_ptr = &vm->reg_bp;
         break;
     default:
         reg_ptr = NULL;

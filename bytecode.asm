@@ -4,6 +4,7 @@ DATA
 CODE
 start: ; This is currently not needed
     sub sp 2
+    mov bp 3
     debugstack
     mov ax bytes
     mov bx words

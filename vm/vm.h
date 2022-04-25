@@ -39,6 +39,7 @@ struct Fy_VM {
     uint8_t reg_dx[2];
     uint16_t reg_ip;
     uint16_t reg_sp;
+    uint16_t reg_bp;
     /* Is running? */
     bool running;
     uint8_t flags;

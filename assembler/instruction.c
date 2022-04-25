@@ -41,6 +41,7 @@ static void Fy_InstructionType_Debug_run(Fy_VM *vm, uint16_t address) {
     printf("DX: (h)%.2X (l)%.2X\n", vm->reg_dx[1], vm->reg_dx[0]);
     printf("IP: %.4X\n", vm->reg_ip);
     printf("SP: %.4X\n", vm->reg_sp);
+    printf("BP: %.4X\n", vm->reg_bp);
     printf("FLAG_ZERO: %d\n", vm->flags & FY_FLAGS_ZERO ? 1 : 0);
     printf("FLAG_SIGN: %d\n", vm->flags & FY_FLAGS_SIGN ? 1 : 0);
 }

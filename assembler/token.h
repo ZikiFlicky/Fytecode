@@ -33,6 +33,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Cx,
     Fy_TokenType_Dx,
     Fy_TokenType_Sp,
+    Fy_TokenType_Bp,
     Fy_TokenType_Ah,
     Fy_TokenType_Al,
     Fy_TokenType_Bh,

@@ -3,6 +3,8 @@ DATA
     words ew 0x33, 0x44
 CODE
 start: ; This is currently not needed
+    sub sp 2
+    debugstack
     mov ax bytes
     mov bx words
     debug

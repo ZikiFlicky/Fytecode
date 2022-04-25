@@ -4,7 +4,8 @@ Fy_TokenType Fy_reg16Tokens[] = {
     Fy_TokenType_Ax,
     Fy_TokenType_Bx,
     Fy_TokenType_Cx,
-    Fy_TokenType_Dx
+    Fy_TokenType_Dx,
+    Fy_TokenType_Sp
 };
 
 Fy_TokenType Fy_reg8Tokens[] = {
@@ -69,6 +70,8 @@ Fy_Reg16 Fy_TokenType_toReg16(Fy_TokenType type) {
         return Fy_Reg16_Cx;
     case Fy_TokenType_Dx:
         return Fy_Reg16_Dx;
+    case Fy_TokenType_Sp:
+        return Fy_Reg16_Sp;
     default:
         FY_UNREACHABLE();
     }

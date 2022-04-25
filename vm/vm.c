@@ -125,7 +125,7 @@ void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
     *(uint16_t*)&vm->mem_space_bottom[address] = value;
 }
 
-static uint8_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
+static uint8_t *Fy_VM_getDividedReg16Ptr(Fy_VM *vm, uint8_t reg) {
     uint8_t *reg_ptr;
 
     switch (reg) {
@@ -142,26 +142,54 @@ static uint8_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
         reg_ptr = vm->reg_dx;
         break;
     default:
-        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
-        FY_UNREACHABLE();
+        reg_ptr = NULL;
     }
 
     return reg_ptr;
 }
 
-uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
-    uint8_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+static uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
+    uint16_t *reg_ptr;
+    switch (reg) {
+    case Fy_Reg16_Sp:
+        reg_ptr = &vm->reg_sp;
+        break;
+    default:
+        reg_ptr = NULL;
+    }
+    return reg_ptr;
+}
 
-    // Little-endian
-    return reg_ptr[0] + (reg_ptr[1] << 8);
+uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
+    uint8_t *div_reg_ptr;
+    uint16_t *reg_ptr;
+    uint16_t value;
+
+    if ((div_reg_ptr = Fy_VM_getDividedReg16Ptr(vm, reg))) {
+        value = div_reg_ptr[0] + (div_reg_ptr[1] << 8); // Little-endian
+    } else if ((reg_ptr = Fy_VM_getReg16Ptr(vm, reg))) {
+        value = *reg_ptr;
+    } else {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "'%X'", reg);
+        FY_UNREACHABLE();
+    }
+
+    return value;
 }
 
 void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
-    uint8_t *reg_ptr = Fy_VM_getReg16Ptr(vm, reg);
+    uint8_t *div_reg_ptr;
+    uint16_t *reg_ptr;
 
-    // Little endian
-    reg_ptr[0] = value & 0xFF;
-    reg_ptr[1] = value >> 8;
+    if ((div_reg_ptr = Fy_VM_getDividedReg16Ptr(vm, reg))) {
+        div_reg_ptr[0] = value & 0xFF;
+        div_reg_ptr[1] = value >> 8;
+    } else if ((reg_ptr = Fy_VM_getReg16Ptr(vm, reg))) {
+        *reg_ptr = value;
+    } else {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "'%X'", reg);
+        FY_UNREACHABLE();
+    }
 
     // Set flags matching the operation
     Fy_VM_setResult16InFlags(vm, value);

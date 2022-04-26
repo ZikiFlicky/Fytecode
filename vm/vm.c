@@ -317,3 +317,7 @@ uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
 
     return value;
 }
+
+uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional) {
+    return vm->reg_bp * (*(int16_t*)&amount_bp) + Fy_VM_getReg16(vm, Fy_Reg16_Bx) * (*(int16_t*)&amount_bx) + (*(int16_t*)&additional);
+}

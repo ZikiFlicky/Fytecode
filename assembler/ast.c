@@ -10,6 +10,7 @@ void Fy_AST_eval(Fy_AST *ast, Fy_InlineValue *out) {
     switch (ast->type) {
     case Fy_ASTType_Number:
         out->numeric = ast->as_number;
+        out->times_bp = 0;
         out->times_bx = 0;
         break;
     case Fy_ASTType_Bx:

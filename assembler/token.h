@@ -14,6 +14,7 @@ typedef enum Fy_InstructionArgType Fy_InstructionArgType;
 typedef enum Fy_TokenType {
     Fy_TokenType_Nop = 1,
     Fy_TokenType_Mov,
+    Fy_TokenType_Lea,
     Fy_TokenType_Add,
     Fy_TokenType_Sub,
     Fy_TokenType_Cmp,

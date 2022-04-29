@@ -5,7 +5,7 @@ CODE
 start: ; This is currently not needed
     ; mov bx 2
     ; mov bp 0x10C
-    mov ax [words - 3]
+    lea ax [words + bx + 2]
     ; mov ax [bp + bx + bx + 1]
     debug
     debugstack

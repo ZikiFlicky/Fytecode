@@ -261,6 +261,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "lea", Fy_TokenType_Lea))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "add", Fy_TokenType_Add))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "sub", Fy_TokenType_Sub))

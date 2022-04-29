@@ -26,6 +26,7 @@ static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_InstructionArg *a
 static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
+static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpCodeLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -216,6 +217,14 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Mem = {
     .func_two_params = Fy_ParseMovReg16Mem,
     .func_process = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem
 };
+Fy_ParserParseRule Fy_parseRuleLea = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Lea,
+    .arg1_type = Fy_InstructionArgType_Reg16,
+    .arg2_type = Fy_InstructionArgType_Memory,
+    .func_two_params = Fy_ParseLea,
+    .func_process = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem
+};
 
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
@@ -243,7 +252,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleCall,
     &Fy_parseRuleRet,
     &Fy_parseRuleRetConst16,
-    &Fy_parseRuleMovReg16Mem
+    &Fy_parseRuleMovReg16Mem,
+    &Fy_parseRuleLea
 };
 
 static void Fy_InstructionArg_Destruct(Fy_InstructionArg *arg) {
@@ -571,6 +581,10 @@ static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg) {
 
 static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
     return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_instructionTypeMovReg16Mem);
+}
+
+static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_instructionTypeLea);
 }
 
 /* Processing functions */

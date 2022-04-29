@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 typedef struct Fy_Instruction Fy_Instruction;
+typedef struct Fy_InlineValue Fy_InlineValue;
 
 typedef struct Fy_Generator {
     size_t idx, allocated;
@@ -15,6 +16,7 @@ void Fy_Generator_Init(Fy_Generator *out);
 void Fy_Generator_Deallocate(Fy_Generator *generator);
 void Fy_Generator_addByte(Fy_Generator *generator, uint8_t b);
 void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w);
+void Fy_Generator_addMemory(Fy_Generator *generator, Fy_InlineValue *mem);
 void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instuction);
 
 #endif /* FY_GENERATOR_H */

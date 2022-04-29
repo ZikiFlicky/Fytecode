@@ -35,6 +35,14 @@ void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w) {
     generator->idx += 2;
 }
 
+void Fy_Generator_addMemory(Fy_Generator *generator, Fy_InlineValue *mem) {
+    Fy_Generator_addByte(generator, mem->has_variable);
+    Fy_Generator_addWord(generator, mem->has_variable ? mem->variable_offset : 0);
+    Fy_Generator_addWord(generator, mem->times_bp);
+    Fy_Generator_addWord(generator, mem->times_bx);
+    Fy_Generator_addWord(generator, mem->numeric);
+}
+
 void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instruction) {
     Fy_InstructionWriteFunc func;
     // Add the instruction opcode

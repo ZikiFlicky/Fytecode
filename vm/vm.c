@@ -121,8 +121,7 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
         va_end(va);
     }
     printf("\n");
-    Fy_VM_Destruct(vm);
-    exit(1);
+    vm->running = false;
 }
 
 uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address) {
@@ -178,7 +177,7 @@ static uint16_t *Fy_VM_getReg16Ptr(Fy_VM *vm, uint8_t reg) {
     return reg_ptr;
 }
 
-uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
+bool Fy_VM_getReg16(Fy_VM *vm, uint8_t reg, uint16_t *out) {
     uint8_t *div_reg_ptr;
     uint16_t *reg_ptr;
     uint16_t value;
@@ -189,13 +188,14 @@ uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
         value = *reg_ptr;
     } else {
         Fy_VM_runtimeError(vm, Fy_RuntimeError_ReadableReg16NotFound, "'%X'", reg);
-        FY_UNREACHABLE();
+        return false;
     }
 
-    return value;
+    *out = value;
+    return true;
 }
 
-void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
+bool Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
     uint8_t *div_reg_ptr;
     uint16_t *reg_ptr;
 
@@ -206,11 +206,12 @@ void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
         *reg_ptr = value;
     } else {
         Fy_VM_runtimeError(vm, Fy_RuntimeError_WritableReg16NotFound, "'%X'", reg);
-        FY_UNREACHABLE();
+        return false;
     }
 
     // Set flags matching the operation
     Fy_VM_setResult16InFlags(vm, value);
+    return true;
 }
 
 static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
@@ -233,20 +234,28 @@ static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
         return &vm->reg_dx[0];
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_ReadableReg8NotFound, "%d", reg);
-        FY_UNREACHABLE();
+        return NULL;
     }
 }
 
-uint8_t Fy_VM_getReg8(Fy_VM *vm, uint8_t reg) {
+bool Fy_VM_getReg8(Fy_VM *vm, uint8_t reg, uint8_t *out) {
     uint8_t *reg_ptr = Fy_VM_getReg8Ptr(vm, reg);
-    return *reg_ptr;
+    if (!reg_ptr)
+        return false;
+
+    *out = *reg_ptr;
+    return true;
 }
 
-void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
+bool Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
     uint8_t *reg_ptr = Fy_VM_getReg8Ptr(vm, reg);
+    if (!reg_ptr)
+        return false;
+
     *reg_ptr = value;
     // Set flags matching the operation
     Fy_VM_setResult8InFlags(vm, value);
+    return true;
 }
 
 
@@ -341,9 +350,13 @@ uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
 
 uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t *variable_off_ptr, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional) {
     uint16_t address = 0;
+    uint16_t bx_value;
+
+    if (!Fy_VM_getReg16(vm, Fy_Reg16_Bx, &bx_value))
+        FY_UNREACHABLE();
     address += variable_off_ptr ? *(int16_t*)variable_off_ptr + vm->data_offset : 0;
     address += *(int16_t*)&amount_bp * vm->reg_bp;
-    address += *(int16_t*)&amount_bx * Fy_VM_getReg16(vm, Fy_Reg16_Bx);
+    address += *(int16_t*)&amount_bx * bx_value;
     address += *(int16_t*)&additional;
     return address;
 }

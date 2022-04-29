@@ -28,7 +28,8 @@ static void Fy_instructionTypeMovReg16Reg16_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint8_t reg2 = Fy_VM_getMem8(vm, address + 1);
     uint16_t value;
-    value = Fy_VM_getReg16(vm, reg2);
+    if (!Fy_VM_getReg16(vm, reg2, &value))
+        return;
     Fy_VM_setReg16(vm, reg, value);
 }
 
@@ -77,7 +78,8 @@ static void Fy_instructionTypeAddReg16Const_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t base_value;
     uint16_t added_value = Fy_VM_getMem16(vm, address + 1);
-    base_value = Fy_VM_getReg16(vm, reg);
+    if (!Fy_VM_getReg16(vm, reg, &base_value))
+        return;
     Fy_VM_setReg16(vm, reg, base_value + added_value);
 }
 
@@ -92,8 +94,10 @@ static void Fy_instructionTypeAddReg16Reg16_run(Fy_VM *vm, uint16_t address) {
     uint16_t reg_value;
     uint16_t reg2_value;
 
-    reg_value = Fy_VM_getReg16(vm, reg);
-    reg2_value = Fy_VM_getReg16(vm, reg2);
+    if (!Fy_VM_getReg16(vm, reg, &reg_value))
+        return;
+    if (!Fy_VM_getReg16(vm, reg2, &reg2_value))
+        return;
     Fy_VM_setReg16(vm, reg, reg_value + reg2_value);
 }
 
@@ -106,7 +110,8 @@ static void Fy_instructionTypeSubReg16Const_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t base_value;
     uint16_t sub_value = Fy_VM_getMem16(vm, address + 1);
-    base_value = Fy_VM_getReg16(vm, reg);
+    if (!Fy_VM_getReg16(vm, reg, &base_value))
+        return;
     Fy_VM_setReg16(vm, reg, base_value - sub_value);
 }
 
@@ -121,8 +126,10 @@ static void Fy_instructionTypeSubReg16Reg16_run(Fy_VM *vm, uint16_t address) {
     uint16_t reg_value;
     uint16_t reg2_value;
 
-    reg_value = Fy_VM_getReg16(vm, reg);
-    reg2_value = Fy_VM_getReg16(vm, reg2);
+    if (!Fy_VM_getReg16(vm, reg, &reg_value))
+        return;
+    if (!Fy_VM_getReg16(vm, reg2, &reg2_value))
+        return;
     Fy_VM_setReg16(vm, reg, reg_value - reg2_value);
 }
 
@@ -137,7 +144,8 @@ static void Fy_instructionTypeCmpReg16Const_run(Fy_VM *vm, uint16_t address) {
     uint16_t reg_value;
     uint16_t res;
 
-    reg_value = Fy_VM_getReg16(vm, reg_id);
+    if (!Fy_VM_getReg16(vm, reg_id, &reg_value))
+        return;
     res = reg_value - value;
     Fy_VM_setResult16InFlags(vm, *((int16_t*)&res));
 }
@@ -153,8 +161,10 @@ void Fy_instructionTypeCmpReg16Reg16_run(Fy_VM *vm, uint16_t address) {
     uint16_t reg_value;
     uint16_t reg2_value;
 
-    reg_value = Fy_VM_getReg16(vm, reg);
-    reg2_value = Fy_VM_getReg16(vm, reg2);
+    if (!Fy_VM_getReg16(vm, reg, &reg_value))
+        return;
+    if (!Fy_VM_getReg16(vm, reg2, &reg2_value))
+        return;
     Fy_VM_setResult16InFlags(vm, reg_value - reg2_value);
 }
 
@@ -213,7 +223,8 @@ static void Fy_instructionTypePushReg16_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t reg_value;
 
-    reg_value = Fy_VM_getReg16(vm, reg);
+    if (!Fy_VM_getReg16(vm, reg, &reg_value))
+        return;
     Fy_VM_pushToStack(vm, reg_value);
 }
 
@@ -225,11 +236,10 @@ static void Fy_instructionTypePop_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t popped;
 
-    if (!Fy_VM_isWritableReg16(vm, reg))
+    if (!Fy_VM_isWritableReg16(vm, reg)) {
         Fy_VM_runtimeError(vm, Fy_RuntimeError_WritableReg16NotFound, "'%X'", reg);
-
-    // Verify the register exists
-    Fy_VM_getReg16(vm, reg);
+        return;
+    }
 
     popped = Fy_VM_popFromStack(vm);
     Fy_VM_setReg16(vm, reg, popped);
@@ -255,9 +265,12 @@ static void Fy_instructionTypeMovReg8Reg8_write(Fy_Generator *generator, Fy_Inst
 static void Fy_instructionTypeMovReg8Reg8_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint8_t reg2 = Fy_VM_getMem8(vm, address + 1);
-    uint8_t val = Fy_VM_getReg8(vm, reg2);
+    uint8_t value;
 
-    Fy_VM_setReg8(vm, reg, val);
+    if (!Fy_VM_getReg8(vm, reg2, &value))
+        return;
+
+    Fy_VM_setReg8(vm, reg, value);
 }
 
 static void Fy_instructionTypeCall_write(Fy_Generator *generator, Fy_Instruction_OpLabel *instruction) {

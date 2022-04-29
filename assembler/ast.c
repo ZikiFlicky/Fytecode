@@ -6,19 +6,33 @@ Fy_AST *Fy_AST_New(Fy_ASTType type) {
     return ast;
 }
 
-void Fy_AST_eval(Fy_AST *ast, Fy_InlineValue *out) {
+void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
     switch (ast->type) {
     case Fy_ASTType_Number:
+        out->has_variable = false;
         out->numeric = ast->as_number;
         out->times_bp = 0;
         out->times_bx = 0;
         break;
+    case Fy_ASTType_Label: {
+        Fy_BucketNode *entry = Fy_Labelmap_getEntry(&parser->labelmap, ast->as_label);
+        if (entry->type != Fy_MapEntryType_Variable)
+            Fy_Parser_error(parser, Fy_ParserError_LabelNotVariable, &ast->state, "%s", ast->as_label);
+        out->has_variable = true;
+        out->variable_offset = entry->data_offset;
+        out->numeric = 0;
+        out->times_bx = 0;
+        out->times_bp = 0;
+        break;
+    }
     case Fy_ASTType_Bx:
+        out->has_variable = false;
         out->numeric = 0;
         out->times_bx = 1;
         out->times_bp = 0;
         break;
     case Fy_ASTType_Bp:
+        out->has_variable = false;
         out->numeric = 0;
         out->times_bx = 0;
         out->times_bp = 1;
@@ -26,8 +40,19 @@ void Fy_AST_eval(Fy_AST *ast, Fy_InlineValue *out) {
     case Fy_ASTType_Add: {
         Fy_InlineValue lhs;
         Fy_InlineValue rhs;
-        Fy_AST_eval(ast->lhs, &lhs);
-        Fy_AST_eval(ast->rhs, &rhs);
+        Fy_AST_eval(ast->lhs, parser, &lhs);
+        Fy_AST_eval(ast->rhs, parser, &rhs);
+        if (lhs.has_variable && rhs.has_variable)
+            Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken, &ast->rhs->state, NULL);
+        if (lhs.has_variable) {
+            out->has_variable = true;
+            out->variable_offset = lhs.variable_offset;
+        } else if (rhs.has_variable) {
+            out->has_variable = true;
+            out->variable_offset = rhs.variable_offset;
+        } else {
+            out->has_variable = false;
+        }
         out->numeric = lhs.numeric + rhs.numeric;
         out->times_bx = lhs.times_bx + rhs.times_bx;
         out->times_bp = lhs.times_bp + rhs.times_bp;
@@ -36,8 +61,16 @@ void Fy_AST_eval(Fy_AST *ast, Fy_InlineValue *out) {
     case Fy_ASTType_Sub: {
         Fy_InlineValue lhs;
         Fy_InlineValue rhs;
-        Fy_AST_eval(ast->lhs, &lhs);
-        Fy_AST_eval(ast->rhs, &rhs);
+        Fy_AST_eval(ast->lhs, parser, &lhs);
+        Fy_AST_eval(ast->rhs, parser, &rhs);
+        if (rhs.has_variable)
+            Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken, &ast->rhs->state, NULL);
+        if (lhs.has_variable) {
+            out->has_variable = true;
+            out->variable_offset = lhs.variable_offset;
+        } else {
+            out->has_variable = false;
+        }
         out->numeric = lhs.numeric - rhs.numeric;
         out->times_bx = lhs.times_bx - rhs.times_bx;
         out->times_bp = lhs.times_bp - rhs.times_bp;
@@ -53,6 +86,9 @@ void Fy_AST_delete(Fy_AST *ast) {
     case Fy_ASTType_Number:
     case Fy_ASTType_Bx:
     case Fy_ASTType_Bp:
+        break;
+    case Fy_ASTType_Label:
+        free(ast->as_label);
         break;
     case Fy_ASTType_Add:
     case Fy_ASTType_Sub:

@@ -66,6 +66,6 @@ void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
 void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address);
 void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value);
 uint16_t Fy_VM_popFromStack(Fy_VM *vm);
-uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional);
+uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t *variable_off_ptr, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional);
 
 #endif /* FY_VM_H */

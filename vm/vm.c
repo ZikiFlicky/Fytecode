@@ -318,6 +318,11 @@ uint16_t Fy_VM_popFromStack(Fy_VM *vm) {
     return value;
 }
 
-uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional) {
-    return vm->reg_bp * (*(int16_t*)&amount_bp) + Fy_VM_getReg16(vm, Fy_Reg16_Bx) * (*(int16_t*)&amount_bx) + (*(int16_t*)&additional);
+uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t *variable_off_ptr, uint16_t amount_bp, uint16_t amount_bx, uint16_t additional) {
+    uint16_t address = 0;
+    address += variable_off_ptr ? *(int16_t*)variable_off_ptr + vm->data_offset : 0;
+    address += *(int16_t*)&amount_bp * vm->reg_bp;
+    address += *(int16_t*)&amount_bx * Fy_VM_getReg16(vm, Fy_Reg16_Bx);
+    address += *(int16_t*)&additional;
+    return address;
 }

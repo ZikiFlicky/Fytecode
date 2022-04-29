@@ -119,7 +119,7 @@ static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parse
         positive += char_to_number(token->start[i]);
 
         if (positive >= (size_t)(1 << (is_neg ? width - 1 : width)))
-            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL);
+            Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, NULL);
 
         ++i;
     } while (i < token->length);

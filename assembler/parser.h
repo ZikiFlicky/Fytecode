@@ -15,6 +15,7 @@ typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_InstructionArgType Fy_InstructionArgType;
 typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
+typedef struct Fy_AST Fy_AST;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
 
@@ -70,7 +71,7 @@ struct Fy_InstructionArg {
         uint8_t as_reg8;
         uint16_t as_const;
         char *as_label;
-        Fy_InlineValue as_memory;
+        Fy_AST *as_memory;
     };
 };
 
@@ -99,7 +100,7 @@ extern Fy_ParserParseRule *Fy_parserRules[];
 void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out);
 void Fy_Parser_Destruct(Fy_Parser *parser);
 void Fy_Parser_parseAll(Fy_Parser *parser);
-void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, char *additional, ...);
+void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, Fy_ParserState *state, char *additional, ...);
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);
 void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename);
 void Fy_Parser_logParsed(Fy_Parser *parser); /* NOTE: Debug function */

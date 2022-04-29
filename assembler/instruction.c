@@ -285,30 +285,21 @@ static void Fy_InstructionType_RetConst16_run(Fy_VM *vm, uint16_t address) {
 
 static void Fy_InstructionType_MovReg16Mem_write(Fy_Generator *generator, Fy_Instruction_OpReg16Mem *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addWord(generator, instruction->amount_bp);
-    Fy_Generator_addWord(generator, instruction->amount_bx);
-    Fy_Generator_addWord(generator, instruction->address);
+    Fy_Generator_addByte(generator, instruction->value.has_variable);
+    Fy_Generator_addWord(generator, instruction->value.has_variable ? instruction->value.variable_offset : 0);
+    Fy_Generator_addWord(generator, instruction->value.times_bp);
+    Fy_Generator_addWord(generator, instruction->value.times_bx);
+    Fy_Generator_addWord(generator, instruction->value.numeric);
 }
 
 static void Fy_InstructionType_MovReg16Mem_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
-    uint16_t amount_bp = Fy_VM_getMem16(vm, address + 1);
-    uint16_t amount_bx = Fy_VM_getMem16(vm, address + 3);
-    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 5);
-    uint16_t full_addr = Fy_VM_calculateAddress(vm, amount_bp, amount_bx, mem_addr);
-    uint16_t value = Fy_VM_getMem16(vm, full_addr);
-    Fy_VM_setReg16(vm, reg_id, value);
-}
-
-static void Fy_InstructionType_MovReg16Var_write(Fy_Generator *generator, Fy_Instruction_OpReg16Var *instruction) {
-    Fy_Generator_addByte(generator, instruction->reg_id);
-    Fy_Generator_addWord(generator, instruction->address);
-}
-
-static void Fy_InstructionType_MovReg16Var_run(Fy_VM *vm, uint16_t address) {
-    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
-    uint16_t var_addr = Fy_VM_getMem16(vm, address + 1);
-    uint16_t full_addr = vm->data_offset + var_addr;
+    bool has_variable = Fy_VM_getMem8(vm, address + 1);
+    uint16_t variable = Fy_VM_getMem16(vm, address + 2);
+    uint16_t amount_bp = Fy_VM_getMem16(vm, address + 4);
+    uint16_t amount_bx = Fy_VM_getMem16(vm, address + 6);
+    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 8);
+    uint16_t full_addr = Fy_VM_calculateAddress(vm, has_variable ? &variable : NULL, amount_bp, amount_bx, mem_addr);
     uint16_t value = Fy_VM_getMem16(vm, full_addr);
     Fy_VM_setReg16(vm, reg_id, value);
 }
@@ -460,15 +451,9 @@ Fy_InstructionType Fy_InstructionType_DebugStack = {
 };
 Fy_InstructionType Fy_InstructionType_MovReg16Mem = {
     .opcode = 24,
-    .additional_size = 7,
+    .additional_size = 10,
     .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Mem_write,
     .run_func = Fy_InstructionType_MovReg16Mem_run
-};
-Fy_InstructionType Fy_InstructionType_MovReg16Var = {
-    .opcode = 25,
-    .additional_size = 3,
-    .write_func = (Fy_InstructionWriteFunc)Fy_InstructionType_MovReg16Var_write,
-    .run_func = Fy_InstructionType_MovReg16Var_run
 };
 
 Fy_InstructionType *Fy_instructionTypes[] = {
@@ -496,6 +481,5 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_InstructionType_RetConst16,
     &Fy_InstructionType_Debug,
     &Fy_InstructionType_DebugStack,
-    &Fy_InstructionType_MovReg16Mem,
-    &Fy_InstructionType_MovReg16Var
+    &Fy_InstructionType_MovReg16Mem
 };

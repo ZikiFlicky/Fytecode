@@ -1,3 +1,4 @@
+CODE
 start:
     mov dx 10 ; amount of rounds
     call fib

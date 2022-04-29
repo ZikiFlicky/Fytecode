@@ -474,103 +474,103 @@ static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *
 /* Parsing functions */
 static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser) {
     (void)parser;
-    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_Nop);
+    return Fy_ParseOpNoParams(parser, &Fy_instructionTypeNop);
 }
 
 static Fy_Instruction *Fy_ParseMovReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_InstructionType_MovReg8Const);
+    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_instructionTypeMovReg8Const);
 }
 
 static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_InstructionType_MovReg8Reg8);
+    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_instructionTypeMovReg8Reg8);
 }
 
 static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_InstructionType_MovReg16Const);
+    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeMovReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_InstructionType_MovReg16Reg16);
+    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeMovReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
-    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_Debug);
+    return Fy_ParseOpNoParams(parser, &Fy_instructionTypeDebug);
 }
 
 static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser) {
-    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_DebugStack);
+    return Fy_ParseOpNoParams(parser, &Fy_instructionTypeDebugStack);
 }
 
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
-    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_EndProgram);
+    return Fy_ParseOpNoParams(parser, &Fy_instructionTypeEndProgram);
 }
 
 static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_InstructionType_AddReg16Const);
+    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeAddReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_InstructionType_AddReg16Reg16);
+    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeAddReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_InstructionType_SubReg16Const);
+    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeSubReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_InstructionType_SubReg16Reg16);
+    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeSubReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_InstructionType_CmpReg16Const);
+    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeCmpReg16Const);
 }
 
 static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_InstructionType_CmpReg16Reg16);
+    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeCmpReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_InstructionType_Jmp);
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJmp);
 }
 
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_InstructionType_Je);
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJe);
 }
 
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_InstructionType_Jl);
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJl);
 }
 
 static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_InstructionType_Jg);
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJg);
 }
 
 static Fy_Instruction *Fy_ParseCall(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_InstructionType_Call);
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeCall);
 }
 
 static Fy_Instruction *Fy_ParseRet(Fy_Parser *parser) {
-    return Fy_ParseOpNoParams(parser, &Fy_InstructionType_Ret);
+    return Fy_ParseOpNoParams(parser, &Fy_instructionTypeRet);
 }
 
 static Fy_Instruction *Fy_ParseRetConst16(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpConst16(parser, arg, &Fy_InstructionType_RetConst16);
+    return Fy_ParseOpConst16(parser, arg, &Fy_instructionTypeRetConst16);
 }
 
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpConst16(parser, arg, &Fy_InstructionType_PushConst);
+    return Fy_ParseOpConst16(parser, arg, &Fy_instructionTypePushConst);
 }
 
 static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpReg16(parser, arg, &Fy_InstructionType_PushReg16);
+    return Fy_ParseOpReg16(parser, arg, &Fy_instructionTypePushReg16);
 }
 
 static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpReg16(parser, arg, &Fy_InstructionType_Pop);
+    return Fy_ParseOpReg16(parser, arg, &Fy_instructionTypePop);
 }
 
 static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_InstructionType_MovReg16Mem);
+    return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_instructionTypeMovReg16Mem);
 }
 
 /* Processing functions */
@@ -1011,12 +1011,12 @@ void Fy_Parser_logParsed(Fy_Parser *parser) {
     // for (size_t i = 0; i < parser->amount_used; ++i) {
     //     Fy_Instruction *instruction = parser->instructions[i];
     //     switch (instruction->type) {
-    //     case Fy_InstructionType_MovReg16Const:
+    //     case Fy_instructionTypeMovReg16Const:
     //         printf("mov %s %d",
     //                 Fy_ParserReg16_toString(instruction->mov_reg16_const.reg_id),
     //                 instruction->mov_reg16_const.const16);
     //         break;
-    //     case Fy_InstructionType_MovReg16Reg16:
+    //     case Fy_instructionTypeMovReg16Reg16:
     //         printf("mov %s %s",
     //                 Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg_id),
     //                 Fy_ParserReg16_toString(instruction->mov_reg16_reg16.reg2_id));

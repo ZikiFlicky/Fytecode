@@ -223,8 +223,12 @@ static void Fy_InstructionType_Pop_write(Fy_Generator *generator, Fy_Instruction
 
 static void Fy_InstructionType_Pop_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
-    uint16_t popped = Fy_VM_popFromStack(vm); // FIXME: This should happen only after the register was verified to be valid
+    uint16_t popped;
 
+    // Verify the register exists
+    Fy_VM_getReg16(vm, reg);
+
+    popped = Fy_VM_popFromStack(vm);
     Fy_VM_setReg16(vm, reg, popped);
 }
 

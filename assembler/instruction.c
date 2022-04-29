@@ -225,7 +225,8 @@ static void Fy_instructionTypePop_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg = Fy_VM_getMem8(vm, address + 0);
     uint16_t popped;
 
-    // TODO: Check here if the register is writable not readable
+    if (!Fy_VM_isWritableReg16(vm, reg))
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_WritableReg16NotFound, "'%X'", reg);
 
     // Verify the register exists
     Fy_VM_getReg16(vm, reg);

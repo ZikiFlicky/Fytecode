@@ -53,10 +53,16 @@ void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t am
 
 static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
     switch (error) {
-    case Fy_RuntimeError_RegNotFound:
-        return "Register not found";
     case Fy_RuntimeError_InvalidOpcode:
         return "Invalid opcode";
+    case Fy_RuntimeError_ReadableReg16NotFound:
+        return "Could not find readable 16-bit register from opcode";
+    case Fy_RuntimeError_WritableReg16NotFound:
+        return "Could not find writable 16-bit register from opcode";
+    case Fy_RuntimeError_ReadableReg8NotFound:
+        return "Could not find readable 8-bit register from opcode";
+    case Fy_RuntimeError_WritableReg8NotFound:
+        return "Could not find writable 8-bit register from opcode";
     default:
         FY_UNREACHABLE();
     }
@@ -182,7 +188,7 @@ uint16_t Fy_VM_getReg16(Fy_VM *vm, uint8_t reg) {
     } else if ((reg_ptr = Fy_VM_getReg16Ptr(vm, reg))) {
         value = *reg_ptr;
     } else {
-        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "'%X'", reg);
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_ReadableReg16NotFound, "'%X'", reg);
         FY_UNREACHABLE();
     }
 
@@ -199,7 +205,7 @@ void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
     } else if ((reg_ptr = Fy_VM_getReg16Ptr(vm, reg))) {
         *reg_ptr = value;
     } else {
-        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "'%X'", reg);
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_WritableReg16NotFound, "'%X'", reg);
         FY_UNREACHABLE();
     }
 
@@ -226,7 +232,7 @@ static uint8_t *Fy_VM_getReg8Ptr(Fy_VM *vm, uint8_t reg) {
     case Fy_Reg8_Dl:
         return &vm->reg_dx[0];
     default:
-        Fy_VM_runtimeError(vm, Fy_RuntimeError_RegNotFound, "%d", reg);
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_ReadableReg8NotFound, "%d", reg);
         FY_UNREACHABLE();
     }
 }
@@ -241,6 +247,21 @@ void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
     *reg_ptr = value;
     // Set flags matching the operation
     Fy_VM_setResult8InFlags(vm, value);
+}
+
+
+bool Fy_VM_isWritableReg16(Fy_VM *vm, uint8_t reg) {
+    if (Fy_VM_getReg16Ptr(vm, reg))
+        return true;
+    if (Fy_VM_getDividedReg16Ptr(vm, reg))
+        return true;
+    return false;
+}
+
+bool Fy_VM_isWritableReg8(Fy_VM *vm, uint8_t reg) {
+    if (Fy_VM_getReg8Ptr(vm, reg))
+        return true;
+    return false;
 }
 
 static void Fy_VM_runInstruction(Fy_VM *vm) {

@@ -17,8 +17,11 @@ struct Fy_BytecodeFileStream {
 };
 
 enum Fy_RuntimeError {
-    Fy_RuntimeError_RegNotFound = 1,
-    Fy_RuntimeError_InvalidOpcode
+    Fy_RuntimeError_InvalidOpcode = 1,
+    Fy_RuntimeError_ReadableReg16NotFound,
+    Fy_RuntimeError_WritableReg16NotFound,
+    Fy_RuntimeError_ReadableReg8NotFound,
+    Fy_RuntimeError_WritableReg8NotFound
 };
 
 struct Fy_VM {
@@ -59,6 +62,8 @@ void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value);
 void Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value);
 uint8_t Fy_VM_getReg8(Fy_VM *vm, uint8_t reg);
 void Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value);
+bool Fy_VM_isWritableReg16(Fy_VM *vm, uint8_t reg);
+bool Fy_VM_isWritableReg8(Fy_VM *vm, uint8_t reg);
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...);
 void Fy_VM_runAll(Fy_VM *vm);
 void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res);

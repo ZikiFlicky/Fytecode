@@ -303,6 +303,10 @@ static void Fy_instructionTypeRetConst16_run(Fy_VM *vm, uint16_t address) {
     vm->reg_sp += to_change;
 }
 
+static uint16_t Fy_instructionTypeMovReg16Mem_getsize(Fy_Instruction_OpReg16Mem *instruction) {
+    return 1 + Fy_InlineValue_getMapping(&instruction->value, NULL);
+}
+
 static void Fy_instructionTypeMovReg16Mem_write(Fy_Generator *generator, Fy_Instruction_OpReg16Mem *instruction) {
     Fy_Generator_addByte(generator, instruction->reg_id);
     Fy_Generator_addMemory(generator, &instruction->value);
@@ -320,7 +324,7 @@ static void Fy_instructionTypeMovReg16Mem_run(Fy_VM *vm, uint16_t address) {
     vm->reg_ip += 1 + 1 + memparam_size;
 }
 
-static uint16_t Fy_instructionTypeMovReg16Mem_getsize(Fy_Instruction_OpReg16Mem *instruction) {
+static uint16_t Fy_instructionTypeLea_getsize(Fy_Instruction_OpReg16Mem *instruction) {
     return 1 + Fy_InlineValue_getMapping(&instruction->value, NULL);
 }
 
@@ -339,8 +343,24 @@ static void Fy_instructionTypeLea_run(Fy_VM *vm, uint16_t address) {
     vm->reg_ip += 1 + 1 + memparam_size;
 }
 
-static uint16_t Fy_instructionTypeLea_getsize(Fy_Instruction_OpReg16Mem *instruction) {
-    return 1 + Fy_InlineValue_getMapping(&instruction->value, NULL);
+static uint16_t Fy_instructionTypeMovMemReg16_getsize(Fy_Instruction_OpMemReg16 *instruction) {
+    return Fy_InlineValue_getMapping(&instruction->value, NULL) + 1;
+}
+
+static void Fy_instructionTypeMovMemReg16_write(Fy_Generator *generator, Fy_Instruction_OpMemReg16 *instruction) {
+    Fy_Generator_addMemory(generator, &instruction->value);
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeMovMemReg16_run(Fy_VM *vm, uint16_t address) {
+    uint16_t addr, value;
+    uint16_t memparam_size = Fy_VM_readMemoryParam(vm, address + 0, &addr);
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + memparam_size);
+
+    if (!Fy_VM_getReg16(vm, reg_id, &value))
+        return;
+    Fy_VM_setMem16(vm, addr, value);
+    vm->reg_ip += 1 + memparam_size + 1;
 }
 
 /* Type definitions */
@@ -526,6 +546,13 @@ Fy_InstructionType Fy_instructionTypeLea = {
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeLea_write,
     .run_func = Fy_instructionTypeLea_run
 };
+Fy_InstructionType Fy_instructionTypeMovMemReg16 = {
+    .opcode = 26,
+    .variable_size = true,
+    .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeMovMemReg16_getsize,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovMemReg16_write,
+    .run_func = Fy_instructionTypeMovMemReg16_run
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeNop,
@@ -553,5 +580,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeDebug,
     &Fy_instructionTypeDebugStack,
     &Fy_instructionTypeMovReg16Mem,
-    &Fy_instructionTypeLea
+    &Fy_instructionTypeLea,
+    &Fy_instructionTypeMovMemReg16
 };

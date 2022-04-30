@@ -790,93 +790,76 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
 }
 
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
-    Fy_ParserState start_backtrack, backtrack;
+    Fy_ParserState start_backtrack;
     Fy_TokenType start_token;
+    Fy_ParserParseRuleType type;
+    Fy_InstructionArg arg1, arg2;
+    Fy_ParserParseRule *rule;
+    Fy_Instruction *instruction = NULL;
 
     Fy_Parser_dumpState(parser, &start_backtrack);
 
     // If you can't even lex, don't start parsing
     if (!Fy_Parser_lex(parser))
         return NULL;
-
     start_token = parser->token.type;
 
-    Fy_Parser_dumpState(parser, &backtrack);
+    if (Fy_Parser_parseArgument(parser, &arg1)) {
+        if (Fy_Parser_parseArgument(parser, &arg2))
+            type = Fy_ParserParseRuleType_TwoParams;
+        else
+            type = Fy_ParserParseRuleType_OneParam;
+    } else {
+        type = Fy_ParserParseRuleType_NoParams;
+    }
+    Fy_Parser_expectNewline(parser, true);
 
-    for (size_t i = 0; i < sizeof(Fy_parserRules) / sizeof(Fy_ParserParseRule*); ++i) {
-        Fy_ParserParseRule *rule = Fy_parserRules[i];
-        Fy_InstructionArg arg1, arg2;
+    for (size_t i = 0; !instruction && i < sizeof(Fy_parserRules) / sizeof(Fy_ParserParseRule*); ++i) {
+        rule = Fy_parserRules[i];
 
-        if (start_token != rule->start_token)
-            continue;
-
-        // If we take no params
-        if (rule->type == Fy_ParserParseRuleType_NoParams) {
-            Fy_Instruction *instruction;
-            if (!Fy_Parser_expectNewline(parser, false)) {
-                Fy_Parser_loadState(parser, &backtrack);
-                continue;
+        if (start_token == rule->start_token && type == rule->type) {
+            switch (type) {
+            case Fy_ParserParseRuleType_NoParams:
+                instruction = rule->func_no_params(parser);
+                break;
+            case Fy_ParserParseRuleType_OneParam:
+                if (arg1.type == rule->arg1_type)
+                    instruction = rule->func_one_param(parser, &arg1);
+                break;
+            case Fy_ParserParseRuleType_TwoParams:
+                if (arg1.type == rule->arg1_type && arg2.type == rule->arg2_type)
+                    instruction = rule->func_two_params(parser, &arg1, &arg2);
+                break;
+            default:
+                FY_UNREACHABLE();
             }
-            instruction = rule->func_no_params(parser);
-            instruction->parse_rule = rule;
-            instruction->start_state = start_backtrack;
-            return instruction;
         }
+    }
 
-        if (!Fy_Parser_parseArgument(parser, &arg1))
-            continue;
+    if (instruction) {
+        instruction->parse_rule = rule;
+        instruction->start_state = start_backtrack;
+        return instruction;
+    }
 
-        if (arg1.type != rule->arg1_type) {
-            Fy_InstructionArg_Destruct(&arg1);
-            Fy_Parser_loadState(parser, &backtrack);
-            continue;
-        }
-
-        if (rule->type == Fy_ParserParseRuleType_OneParam) {
-            Fy_Instruction *instruction;
-            if (!Fy_Parser_expectNewline(parser, false)) {
-                Fy_InstructionArg_Destruct(&arg1);
-                Fy_Parser_loadState(parser, &backtrack);
-                continue;
-            }
-            instruction = rule->func_one_param(parser, &arg1);
-            instruction->parse_rule = rule;
-            instruction->start_state = start_backtrack;
-            return instruction;
-        }
-
-        if (!Fy_Parser_parseArgument(parser, &arg2)) {
-            Fy_InstructionArg_Destruct(&arg1);
-            Fy_Parser_loadState(parser, &backtrack);
-            continue;
-        }
-
-        if (arg2.type != rule->arg2_type) {
-            Fy_InstructionArg_Destruct(&arg1);
-            Fy_InstructionArg_Destruct(&arg2);
-            Fy_Parser_loadState(parser, &backtrack);
-            continue;
-        }
-
-        if (rule->type == Fy_ParserParseRuleType_TwoParams) {
-            Fy_Instruction *instruction;
-            if (!Fy_Parser_expectNewline(parser, false)) {
-                Fy_InstructionArg_Destruct(&arg1);
-                Fy_InstructionArg_Destruct(&arg2);
-                Fy_Parser_loadState(parser, &backtrack);
-                continue;
-            }
-            instruction = rule->func_two_params(parser, &arg1, &arg2);
-            instruction->parse_rule = rule;
-            instruction->start_state = start_backtrack;
-            return instruction;
-        }
-
+    // Remove arguments
+    switch (type) {
+    case Fy_ParserParseRuleType_NoParams:
+        break;
+    case Fy_ParserParseRuleType_OneParam:
+        Fy_InstructionArg_Destruct(&arg1);
+        break;
+    case Fy_ParserParseRuleType_TwoParams:
+        Fy_InstructionArg_Destruct(&arg1);
+        Fy_InstructionArg_Destruct(&arg2);
+        break;
+    default:
         FY_UNREACHABLE();
     }
 
     // TODO: Add clever error message that tells us why we were wrong
 
+    Fy_Parser_loadState(parser, &start_backtrack);
     Fy_Parser_error(parser, Fy_ParserError_InvalidInstruction, NULL, NULL);
 
     FY_UNREACHABLE();

@@ -1,34 +1,42 @@
 CODE
 start:
-    mov dx 10 ; amount of rounds
+    push 11
+    push 0
+    push 1
     call fib
+    debug
     end
 
+; returns into ax
 proc fib
-    push ax
+    push bp
+    mov bp sp
     push bx
     push cx
     push dx
 
-    mov ax 0
-    mov bx 1
-fib_loop:
-    cmp dx 0
-    je end_fib
-
+    mov ax [bp + 8]
+    cmp ax 0
+    jg calculate
+    mov ax [bp + 6]
+    jmp return
+calculate:
+    mov ax [bp + 6] ; load a
+    mov bx [bp + 4] ; load b
+    ; create next
     mov cx ax
     add cx bx
-    mov ax bx
-    mov bx cx
 
+    mov dx [bp + 8]
     sub dx 1
-    jmp fib_loop
-end_fib:
-    debug
-
+    push dx
+    push bx
+    push cx
+    call fib
+return:
     pop dx
     pop cx
     pop bx
-    pop ax
-    ret
+    pop bp
+    ret 6
 endp fib

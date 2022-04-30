@@ -44,7 +44,6 @@ uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc) {
 
 void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out) {
     if (bc->idx + amount > bc->length) {
-        printf("%d/%d\n", bc->idx + amount, bc->length);
         FY_UNREACHABLE();
     }
     memcpy(out, &bc->code[bc->idx], amount);

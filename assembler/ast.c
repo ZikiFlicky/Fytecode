@@ -81,7 +81,7 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
     }
 }
 
-void Fy_AST_delete(Fy_AST *ast) {
+void Fy_AST_Delete(Fy_AST *ast) {
     switch (ast->type) {
     case Fy_ASTType_Number:
     case Fy_ASTType_Bx:
@@ -92,8 +92,8 @@ void Fy_AST_delete(Fy_AST *ast) {
         break;
     case Fy_ASTType_Add:
     case Fy_ASTType_Sub:
-        Fy_AST_delete(ast->lhs);
-        Fy_AST_delete(ast->rhs);
+        Fy_AST_Delete(ast->lhs);
+        Fy_AST_Delete(ast->rhs);
         break;
     }
     free(ast);

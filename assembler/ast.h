@@ -45,7 +45,7 @@ struct Fy_InlineValue {
 };
 
 Fy_AST *Fy_AST_New(Fy_ASTType type);
-void Fy_AST_delete(Fy_AST *ast);
+void Fy_AST_Delete(Fy_AST *ast);
 void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out);
 
 uint16_t Fy_InlineValue_getMapping(Fy_InlineValue *inline_value, uint8_t *mapping);

@@ -290,6 +290,9 @@ static void Fy_InstructionArg_Destruct(Fy_InstructionArg *arg) {
     case Fy_InstructionArgType_Label:
         free(arg->as_label);
         break;
+    case Fy_InstructionArgType_Memory:
+        Fy_AST_Delete(arg->as_memory);
+        break;
     default:
         break;
     }
@@ -633,6 +636,7 @@ static void Fy_ProcessOpCodeLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *ins
 
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction) {
     Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
+    Fy_AST_Delete(instruction->address_ast);
 }
 
 /* Label processing functions */

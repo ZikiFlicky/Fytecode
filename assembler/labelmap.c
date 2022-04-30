@@ -65,11 +65,11 @@ static Fy_BucketNode *Fy_Labelmap_addEntry(Fy_Labelmap *map, char *name, Fy_MapE
     return new_node;
 }
 
-bool Fy_Labelmap_addMemLabel(Fy_Labelmap *map, char *name, uint16_t address) {
+bool Fy_Labelmap_addMemLabelDecl(Fy_Labelmap *map, char *name, size_t amount_prev_instructions) {
     Fy_BucketNode *node = Fy_Labelmap_addEntry(map, name, Fy_MapEntryType_CodeLabel);
     if (!node)
         return false;
-    node->code_offset = address;
+    node->code_label = amount_prev_instructions;
     return true;
 }
 

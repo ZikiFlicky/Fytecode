@@ -278,7 +278,8 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
         Fy_InstructionType *type = Fy_instructionTypes[i];
         if (opcode == type->opcode) {
             uint16_t address = vm->reg_ip + 1;
-            vm->reg_ip += 1 + type->additional_size;
+            if (!type->variable_size)
+                vm->reg_ip += 1 + type->additional_size;
             if (type->run_func)
                 type->run_func(vm, address);
             return;
@@ -358,4 +359,36 @@ uint16_t Fy_VM_calculateAddress(Fy_VM *vm, uint16_t *variable_off_ptr, uint16_t 
     address += *(int16_t*)&amount_bx * bx_value;
     address += *(int16_t*)&additional;
     return address;
+}
+
+/* Returns size of param and puts memory address into `out` */
+uint16_t Fy_VM_readMemoryParam(Fy_VM *vm, uint16_t address, uint16_t *out) {
+    uint8_t mapping = Fy_VM_getMem8(vm, address + 0);
+    uint16_t variable = 0;
+    uint16_t amount_bp = 0;
+    uint16_t amount_bx = 0;
+    uint16_t mem_addr = 0;
+    uint16_t full_addr;
+    uint16_t size = 1;
+
+    if (mapping & FY_INLINEVAL_MAPPING_HASVAR) {
+        variable = Fy_VM_getMem16(vm, address + size);
+        size += 2;
+    }
+    if (mapping & FY_INLINEVAL_MAPPING_HASBP) {
+        amount_bp = Fy_VM_getMem16(vm, address + size);
+        size += 2;
+    }
+    if (mapping & FY_INLINEVAL_MAPPING_HASBX) {
+        amount_bx = Fy_VM_getMem16(vm, address + size);
+        size += 2;
+    }
+    if (mapping & FY_INLINEVAL_MAPPING_HASNUM) {
+        mem_addr = Fy_VM_getMem16(vm, address + size);
+        size += 2;
+    }
+
+    full_addr = Fy_VM_calculateAddress(vm, mapping & FY_INLINEVAL_MAPPING_HASVAR ? &variable : NULL, amount_bp, amount_bx, mem_addr);
+    *out = full_addr;
+    return size;
 }

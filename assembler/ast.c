@@ -98,3 +98,27 @@ void Fy_AST_delete(Fy_AST *ast) {
     }
     free(ast);
 }
+
+uint16_t Fy_InlineValue_getMapping(Fy_InlineValue *inline_value, uint8_t *mapping) {
+    uint16_t size = 1; // Initialized to one because the mapping is one byte
+    uint16_t map = 0;
+    if (inline_value->has_variable) {
+        map |= FY_INLINEVAL_MAPPING_HASVAR;
+        size += 2;
+    }
+    if (inline_value->numeric) {
+        map |= FY_INLINEVAL_MAPPING_HASNUM;
+        size += 2;
+    }
+    if (inline_value->times_bp) {
+        map |= FY_INLINEVAL_MAPPING_HASBP;
+        size += 2;
+    }
+    if (inline_value->times_bx) {
+        map |= FY_INLINEVAL_MAPPING_HASBX;
+        size += 2;
+    }
+    if (mapping)
+        *mapping = map;
+    return size;
+}

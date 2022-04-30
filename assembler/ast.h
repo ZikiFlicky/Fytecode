@@ -9,6 +9,11 @@
 typedef struct Fy_AST Fy_AST;
 typedef struct Fy_InlineValue Fy_InlineValue;
 
+#define FY_INLINEVAL_MAPPING_HASVAR (1 << 0)
+#define FY_INLINEVAL_MAPPING_HASBP (1 << 1)
+#define FY_INLINEVAL_MAPPING_HASBX (1 << 2)
+#define FY_INLINEVAL_MAPPING_HASNUM (1 << 3)
+
 typedef enum Fy_ASTType {
     Fy_ASTType_Number = 1,
     Fy_ASTType_Label,
@@ -42,5 +47,7 @@ struct Fy_InlineValue {
 Fy_AST *Fy_AST_New(Fy_ASTType type);
 void Fy_AST_delete(Fy_AST *ast);
 void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out);
+
+uint16_t Fy_InlineValue_getMapping(Fy_InlineValue *inline_value, uint8_t *mapping);
 
 #endif /* FY_AST_H */

@@ -310,14 +310,18 @@ static void Fy_instructionTypeMovReg16Mem_write(Fy_Generator *generator, Fy_Inst
 
 static void Fy_instructionTypeMovReg16Mem_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
-    bool has_variable = Fy_VM_getMem8(vm, address + 1);
-    uint16_t variable = Fy_VM_getMem16(vm, address + 2);
-    uint16_t amount_bp = Fy_VM_getMem16(vm, address + 4);
-    uint16_t amount_bx = Fy_VM_getMem16(vm, address + 6);
-    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 8);
-    uint16_t full_addr = Fy_VM_calculateAddress(vm, has_variable ? &variable : NULL, amount_bp, amount_bx, mem_addr);
-    uint16_t value = Fy_VM_getMem16(vm, full_addr);
-    Fy_VM_setReg16(vm, reg_id, value);
+    uint16_t addr;
+    uint16_t memparam_size = Fy_VM_readMemoryParam(vm, address + 1, &addr);
+    uint16_t value;
+
+    value = Fy_VM_getMem16(vm, addr);
+    if (!Fy_VM_setReg16(vm, reg_id, value))
+        return;
+    vm->reg_ip += 1 + 1 + memparam_size;
+}
+
+static uint16_t Fy_instructionTypeMovReg16Mem_getsize(Fy_Instruction_OpReg16Mem *instruction) {
+    return 1 + Fy_InlineValue_getMapping(&instruction->value, NULL);
 }
 
 static void Fy_instructionTypeLea_write(Fy_Generator *generator, Fy_Instruction_OpReg16Mem *instruction) {
@@ -327,169 +331,198 @@ static void Fy_instructionTypeLea_write(Fy_Generator *generator, Fy_Instruction_
 
 static void Fy_instructionTypeLea_run(Fy_VM *vm, uint16_t address) {
     uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
-    bool has_variable = Fy_VM_getMem8(vm, address + 1);
-    uint16_t variable = Fy_VM_getMem16(vm, address + 2);
-    uint16_t amount_bp = Fy_VM_getMem16(vm, address + 4);
-    uint16_t amount_bx = Fy_VM_getMem16(vm, address + 6);
-    uint16_t mem_addr = Fy_VM_getMem16(vm, address + 8);
-    uint16_t full_addr = Fy_VM_calculateAddress(vm, has_variable ? &variable : NULL, amount_bp, amount_bx, mem_addr);
-    Fy_VM_setReg16(vm, reg_id, full_addr);
+    uint16_t addr;
+    uint16_t memparam_size = Fy_VM_readMemoryParam(vm, address + 1, &addr);
+
+    if (!Fy_VM_setReg16(vm, reg_id, addr))
+        return;
+    vm->reg_ip += 1 + 1 + memparam_size;
+}
+
+static uint16_t Fy_instructionTypeLea_getsize(Fy_Instruction_OpReg16Mem *instruction) {
+    return 1 + Fy_InlineValue_getMapping(&instruction->value, NULL);
 }
 
 /* Type definitions */
 Fy_InstructionType Fy_instructionTypeNop = {
     .opcode = 0,
+    .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = NULL
 };
 Fy_InstructionType Fy_instructionTypeMovReg16Const = {
     .opcode = 1,
+    .variable_size = false,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovReg16Const_write,
     .run_func = Fy_instructionTypeMovReg16Const_run
 };
 Fy_InstructionType Fy_instructionTypeMovReg16Reg16 = {
     .opcode = 2,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovReg16Reg16_write,
     .run_func = Fy_instructionTypeMovReg16Reg16_run
 };
 Fy_InstructionType Fy_instructionTypeEndProgram = {
     .opcode = 3,
+    .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeEndProgram_run
 };
 Fy_InstructionType Fy_instructionTypeAddReg16Const = {
     .opcode = 4,
+    .variable_size = false,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeAddReg16Const_write,
     .run_func = Fy_instructionTypeAddReg16Const_run
 };
 Fy_InstructionType Fy_instructionTypeAddReg16Reg16 = {
     .opcode = 5,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeAddReg16Reg16_write,
     .run_func = Fy_instructionTypeAddReg16Reg16_run
 };
 Fy_InstructionType Fy_instructionTypeSubReg16Const = {
     .opcode = 6,
+    .variable_size = false,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeSubReg16Const_write,
     .run_func = Fy_instructionTypeSubReg16Const_run
 };
 Fy_InstructionType Fy_instructionTypeSubReg16Reg16 = {
     .opcode = 7,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeSubReg16Reg16_write,
     .run_func = Fy_instructionTypeSubReg16Reg16_run
 };
 Fy_InstructionType Fy_instructionTypeCmpReg16Const = {
     .opcode = 8,
+    .variable_size = false,
     .additional_size = 3,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCmpReg16Const_write,
     .run_func = Fy_instructionTypeCmpReg16Const_run
 };
 Fy_InstructionType Fy_instructionTypeCmpReg16Reg16 = {
     .opcode = 9,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCmpReg16Reg16_write,
     .run_func = Fy_instructionTypeCmpReg16Reg16_run
 };
 Fy_InstructionType Fy_instructionTypeJmp = {
     .opcode = 10,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJmp_write,
     .run_func = Fy_instructionTypeJmp_run
 };
 Fy_InstructionType Fy_instructionTypeJe = {
     .opcode = 11,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJe_write,
     .run_func = Fy_instructionTypeJe_run
 };
 Fy_InstructionType Fy_instructionTypeJl = {
     .opcode = 12,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJl_write,
     .run_func = Fy_instructionTypeJl_run
 };
 Fy_InstructionType Fy_instructionTypeJg = {
     .opcode = 13,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJg_write,
     .run_func = Fy_instructionTypeJg_run
 };
 Fy_InstructionType Fy_instructionTypePushConst = {
     .opcode = 14,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePushConst_write,
     .run_func = Fy_instructionTypePushConst_run
 };
 Fy_InstructionType Fy_instructionTypePushReg16 = {
     .opcode = 15,
+    .variable_size = false,
     .additional_size = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePushReg16_write,
     .run_func = Fy_instructionTypePushReg16_run
 };
 Fy_InstructionType Fy_instructionTypePop = {
     .opcode = 16,
+    .variable_size = false,
     .additional_size = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePop_write,
     .run_func = Fy_instructionTypePop_run
 };
 Fy_InstructionType Fy_instructionTypeMovReg8Const = {
     .opcode = 17,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovReg8Const_write,
     .run_func = Fy_instructionTypeMovReg8Const_run
 };
 Fy_InstructionType Fy_instructionTypeMovReg8Reg8 = {
     .opcode = 18,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovReg8Reg8_write,
     .run_func = Fy_instructionTypeMovReg8Reg8_run
 };
 Fy_InstructionType Fy_instructionTypeCall = {
     .opcode = 19,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCall_write,
     .run_func = Fy_instructionTypeCall_run
 };
 Fy_InstructionType Fy_instructionTypeRet = {
     .opcode = 20,
+    .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeRet_run
 };
 Fy_InstructionType Fy_instructionTypeRetConst16 = {
     .opcode = 21,
+    .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeRetConst16_write,
     .run_func = Fy_instructionTypeRetConst16_run
 };
 Fy_InstructionType Fy_instructionTypeDebug = {
     .opcode = 22,
+    .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeDebug_run
 };
 Fy_InstructionType Fy_instructionTypeDebugStack = {
     .opcode = 23,
+    .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeDebugStack_run
 };
 Fy_InstructionType Fy_instructionTypeMovReg16Mem = {
     .opcode = 24,
-    .additional_size = 10,
+    .variable_size = true,
+    .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeMovReg16Mem_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovReg16Mem_write,
     .run_func = Fy_instructionTypeMovReg16Mem_run
 };
 Fy_InstructionType Fy_instructionTypeLea = {
     .opcode = 25,
-    .additional_size = 10,
+    .variable_size = true,
+    .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeLea_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeLea_write,
     .run_func = Fy_instructionTypeLea_run
 };

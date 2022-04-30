@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define FY_LABELMAP_AMOUNT_BUCKETS 8
 
@@ -21,7 +22,7 @@ struct Fy_BucketNode {
     char *name;
     union {
         uint16_t data_offset;
-        uint16_t code_offset;
+        size_t code_label;
     };
 };
 
@@ -31,7 +32,7 @@ struct Fy_Labelmap {
 
 void Fy_Labelmap_Init(Fy_Labelmap *out);
 void Fy_Labelmap_Destruct(Fy_Labelmap *map);
-bool Fy_Labelmap_addMemLabel(Fy_Labelmap *map, char *name, uint16_t address);
+bool Fy_Labelmap_addMemLabelDecl(Fy_Labelmap *map, char *name, size_t amount_prev_instructions);
 bool Fy_Labelmap_addVariable(Fy_Labelmap *map, char *name, uint16_t offset);
 Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name);
 

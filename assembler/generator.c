@@ -36,11 +36,18 @@ void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w) {
 }
 
 void Fy_Generator_addMemory(Fy_Generator *generator, Fy_InlineValue *mem) {
-    Fy_Generator_addByte(generator, mem->has_variable);
-    Fy_Generator_addWord(generator, mem->has_variable ? mem->variable_offset : 0);
-    Fy_Generator_addWord(generator, mem->times_bp);
-    Fy_Generator_addWord(generator, mem->times_bx);
-    Fy_Generator_addWord(generator, mem->numeric);
+    uint8_t mapping;
+    Fy_InlineValue_getMapping(mem, &mapping);
+    // Add mapping
+    Fy_Generator_addByte(generator, mapping);
+    if (mapping & FY_INLINEVAL_MAPPING_HASVAR)
+        Fy_Generator_addWord(generator, mem->variable_offset);
+    if (mapping & FY_INLINEVAL_MAPPING_HASBP)
+        Fy_Generator_addWord(generator, mem->times_bp);
+    if (mapping & FY_INLINEVAL_MAPPING_HASBX)
+        Fy_Generator_addWord(generator, mem->times_bx);
+    if (mapping & FY_INLINEVAL_MAPPING_HASNUM)
+        Fy_Generator_addWord(generator, mem->numeric);
 }
 
 void Fy_Generator_addInstruction(Fy_Generator *generator, Fy_Instruction *instruction) {

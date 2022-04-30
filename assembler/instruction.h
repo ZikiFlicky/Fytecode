@@ -27,12 +27,17 @@ typedef struct Fy_Instruction_OpMem Fy_Instruction_OpMem;
 typedef struct Fy_Instruction_OpVarReg16 Fy_Instruction_OpVarReg16;
 typedef struct Fy_Instruction_OpVarConst16 Fy_Instruction_OpVarConst16;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
+typedef uint16_t (*Fy_InstructionGetSizeFunc)(Fy_Instruction*);
 typedef void (*Fy_InstructionRunFunc)(Fy_VM*, uint16_t);
 
 /* Stores information about an instruction */
 struct Fy_InstructionType {
     uint8_t opcode;
-    uint16_t additional_size;
+    bool variable_size;
+    union {
+        Fy_InstructionGetSizeFunc getsize_func;
+        uint16_t additional_size;
+    };
     Fy_InstructionWriteFunc write_func;
     /* Parses and runs instruction from memory pointer on virtual machine */
     Fy_InstructionRunFunc run_func;
@@ -43,6 +48,8 @@ struct Fy_Instruction {
     Fy_InstructionType *type;
     Fy_ParserParseRule *parse_rule;
     Fy_ParserState start_state;
+    /* Stores information needed for code labels */
+    uint16_t code_offset, size;
 };
 
 /* Inheriting instructions */
@@ -73,6 +80,8 @@ struct Fy_Instruction_OpReg16Reg16 {
 struct Fy_Instruction_OpLabel {
     FY_INSTRUCTION_BASE;
     char *name;
+    /* The next instruction offset */
+    size_t instruction_offset;
     uint16_t address;
 };
 

@@ -18,6 +18,7 @@ typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
 typedef struct Fy_AST Fy_AST;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
+typedef void (*Fy_InstructionProcessLabelFunc)(Fy_Instruction*, Fy_Parser*);
 
 struct Fy_ParserState {
     char *stream;
@@ -46,12 +47,10 @@ struct Fy_Parser {
     Fy_Token token;
     uint8_t *data_part;
     uint16_t data_allocated, data_size;
+    uint16_t code_size;
 
     size_t amount_used, amount_allocated;
     Fy_Instruction **instructions;
-
-    /* Offset to next instruction. Stored for label management */
-    uint16_t code_size;
 
     Fy_Labelmap labelmap;
 };
@@ -92,7 +91,8 @@ struct Fy_ParserParseRule {
         Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_InstructionArg*, Fy_InstructionArg*);
     };
     /* Process instruction after full file parsing */
-    Fy_InstructionProcessFunc func_process;
+    Fy_InstructionProcessFunc process_func;
+    Fy_InstructionProcessLabelFunc process_label_func;
 };
 
 extern Fy_ParserParseRule *Fy_parserRules[];
@@ -104,5 +104,6 @@ void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, Fy_ParserState *st
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);
 void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename);
 void Fy_Parser_logParsed(Fy_Parser *parser); /* NOTE: Debug function */
+uint16_t Fy_Parser_getCodeOffsetByInstructionIndex(Fy_Parser *parser, size_t index);
 
 #endif /* FY_PARSER_H */

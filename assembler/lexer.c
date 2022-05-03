@@ -189,6 +189,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
         ++lexer->stream;
+        ++lexer->column;
         return true;
     }
 
@@ -197,6 +198,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
         ++lexer->stream;
+        ++lexer->column;
         return true;
     }
 
@@ -205,6 +207,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
         ++lexer->stream;
+        ++lexer->column;
         return true;
     }
 
@@ -216,6 +219,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.type = Fy_TokenType_Minus;
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
+        ++lexer->column;
         ++lexer->stream;
         return true;
     }
@@ -224,6 +228,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.type = Fy_TokenType_Plus;
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
+        ++lexer->column;
         ++lexer->stream;
         return true;
     }
@@ -232,6 +237,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         lexer->token.type = Fy_TokenType_Comma;
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;
+        ++lexer->column;
         ++lexer->stream;
         return true;
     }

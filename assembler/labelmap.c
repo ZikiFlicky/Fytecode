@@ -44,25 +44,37 @@ static size_t Fy_HashLabelmapKey(char *key) {
 static Fy_BucketNode *Fy_Labelmap_addEntry(Fy_Labelmap *map, char *name, Fy_MapEntryType type) {
     size_t idx = Fy_HashLabelmapKey(name);
     Fy_BucketNode *base_node = map->buckets[idx];
-    Fy_BucketNode *new_node;
-    Fy_BucketNode **insert_ptr;
+    Fy_BucketNode *modify_node;
 
     if (!base_node) {
-        insert_ptr = &map->buckets[idx];
+        modify_node = Fy_BucketNode_New(name, type);
+        map->buckets[idx] = modify_node;
     } else {
         Fy_BucketNode *prev;
+        bool found = false;
         do {
             // If found a match, panic
-            if (strcmp(base_node->name, name) == 0)
-                return NULL;
+            if (strcmp(base_node->name, name) == 0) {
+                if (base_node->type != type)
+                    return NULL;
+                // Macros can be redefined
+                if (type == Fy_MapEntryType_Macro) {
+                    modify_node = base_node;
+                    found = true;
+                } else {
+                    return NULL;
+                }
+            }
             prev = base_node;
             base_node = prev->next;
-        } while (base_node);
-        insert_ptr = &prev->next;
+            if (!found && !base_node) {
+                modify_node = Fy_BucketNode_New(name, type);
+                prev->next = modify_node;
+                found = true;
+            }
+        } while (!found);
     }
-    new_node = Fy_BucketNode_New(name, type);
-    *insert_ptr = new_node;
-    return new_node;
+    return modify_node;
 }
 
 bool Fy_Labelmap_addMemLabelDecl(Fy_Labelmap *map, char *name, size_t amount_prev_instructions) {
@@ -81,6 +93,14 @@ bool Fy_Labelmap_addVariable(Fy_Labelmap *map, char *name, uint16_t offset) {
     return true;
 }
 
+bool Fy_Labelmap_addMacro(Fy_Labelmap *map, char *name, Fy_Macro macro) {
+    Fy_BucketNode *node = Fy_Labelmap_addEntry(map, name, Fy_MapEntryType_Macro);
+    if (!node)
+        return false;
+    node->macro = macro;
+    return true;
+}
+
 /* Returns whether we found the entry, and if we did, we put it in address_out */
 Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name) {
     size_t idx = Fy_HashLabelmapKey(name);
@@ -90,6 +110,14 @@ Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name) {
             return node;
         node = node->next;
     }
+    // Not found
+    return NULL;
+}
+
+Fy_Macro *Fy_Labelmap_getMacro(Fy_Labelmap *map, char *name) {
+    Fy_BucketNode *entry = Fy_Labelmap_getEntry(map, name);
+    if (entry && entry->type == Fy_MapEntryType_Macro)
+        return &entry->macro;
     // Not found
     return NULL;
 }

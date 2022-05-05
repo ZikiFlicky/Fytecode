@@ -53,6 +53,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_RightBracket,
     Fy_TokenType_Plus,
     Fy_TokenType_Minus,
+    Fy_TokenType_EqualSign,
     Fy_TokenType_Comma,
     Fy_TokenType_Data,
     Fy_TokenType_Code,

@@ -23,6 +23,8 @@ typedef void (*Fy_InstructionProcessLabelFunc)(Fy_Instruction*, Fy_Parser*);
 struct Fy_ParserState {
     char *stream;
     size_t line, column;
+    Fy_Macro *macro;
+    size_t macro_idx;
 };
 
 enum Fy_ParserError {
@@ -53,6 +55,9 @@ struct Fy_Parser {
     Fy_Instruction **instructions;
 
     Fy_Labelmap labelmap;
+
+    Fy_Macro *macro;
+    size_t macro_idx;
 };
 
 enum Fy_InstructionArgType {

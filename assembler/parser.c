@@ -353,6 +353,8 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     out->amount_used = 0;
     out->data_allocated = 0;
     out->data_size = 0;
+    out->macro = NULL;
+    out->macro_idx = 0;
     Fy_Labelmap_Init(&out->labelmap);
 }
 
@@ -373,16 +375,34 @@ static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     out_state->stream = parser->lexer->stream;
     out_state->line = parser->lexer->line;
     out_state->column = parser->lexer->column;
+    out_state->macro = parser->macro;
+    out_state->macro_idx = parser->macro_idx;
 }
 
 static void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
     parser->lexer->stream = state->stream;
     parser->lexer->line = state->line;
     parser->lexer->column = state->column;
+    parser->macro = state->macro;
+    parser->macro_idx = state->macro_idx;
 }
 
-static bool Fy_Parser_lex(Fy_Parser *parser) {
-    if (Fy_Lexer_lex(parser->lexer)) {
+static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval) {
+    if (macro_eval && parser->macro && parser->macro_idx < parser->macro->token_amount) {
+        parser->token = parser->macro->tokens[parser->macro_idx++];
+        return true;
+    } else if (Fy_Lexer_lex(parser->lexer)) {
+        // If we got a label, it might be a macro, so if allowed, we should replace the label by tokens 
+        if (macro_eval && parser->lexer->token.type == Fy_TokenType_Label) {
+            char *name = Fy_Token_toLowercaseCStr(&parser->lexer->token);
+            Fy_Macro *macro = Fy_Labelmap_getMacro(&parser->labelmap, name);
+            free(name);
+            if (macro) {
+                parser->macro = macro;
+                parser->macro_idx = 0;
+                return Fy_Parser_lex(parser, true);
+            }
+        }
         parser->token = parser->lexer->token;
         return true;
     } else {
@@ -446,11 +466,11 @@ static void Fy_Parser_addData16(Fy_Parser *parser, uint16_t value) {
 }
 
 /* Returns a boolean specifying whether a token of the given type was found. */
-static bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type) {
+static bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
     Fy_ParserState backtrack;
     Fy_Parser_dumpState(parser, &backtrack);
 
-    if (!Fy_Parser_lex(parser) || parser->token.type != type) {
+    if (!Fy_Parser_lex(parser, macro_eval) || parser->token.type != type) {
         Fy_Parser_loadState(parser, &backtrack);
         return false;
     }
@@ -681,7 +701,7 @@ static bool Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
     Fy_ParserState state;
     Fy_Parser_dumpState(parser, &state);
 
-    if (!Fy_Parser_lex(parser))
+    if (!Fy_Parser_lex(parser, true))
         return true; // Eof = Eol for us
     if (parser->token.type == Fy_TokenType_Newline)
         return true;
@@ -699,7 +719,7 @@ static Fy_AST *Fy_Parser_parseLiteralExpr(Fy_Parser *parser) {
     Fy_ParserState backtrack;
     Fy_Parser_dumpState(parser, &backtrack);
 
-    if (!Fy_Parser_lex(parser))
+    if (!Fy_Parser_lex(parser, true))
         return NULL;
 
     switch (parser->token.type) {
@@ -741,7 +761,7 @@ static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
 
         Fy_Parser_dumpState(parser, &backtrack);
 
-        if (!Fy_Parser_lex(parser))
+        if (!Fy_Parser_lex(parser, true))
             break;
 
         switch (parser->token.type) {
@@ -772,12 +792,12 @@ static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
 static Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser) {
     Fy_AST *ast;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_LeftBracket))
+    if (!Fy_Parser_match(parser, Fy_TokenType_LeftBracket, true))
         return NULL;
 
     ast = Fy_Parser_parseSumExpr(parser);
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_RightBracket))
+    if (!Fy_Parser_match(parser, Fy_TokenType_RightBracket, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "']'");
 
     return ast;
@@ -792,7 +812,7 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     }
 
     Fy_Parser_dumpState(parser, &backtrack);
-    if (!Fy_Parser_lex(parser))
+    if (!Fy_Parser_lex(parser, true))
         return false;
 
     if (Fy_TokenType_isReg16(parser->token.type)) {
@@ -834,7 +854,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_Parser_dumpState(parser, &start_backtrack);
 
     // If you can't even lex, don't start parsing
-    if (!Fy_Parser_lex(parser))
+    if (!Fy_Parser_lex(parser, true))
         return NULL;
     start_token = parser->token.type;
 
@@ -899,16 +919,58 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     FY_UNREACHABLE();
 }
 
+static bool Fy_Parser_parseMacroDef(Fy_Parser *parser) {
+    Fy_ParserState backtrack;
+    char *name;
+    Fy_Token label_token;
+    Fy_Token *tokens = NULL;
+    size_t allocated = 0, idx = 0;
+    Fy_Macro macro;
+
+    Fy_Parser_dumpState(parser, &backtrack);
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Label, false))
+        return false;
+    label_token = parser->token;
+    if (!Fy_Parser_match(parser, Fy_TokenType_EqualSign, true)) {
+        Fy_Parser_loadState(parser, &backtrack);
+        return false;
+    }
+
+    // Get tokens
+    while (!Fy_Parser_expectNewline(parser, false)) {
+        if (!Fy_Parser_lex(parser, true))
+            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
+        if (allocated == 0) {
+            tokens = malloc((allocated = 4) * sizeof(Fy_Token));
+        } else if (idx == allocated) {
+            tokens = realloc(tokens, (allocated += 4) * sizeof(Fy_Token));
+        }
+        // Store token
+        tokens[idx++] = parser->token;
+    }
+
+    // Convert label token to cstring
+    name = Fy_Token_toLowercaseCStr(&label_token);
+
+    // Create macro
+    macro.tokens = tokens;
+    macro.token_amount = idx;
+
+    Fy_Labelmap_addMacro(&parser->labelmap, name, macro);
+    return true;
+}
+
 /* Returns whether we parsed a label */
 static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     Fy_Token label_token;
     char *label_string;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
         return false;
     label_token = parser->token;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Colon))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Colon, true))
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
 
     // Advance newline if there is
@@ -924,10 +986,10 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     char *label_string;
     uint16_t amount_prev_instructions = parser->amount_used;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Proc))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Proc, true))
         return false;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
 
     label_string = Fy_Token_toLowercaseCStr(&parser->token);
@@ -935,9 +997,9 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     Fy_Parser_expectNewline(parser, true);
 
     for (;;) {
-        if (Fy_Parser_match(parser, Fy_TokenType_Endp)) {
+        if (Fy_Parser_match(parser, Fy_TokenType_Endp, true)) {
             char *endp_label_string;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Label))
+            if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
                 Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
             endp_label_string = Fy_Token_toLowercaseCStr(&parser->token);
             if (strcmp(label_string, endp_label_string) != 0)
@@ -960,6 +1022,9 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
     Fy_Instruction *instruction;
 
     Fy_Parser_expectNewline(parser, false);
+
+    if (Fy_Parser_parseMacroDef(parser))
+        return true;
 
     if (Fy_Parser_parseLabel(parser))
         return true;
@@ -984,7 +1049,7 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     char *label;
     uint16_t variable_offset;
 
-    if (Fy_Parser_match(parser, Fy_TokenType_Label)) {
+    if (Fy_Parser_match(parser, Fy_TokenType_Label, true)) {
         label = Fy_Token_toLowercaseCStr(&parser->token);
         // If there is a label defined with that name
         if (Fy_Labelmap_getEntry(&parser->labelmap, label))
@@ -995,22 +1060,22 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
 
     variable_offset = parser->data_size;
 
-    if (Fy_Parser_match(parser, Fy_TokenType_Eb)) {
+    if (Fy_Parser_match(parser, Fy_TokenType_Eb, true)) {
         do {
             int8_t value;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Const))
+            if (!Fy_Parser_match(parser, Fy_TokenType_Const, true))
                 Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Constant");
             value = Fy_Token_toConst8(&parser->token, parser);
             Fy_Parser_addData8(parser, value);
-        } while (Fy_Parser_match(parser, Fy_TokenType_Comma));
-    } else if (Fy_Parser_match(parser, Fy_TokenType_Ew)) {
+        } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
+    } else if (Fy_Parser_match(parser, Fy_TokenType_Ew, true)) {
         do {
             int16_t value;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Const))
+            if (!Fy_Parser_match(parser, Fy_TokenType_Const, true))
                 Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Constant");
             value = Fy_Token_toConst16(&parser->token, parser);
             Fy_Parser_addData16(parser, value);
-        } while (Fy_Parser_match(parser, Fy_TokenType_Comma));
+        } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
     } else {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "EB or EW");
         FY_UNREACHABLE();
@@ -1033,7 +1098,7 @@ static void Fy_Parser_readInstructions(Fy_Parser *parser) {
         ;
 
     Fy_Parser_dumpState(parser, &backtrack);
-    if (Fy_Parser_lex(parser)) {
+    if (Fy_Parser_lex(parser, true)) {
         Fy_Parser_loadState(parser, &backtrack);
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
     }
@@ -1096,12 +1161,12 @@ static void Fy_Parser_processLabels(Fy_Parser *parser) {
 void Fy_Parser_parseAll(Fy_Parser *parser) {
     // Advance newline if there is one
     Fy_Parser_expectNewline(parser, false);
-    if (Fy_Parser_match(parser, Fy_TokenType_Data)) {
+    if (Fy_Parser_match(parser, Fy_TokenType_Data, true)) {
         Fy_Parser_expectNewline(parser, true);
-        while (!Fy_Parser_match(parser, Fy_TokenType_Code)) {
+        while (!Fy_Parser_match(parser, Fy_TokenType_Code, true)) {
             Fy_Parser_parseSetVariable(parser);
         }
-    } else if (!Fy_Parser_match(parser, Fy_TokenType_Code)) {
+    } else if (!Fy_Parser_match(parser, Fy_TokenType_Code, true)) {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "CODE");
     }
 

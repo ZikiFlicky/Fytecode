@@ -130,10 +130,10 @@ bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
     return true;
 }
 
-bool Fy_Lexer_lexLabel(Fy_Lexer *lexer) {
+bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer) {
     if (!is_keyword_start_char(lexer->stream[0]))
         return false;
-    lexer->token.type = Fy_TokenType_Label;
+    lexer->token.type = Fy_TokenType_Symbol;
     lexer->token.start = lexer->stream;
     lexer->token.length = 0;
     do {
@@ -332,7 +332,7 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (Fy_Lexer_lexConst(lexer))
         return true;
 
-    if (Fy_Lexer_lexLabel(lexer))
+    if (Fy_Lexer_lexSymbol(lexer))
         return true;
 
     Fy_Lexer_error(lexer, Fy_LexerError_Syntax);

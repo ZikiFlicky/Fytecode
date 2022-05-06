@@ -45,7 +45,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Dl,
     Fy_TokenType_Proc,
     Fy_TokenType_Endp,
-    Fy_TokenType_Label,
+    Fy_TokenType_Symbol,
     Fy_TokenType_Const,
     Fy_TokenType_Newline,
     Fy_TokenType_Colon,

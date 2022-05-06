@@ -1,15 +1,15 @@
-#ifndef FY_LABELMAP_H
-#define FY_LABELMAP_H
+#ifndef FY_SYMBOLMAP_H
+#define FY_SYMBOLMAP_H
 
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#define FY_LABELMAP_AMOUNT_BUCKETS 8
+#define FY_SYMBOLMAP_AMOUNT_BUCKETS 8
 
 typedef struct Fy_Macro Fy_Macro;
 typedef struct Fy_MacroEvalInstance Fy_MacroEvalInstance;
-typedef struct Fy_Labelmap Fy_Labelmap;
+typedef struct Fy_Symbolmap Fy_Symbolmap;
 typedef struct Fy_BucketNode Fy_BucketNode;
 typedef enum Fy_MapEntryType Fy_MapEntryType;
 
@@ -26,7 +26,7 @@ struct Fy_MacroEvalInstance {
 
 enum Fy_MapEntryType {
     Fy_MapEntryType_Variable = 1,
-    Fy_MapEntryType_CodeLabel,
+    Fy_MapEntryType_Label,
     Fy_MapEntryType_Macro
 };
 
@@ -41,16 +41,16 @@ struct Fy_BucketNode {
     };
 };
 
-struct Fy_Labelmap {
+struct Fy_Symbolmap {
     Fy_BucketNode *buckets[8];
 };
 
-void Fy_Labelmap_Init(Fy_Labelmap *out);
-void Fy_Labelmap_Destruct(Fy_Labelmap *map);
-bool Fy_Labelmap_addMemLabelDecl(Fy_Labelmap *map, char *name, size_t amount_prev_instructions);
-bool Fy_Labelmap_addVariable(Fy_Labelmap *map, char *name, uint16_t offset);
-bool Fy_Labelmap_addMacro(Fy_Labelmap *map, char *name, Fy_Macro macro);
-Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name);
-Fy_Macro *Fy_Labelmap_getMacro(Fy_Labelmap *map, char *name);
+void Fy_Symbolmap_Init(Fy_Symbolmap *out);
+void Fy_Symbolmap_Destruct(Fy_Symbolmap *map);
+bool Fy_Symbolmap_addLabelDecl(Fy_Symbolmap *map, char *name, size_t amount_prev_instructions);
+bool Fy_Symbolmap_addVariable(Fy_Symbolmap *map, char *name, uint16_t offset);
+bool Fy_Symbolmap_addMacro(Fy_Symbolmap *map, char *name, Fy_Macro macro);
+Fy_BucketNode *Fy_Symbolmap_getEntry(Fy_Symbolmap *map, char *name);
+Fy_Macro *Fy_Symbolmap_getMacro(Fy_Symbolmap *map, char *name);
 
-#endif /* FY_LABELMAP_H */
+#endif /* FY_SYMBOLMAP_H */

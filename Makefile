@@ -9,7 +9,7 @@ NAME=fy
 RM=rm -f
 RMDIR=rm -rf
 
-OBJECTS=token.o lexer.o ast.o parser.o generator.o main.o instruction.o labelmap.o vm.o
+OBJECTS=token.o lexer.o ast.o parser.o generator.o main.o instruction.o symbolmap.o vm.o
 
 .PHONY: clean all debug
 

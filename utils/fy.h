@@ -18,7 +18,7 @@
 #include "../assembler/parser.h"
 #include "../assembler/generator.h"
 #include "../assembler/instruction.h"
-#include "../assembler/labelmap.h"
+#include "../assembler/symbolmap.h"
 
 #include "../vm/vm.h"
 #include "../vm/registers.h"

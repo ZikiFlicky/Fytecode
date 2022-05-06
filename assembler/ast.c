@@ -14,10 +14,10 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
         out->times_bp = 0;
         out->times_bx = 0;
         break;
-    case Fy_ASTType_Label: {
-        Fy_BucketNode *entry = Fy_Labelmap_getEntry(&parser->labelmap, ast->as_label);
+    case Fy_ASTType_Variable: {
+        Fy_BucketNode *entry = Fy_Symbolmap_getEntry(&parser->symmap, ast->as_variable);
         if (entry->type != Fy_MapEntryType_Variable)
-            Fy_Parser_error(parser, Fy_ParserError_LabelNotVariable, &ast->state, "%s", ast->as_label);
+            Fy_Parser_error(parser, Fy_ParserError_SymbolNotVariable, &ast->state, "%s", ast->as_variable);
         out->has_variable = true;
         out->variable_offset = entry->data_offset;
         out->numeric = 0;
@@ -87,8 +87,8 @@ void Fy_AST_Delete(Fy_AST *ast) {
     case Fy_ASTType_Bx:
     case Fy_ASTType_Bp:
         break;
-    case Fy_ASTType_Label:
-        free(ast->as_label);
+    case Fy_ASTType_Variable:
+        free(ast->as_variable);
         break;
     case Fy_ASTType_Add:
     case Fy_ASTType_Sub:

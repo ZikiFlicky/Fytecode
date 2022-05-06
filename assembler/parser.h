@@ -3,7 +3,7 @@
 
 #include "lexer.h"
 #include "generator.h"
-#include "labelmap.h"
+#include "symbolmap.h"
 #include "ast.h"
 
 #include <stddef.h>
@@ -39,12 +39,12 @@ enum Fy_ParserError {
     Fy_ParserError_InvalidInstruction,
     Fy_ParserError_SyntaxError,
     Fy_ParserError_CannotOpenFileForWrite,
-    Fy_ParserError_LabelNotFound,
-    Fy_ParserError_UnexpectedLabel,
+    Fy_ParserError_SymbolNotFound,
+    Fy_ParserError_UnexpectedSymbol,
     Fy_ParserError_ExpectedDifferentToken,
-    Fy_ParserError_LabelNotCode,
-    Fy_ParserError_LabelNotVariable,
-    Fy_ParserError_LabelAlreadyExists,
+    Fy_ParserError_SymbolNotCode,
+    Fy_ParserError_SymbolNotVariable,
+    Fy_ParserError_SymbolAlreadyDefined,
     Fy_ParserError_RecursiveMacro,
     Fy_ParserError_MaxMacroDepthReached
 };
@@ -59,7 +59,7 @@ struct Fy_Parser {
     size_t amount_used, amount_allocated;
     Fy_Instruction **instructions;
 
-    Fy_Labelmap labelmap;
+    Fy_Symbolmap symmap;
 
     Fy_MacroEvalInstance macros[FY_MACRO_DEPTH];
     size_t amount_macros;

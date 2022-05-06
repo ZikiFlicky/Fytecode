@@ -30,12 +30,12 @@ static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, F
 static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 
 /* Process-function (parsing step 2) declarations */
-static void Fy_ProcessOpCodeLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
+static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
 static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
 
 /* Process-label-function (parsing step 3) declarations */
-static void Fy_ProcessLabelOpCodeLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser);
+static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser);
 
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
@@ -166,32 +166,32 @@ Fy_ParserParseRule Fy_parseRuleJmp = {
     .start_token = Fy_TokenType_Jmp,
     .arg1_type = Fy_InstructionArgType_Label,
     .func_one_param = Fy_ParseJmp,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpCodeLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpCodeLabel
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
 };
 Fy_ParserParseRule Fy_parseRuleJe = {
     .type = Fy_ParserParseRuleType_OneParam,
     .start_token = Fy_TokenType_Je,
     .arg1_type = Fy_InstructionArgType_Label,
     .func_one_param = Fy_ParseJe,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpCodeLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpCodeLabel
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
 };
 Fy_ParserParseRule Fy_parseRuleJl = {
     .type = Fy_ParserParseRuleType_OneParam,
     .start_token = Fy_TokenType_Jl,
     .arg1_type = Fy_InstructionArgType_Label,
     .func_one_param = Fy_ParseJl,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpCodeLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpCodeLabel
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
 };
 Fy_ParserParseRule Fy_parseRuleJg = {
     .type = Fy_ParserParseRuleType_OneParam,
     .start_token = Fy_TokenType_Jg,
     .arg1_type = Fy_InstructionArgType_Label,
     .func_one_param = Fy_ParseJg,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpCodeLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpCodeLabel
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
 };
 Fy_ParserParseRule Fy_parseRulePushConst = {
     .type = Fy_ParserParseRuleType_OneParam,
@@ -222,8 +222,8 @@ Fy_ParserParseRule Fy_parseRuleCall = {
     .start_token = Fy_TokenType_Call,
     .arg1_type = Fy_InstructionArgType_Label,
     .func_one_param = Fy_ParseCall,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpCodeLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpCodeLabel
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
 };
 Fy_ParserParseRule Fy_parseRuleRet = {
     .type = Fy_ParserParseRuleType_NoParams,
@@ -331,18 +331,18 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Syntax error";
     case Fy_ParserError_CannotOpenFileForWrite:
         return "Cannot open file for writing";
-    case Fy_ParserError_LabelNotFound:
-        return "Label not found";
-    case Fy_ParserError_UnexpectedLabel:
-        return "Unexpected label";
+    case Fy_ParserError_SymbolNotFound:
+        return "Symbol not found";
+    case Fy_ParserError_UnexpectedSymbol:
+        return "Unexpected symbol";
     case Fy_ParserError_ExpectedDifferentToken:
         return "Expected different token";
-    case Fy_ParserError_LabelNotCode:
-        return "Label doesn't reference code and is most likely a variable";
-    case Fy_ParserError_LabelNotVariable:
-        return "Label doesn't reference a variable and is most likely a code/procedure reference";
-    case Fy_ParserError_LabelAlreadyExists:
-        return "Label already exists";
+    case Fy_ParserError_SymbolNotCode:
+        return "Symbol doesn't reference code and is most likely a variable";
+    case Fy_ParserError_SymbolNotVariable:
+        return "Symbol doesn't reference a variable and is most likely a code/procedure reference";
+    case Fy_ParserError_SymbolAlreadyDefined:
+        return "Symbol already defined";
     case Fy_ParserError_RecursiveMacro:
         return "Recursive macro definition";
     case Fy_ParserError_MaxMacroDepthReached:
@@ -360,7 +360,7 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     out->data_allocated = 0;
     out->data_size = 0;
     out->amount_macros = 0;
-    Fy_Labelmap_Init(&out->labelmap);
+    Fy_Symbolmap_Init(&out->symmap);
 }
 
 void Fy_Parser_Destruct(Fy_Parser *parser) {
@@ -373,7 +373,7 @@ void Fy_Parser_Destruct(Fy_Parser *parser) {
     }
     if (parser->data_allocated > 0)
         free(parser->data_part);
-    Fy_Labelmap_Destruct(&parser->labelmap);
+    Fy_Symbolmap_Destruct(&parser->symmap);
 }
 
 static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
@@ -393,9 +393,9 @@ static void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
 }
 
 static bool Fy_Parser_loadToken(Fy_Parser *parser, Fy_Token *token) {
-    if (token->type == Fy_TokenType_Label) {
+    if (token->type == Fy_TokenType_Symbol) {
         char *name = Fy_Token_toLowercaseCStr(token);
-        Fy_Macro *macro = Fy_Labelmap_getMacro(&parser->labelmap, name);
+        Fy_Macro *macro = Fy_Symbolmap_getMacro(&parser->symmap, name);
         free(name);
         if (macro) {
             Fy_MacroEvalInstance new_instance;
@@ -699,15 +699,15 @@ static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg 
 
 /* Processing functions */
 
-static void Fy_ProcessOpCodeLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
+static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
     Fy_BucketNode *node;
-    node = Fy_Labelmap_getEntry(&parser->labelmap, instruction->name);
+    node = Fy_Symbolmap_getEntry(&parser->symmap, instruction->name);
     if (!node) {
         // FIXME: This needs to have the right line and columns
-        Fy_Parser_error(parser, Fy_ParserError_LabelNotFound, NULL, "%s", instruction->name);
+        Fy_Parser_error(parser, Fy_ParserError_SymbolNotFound, NULL, "%s", instruction->name);
     }
-    if (node->type != Fy_MapEntryType_CodeLabel)
-        Fy_Parser_error(parser, Fy_ParserError_LabelNotCode, NULL, "%s", instruction->name);
+    if (node->type != Fy_MapEntryType_Label)
+        Fy_Parser_error(parser, Fy_ParserError_SymbolNotCode, NULL, "%s", instruction->name);
     instruction->instruction_offset = node->code_label;
     // We don't need this anymore
     free(instruction->name);
@@ -725,7 +725,7 @@ static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *i
 
 /* Label processing functions */
 
-static void Fy_ProcessLabelOpCodeLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser) {
+static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser) {
     instruction->address = Fy_Parser_getCodeOffsetByInstructionIndex(parser, instruction->instruction_offset);
 }
 
@@ -763,9 +763,9 @@ static Fy_AST *Fy_Parser_parseLiteralExpr(Fy_Parser *parser) {
         expr->as_number = literal;
         break;
     }
-    case Fy_TokenType_Label: {
-        expr = Fy_AST_New(Fy_ASTType_Label);
-        expr->as_label = Fy_Token_toLowercaseCStr(&parser->token);
+    case Fy_TokenType_Symbol: {
+        expr = Fy_AST_New(Fy_ASTType_Variable);
+        expr->as_variable = Fy_Token_toLowercaseCStr(&parser->token);
         break;
     }
     case Fy_TokenType_Bx:
@@ -861,7 +861,7 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
         return true;
     }
 
-    if (parser->token.type == Fy_TokenType_Label) {
+    if (parser->token.type == Fy_TokenType_Symbol) {
         out->type = Fy_InstructionArgType_Label;
         out->as_label = Fy_Token_toLowercaseCStr(&parser->token);
         return true;
@@ -956,16 +956,16 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
 static bool Fy_Parser_parseMacroDef(Fy_Parser *parser) {
     Fy_ParserState backtrack;
     char *name;
-    Fy_Token label_token;
+    Fy_Token symbol_token;
     Fy_Token *tokens = NULL;
     size_t allocated = 0, idx = 0;
     Fy_Macro macro;
 
     Fy_Parser_dumpState(parser, &backtrack);
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Label, false))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Symbol, false))
         return false;
-    label_token = parser->token;
+    symbol_token = parser->token;
     if (!Fy_Parser_match(parser, Fy_TokenType_EqualSign, true)) {
         Fy_Parser_loadState(parser, &backtrack);
         return false;
@@ -984,14 +984,14 @@ static bool Fy_Parser_parseMacroDef(Fy_Parser *parser) {
         tokens[idx++] = parser->token;
     }
 
-    // Convert label token to cstring
-    name = Fy_Token_toLowercaseCStr(&label_token);
+    // Convert macro name token to cstring
+    name = Fy_Token_toLowercaseCStr(&symbol_token);
 
     // Create macro
     macro.tokens = tokens;
     macro.token_amount = idx;
 
-    Fy_Labelmap_addMacro(&parser->labelmap, name, macro);
+    Fy_Symbolmap_addMacro(&parser->symmap, name, macro);
     return true;
 }
 
@@ -1000,7 +1000,7 @@ static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     Fy_Token label_token;
     char *label_string;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Symbol, true))
         return false;
     label_token = parser->token;
 
@@ -1011,7 +1011,7 @@ static bool Fy_Parser_parseLabel(Fy_Parser *parser) {
     Fy_Parser_expectNewline(parser, false);
 
     label_string = Fy_Token_toLowercaseCStr(&label_token);
-    Fy_Labelmap_addMemLabelDecl(&parser->labelmap, label_string, parser->amount_used);
+    Fy_Symbolmap_addLabelDecl(&parser->symmap, label_string, parser->amount_used);
 
     return true;
 }
@@ -1023,7 +1023,7 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     if (!Fy_Parser_match(parser, Fy_TokenType_Proc, true))
         return false;
 
-    if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
+    if (!Fy_Parser_match(parser, Fy_TokenType_Symbol, true))
         Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
 
     label_string = Fy_Token_toLowercaseCStr(&parser->token);
@@ -1033,11 +1033,11 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
     for (;;) {
         if (Fy_Parser_match(parser, Fy_TokenType_Endp, true)) {
             char *endp_label_string;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Label, true))
+            if (!Fy_Parser_match(parser, Fy_TokenType_Symbol, true))
                 Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
             endp_label_string = Fy_Token_toLowercaseCStr(&parser->token);
             if (strcmp(label_string, endp_label_string) != 0)
-                Fy_Parser_error(parser, Fy_ParserError_UnexpectedLabel, NULL, "Expected '%s'", label_string);
+                Fy_Parser_error(parser, Fy_ParserError_UnexpectedSymbol, NULL, "Expected '%s'", label_string);
             free(endp_label_string);
             Fy_Parser_expectNewline(parser, true);
             break;
@@ -1046,7 +1046,7 @@ static bool Fy_Parser_parseProc(Fy_Parser *parser) {
             Fy_Parser_error(parser, Fy_ParserError_UnexpectedToken, NULL, NULL);
     }
 
-    Fy_Labelmap_addMemLabelDecl(&parser->labelmap, label_string, amount_prev_instructions);
+    Fy_Symbolmap_addLabelDecl(&parser->symmap, label_string, amount_prev_instructions);
 
     return true;
 }
@@ -1080,16 +1080,16 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
 }
 
 static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
-    char *label;
+    char *variable_name;
     uint16_t variable_offset;
 
-    if (Fy_Parser_match(parser, Fy_TokenType_Label, true)) {
-        label = Fy_Token_toLowercaseCStr(&parser->token);
-        // If there is a label defined with that name
-        if (Fy_Labelmap_getEntry(&parser->labelmap, label))
-            Fy_Parser_error(parser, Fy_ParserError_LabelAlreadyExists, NULL, "%s", label);
+    if (Fy_Parser_match(parser, Fy_TokenType_Symbol, true)) {
+        variable_name = Fy_Token_toLowercaseCStr(&parser->token);
+        // If there is a variable defined with that name
+        if (Fy_Symbolmap_getEntry(&parser->symmap, variable_name))
+            Fy_Parser_error(parser, Fy_ParserError_SymbolAlreadyDefined, NULL, "%s", variable_name);
     } else {
-        label = NULL;
+        variable_name = NULL;
     }
 
     variable_offset = parser->data_size;
@@ -1115,8 +1115,8 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
         FY_UNREACHABLE();
     }
 
-    if (label)
-        Fy_Labelmap_addVariable(&parser->labelmap, label, variable_offset);
+    if (variable_name)
+        Fy_Symbolmap_addVariable(&parser->symmap, variable_name, variable_offset);
 
     Fy_Parser_expectNewline(parser, true);
 }

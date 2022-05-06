@@ -16,7 +16,7 @@ typedef struct Fy_InlineValue Fy_InlineValue;
 
 typedef enum Fy_ASTType {
     Fy_ASTType_Number = 1,
-    Fy_ASTType_Label,
+    Fy_ASTType_Variable,
     Fy_ASTType_Bx,
     Fy_ASTType_Bp,
     Fy_ASTType_Add,
@@ -32,7 +32,7 @@ struct Fy_AST {
             Fy_AST *rhs;
         };
         uint16_t as_number;
-        char *as_label;
+        char *as_variable;
     };
 };
 

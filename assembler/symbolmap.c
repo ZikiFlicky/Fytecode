@@ -13,13 +13,13 @@ static void Fy_BucketNode_Delete(Fy_BucketNode *node) {
     free(node);
 }
 
-void Fy_Labelmap_Init(Fy_Labelmap *out) {
-    for (size_t i = 0; i < FY_LABELMAP_AMOUNT_BUCKETS; ++i)
+void Fy_Symbolmap_Init(Fy_Symbolmap *out) {
+    for (size_t i = 0; i < FY_SYMBOLMAP_AMOUNT_BUCKETS; ++i)
         out->buckets[i] = NULL;
 }
 
-void Fy_Labelmap_Destruct(Fy_Labelmap *map) {
-    for (size_t i = 0; i < FY_LABELMAP_AMOUNT_BUCKETS; ++i) {
+void Fy_Symbolmap_Destruct(Fy_Symbolmap *map) {
+    for (size_t i = 0; i < FY_SYMBOLMAP_AMOUNT_BUCKETS; ++i) {
         Fy_BucketNode *node = map->buckets[i];
         while (node) {
             Fy_BucketNode *next = node->next;
@@ -29,20 +29,20 @@ void Fy_Labelmap_Destruct(Fy_Labelmap *map) {
     }
 }
 
-static size_t Fy_HashLabelmapKey(char *key) {
+static size_t Fy_HashSymbolmapKey(char *key) {
     size_t value = 0;
 
     for (char *cur_idx = key; *cur_idx; ++cur_idx) {
         value *= 256;
         value += *cur_idx;
-        value %= FY_LABELMAP_AMOUNT_BUCKETS;
+        value %= FY_SYMBOLMAP_AMOUNT_BUCKETS;
     }
 
     return value;
 }
 
-static Fy_BucketNode *Fy_Labelmap_addEntry(Fy_Labelmap *map, char *name, Fy_MapEntryType type) {
-    size_t idx = Fy_HashLabelmapKey(name);
+static Fy_BucketNode *Fy_Symbolmap_addEntry(Fy_Symbolmap *map, char *name, Fy_MapEntryType type) {
+    size_t idx = Fy_HashSymbolmapKey(name);
     Fy_BucketNode *base_node = map->buckets[idx];
     Fy_BucketNode *modify_node;
 
@@ -77,24 +77,24 @@ static Fy_BucketNode *Fy_Labelmap_addEntry(Fy_Labelmap *map, char *name, Fy_MapE
     return modify_node;
 }
 
-bool Fy_Labelmap_addMemLabelDecl(Fy_Labelmap *map, char *name, size_t amount_prev_instructions) {
-    Fy_BucketNode *node = Fy_Labelmap_addEntry(map, name, Fy_MapEntryType_CodeLabel);
+bool Fy_Symbolmap_addLabelDecl(Fy_Symbolmap *map, char *name, size_t amount_prev_instructions) {
+    Fy_BucketNode *node = Fy_Symbolmap_addEntry(map, name, Fy_MapEntryType_Label);
     if (!node)
         return false;
     node->code_label = amount_prev_instructions;
     return true;
 }
 
-bool Fy_Labelmap_addVariable(Fy_Labelmap *map, char *name, uint16_t offset) {
-    Fy_BucketNode *node = Fy_Labelmap_addEntry(map, name, Fy_MapEntryType_Variable);
+bool Fy_Symbolmap_addVariable(Fy_Symbolmap *map, char *name, uint16_t offset) {
+    Fy_BucketNode *node = Fy_Symbolmap_addEntry(map, name, Fy_MapEntryType_Variable);
     if (!node)
         return false;
     node->data_offset = offset;
     return true;
 }
 
-bool Fy_Labelmap_addMacro(Fy_Labelmap *map, char *name, Fy_Macro macro) {
-    Fy_BucketNode *node = Fy_Labelmap_addEntry(map, name, Fy_MapEntryType_Macro);
+bool Fy_Symbolmap_addMacro(Fy_Symbolmap *map, char *name, Fy_Macro macro) {
+    Fy_BucketNode *node = Fy_Symbolmap_addEntry(map, name, Fy_MapEntryType_Macro);
     if (!node)
         return false;
     node->macro = macro;
@@ -102,8 +102,8 @@ bool Fy_Labelmap_addMacro(Fy_Labelmap *map, char *name, Fy_Macro macro) {
 }
 
 /* Returns whether we found the entry, and if we did, we put it in address_out */
-Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name) {
-    size_t idx = Fy_HashLabelmapKey(name);
+Fy_BucketNode *Fy_Symbolmap_getEntry(Fy_Symbolmap *map, char *name) {
+    size_t idx = Fy_HashSymbolmapKey(name);
     Fy_BucketNode *node = map->buckets[idx];
     while (node) {
         if (strcmp(node->name, name) == 0)
@@ -114,8 +114,8 @@ Fy_BucketNode *Fy_Labelmap_getEntry(Fy_Labelmap *map, char *name) {
     return NULL;
 }
 
-Fy_Macro *Fy_Labelmap_getMacro(Fy_Labelmap *map, char *name) {
-    Fy_BucketNode *entry = Fy_Labelmap_getEntry(map, name);
+Fy_Macro *Fy_Symbolmap_getMacro(Fy_Symbolmap *map, char *name) {
+    Fy_BucketNode *entry = Fy_Symbolmap_getEntry(map, name);
     if (entry && entry->type == Fy_MapEntryType_Macro)
         return &entry->macro;
     // Not found

@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <inttypes.h>
 
+#define FY_MACRO_DEPTH 128
+
 typedef struct Fy_ParserState Fy_ParserState;
 typedef enum Fy_ParserError Fy_ParserError;
 typedef struct Fy_Parser Fy_Parser;
@@ -23,8 +25,9 @@ typedef void (*Fy_InstructionProcessLabelFunc)(Fy_Instruction*, Fy_Parser*);
 struct Fy_ParserState {
     char *stream;
     size_t line, column;
-    Fy_Macro *macro;
-    size_t macro_idx;
+    // Store where the token is stored
+    Fy_Macro macros[FY_MACRO_DEPTH];
+    size_t amount_macros;
 };
 
 enum Fy_ParserError {
@@ -41,7 +44,9 @@ enum Fy_ParserError {
     Fy_ParserError_ExpectedDifferentToken,
     Fy_ParserError_LabelNotCode,
     Fy_ParserError_LabelNotVariable,
-    Fy_ParserError_LabelAlreadyExists
+    Fy_ParserError_LabelAlreadyExists,
+    Fy_ParserError_RecursiveMacro,
+    Fy_ParserError_MaxMacroDepthReached
 };
 
 struct Fy_Parser {
@@ -56,8 +61,8 @@ struct Fy_Parser {
 
     Fy_Labelmap labelmap;
 
-    Fy_Macro *macro;
-    size_t macro_idx;
+    Fy_MacroEvalInstance macros[FY_MACRO_DEPTH];
+    size_t amount_macros;
 };
 
 enum Fy_InstructionArgType {

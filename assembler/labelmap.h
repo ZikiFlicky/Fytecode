@@ -8,6 +8,7 @@
 #define FY_LABELMAP_AMOUNT_BUCKETS 8
 
 typedef struct Fy_Macro Fy_Macro;
+typedef struct Fy_MacroEvalInstance Fy_MacroEvalInstance;
 typedef struct Fy_Labelmap Fy_Labelmap;
 typedef struct Fy_BucketNode Fy_BucketNode;
 typedef enum Fy_MapEntryType Fy_MapEntryType;
@@ -15,6 +16,12 @@ typedef enum Fy_MapEntryType Fy_MapEntryType;
 struct Fy_Macro {
     Fy_Token *tokens;
     size_t token_amount;
+};
+
+struct Fy_MacroEvalInstance {
+    Fy_MacroEvalInstance *parent;
+    Fy_Macro *macro;
+    size_t macro_idx;
 };
 
 enum Fy_MapEntryType {

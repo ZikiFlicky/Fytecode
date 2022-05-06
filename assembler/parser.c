@@ -39,6 +39,8 @@ static void Fy_ProcessLabelOpCodeLabel(Fy_Instruction_OpLabel *instruction, Fy_P
 
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
+/* Get a token */
+static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval);
 
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleNop = {
@@ -341,6 +343,10 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Label doesn't reference a variable and is most likely a code/procedure reference";
     case Fy_ParserError_LabelAlreadyExists:
         return "Label already exists";
+    case Fy_ParserError_RecursiveMacro:
+        return "Recursive macro definition";
+    case Fy_ParserError_MaxMacroDepthReached:
+        return "Max macro depth reached";
     default:
         FY_UNREACHABLE();
     }
@@ -353,8 +359,7 @@ void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out) {
     out->amount_used = 0;
     out->data_allocated = 0;
     out->data_size = 0;
-    out->macro = NULL;
-    out->macro_idx = 0;
+    out->amount_macros = 0;
     Fy_Labelmap_Init(&out->labelmap);
 }
 
@@ -375,38 +380,67 @@ static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     out_state->stream = parser->lexer->stream;
     out_state->line = parser->lexer->line;
     out_state->column = parser->lexer->column;
-    out_state->macro = parser->macro;
-    out_state->macro_idx = parser->macro_idx;
+    out_state->amount_macros = parser->amount_macros;
+    memcpy(out_state->macros, parser->macros, parser->amount_macros * sizeof(Fy_MacroEvalInstance));
 }
 
 static void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
     parser->lexer->stream = state->stream;
     parser->lexer->line = state->line;
     parser->lexer->column = state->column;
-    parser->macro = state->macro;
-    parser->macro_idx = state->macro_idx;
+    parser->amount_macros = state->amount_macros;
+    memcpy(parser->macros, state->macros, state->amount_macros * sizeof(Fy_MacroEvalInstance));
+}
+
+static bool Fy_Parser_loadToken(Fy_Parser *parser, Fy_Token *token) {
+    if (token->type == Fy_TokenType_Label) {
+        char *name = Fy_Token_toLowercaseCStr(token);
+        Fy_Macro *macro = Fy_Labelmap_getMacro(&parser->labelmap, name);
+        free(name);
+        if (macro) {
+            Fy_MacroEvalInstance new_instance;
+
+            for (size_t i = 0; i < parser->amount_macros; ++i) {
+                if (macro == parser->macros[i].macro) {
+                    // TODO: Show the macros that define themselves. maybe something like Fy_Parser_errorMacros
+                    Fy_Parser_error(parser, Fy_ParserError_RecursiveMacro, NULL, NULL);
+                }
+            }
+
+            if (parser->amount_macros >= FY_MACRO_DEPTH) {
+                Fy_Parser_error(parser, Fy_ParserError_MaxMacroDepthReached, NULL, NULL);
+            }
+
+            new_instance.macro = macro;
+            new_instance.macro_idx = 0;
+            parser->macros[parser->amount_macros++] = new_instance;
+            return Fy_Parser_lex(parser, true);
+        }
+    }
+    parser->token = *token;
+    return true;
 }
 
 static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval) {
-    if (macro_eval && parser->macro && parser->macro_idx < parser->macro->token_amount) {
-        parser->token = parser->macro->tokens[parser->macro_idx++];
-        return true;
-    } else if (Fy_Lexer_lex(parser->lexer)) {
-        // If we got a label, it might be a macro, so if allowed, we should replace the label by tokens 
-        if (macro_eval && parser->lexer->token.type == Fy_TokenType_Label) {
-            char *name = Fy_Token_toLowercaseCStr(&parser->lexer->token);
-            Fy_Macro *macro = Fy_Labelmap_getMacro(&parser->labelmap, name);
-            free(name);
-            if (macro) {
-                parser->macro = macro;
-                parser->macro_idx = 0;
-                return Fy_Parser_lex(parser, true);
-            }
+    if (macro_eval && parser->amount_macros > 0) {
+        Fy_MacroEvalInstance *instance = &parser->macros[parser->amount_macros - 1];
+        if (instance->macro_idx < instance->macro->token_amount) {
+            Fy_Token *token = &instance->macro->tokens[instance->macro_idx++];
+            return Fy_Parser_loadToken(parser, token);
         }
+        // If we got to the end of the macro
+        --parser->amount_macros;
+        return Fy_Parser_lex(parser, true);
+    }
+
+    if (!Fy_Lexer_lex(parser->lexer))
+        return false;
+
+    if (macro_eval) {
+        return Fy_Parser_loadToken(parser, &parser->lexer->token);
+    } else {
         parser->token = parser->lexer->token;
         return true;
-    } else {
-        return false;
     }
 }
 

@@ -28,11 +28,13 @@ static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
+static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
-static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
+static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpMemReg16 *instruction);
+static void Fy_ProcessOpMem8Reg8(Fy_Parser *parser, Fy_Instruction_OpMem8Reg8 *instruction);
 
 /* Process-label-function (parsing step 3) declarations */
 static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser);
@@ -244,7 +246,7 @@ Fy_ParserParseRule Fy_parseRuleMovReg16Mem = {
     .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
     .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Memory,
+    .arg2_type = Fy_InstructionArgType_Memory16,
     .func_two_params = Fy_ParseMovReg16Mem,
     .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
     .process_label_func = NULL
@@ -253,7 +255,7 @@ Fy_ParserParseRule Fy_parseRuleLea = {
     .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Lea,
     .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Memory,
+    .arg2_type = Fy_InstructionArgType_Memory16,
     .func_two_params = Fy_ParseLea,
     .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
     .process_label_func = NULL
@@ -261,10 +263,19 @@ Fy_ParserParseRule Fy_parseRuleLea = {
 Fy_ParserParseRule Fy_parseRuleMovMemReg16 = {
     .type = Fy_ParserParseRuleType_TwoParams,
     .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Memory,
+    .arg1_type = Fy_InstructionArgType_Memory16,
     .arg2_type = Fy_InstructionArgType_Reg16,
     .func_two_params = Fy_ParseMovMemReg16,
     .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpMemReg16,
+    .process_label_func = NULL
+};
+Fy_ParserParseRule Fy_parseRuleMovMem8Reg8 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Mov,
+    .arg1_type = Fy_InstructionArgType_Memory8,
+    .arg2_type = Fy_InstructionArgType_Reg8,
+    .func_two_params = Fy_ParseMovMem8Reg8,
+    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpMem8Reg8,
     .process_label_func = NULL
 };
 
@@ -297,15 +308,25 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleRetConst16,
     &Fy_parseRuleMovReg16Mem,
     &Fy_parseRuleLea,
-    &Fy_parseRuleMovMemReg16
+    &Fy_parseRuleMovMemReg16,
+    &Fy_parseRuleMovMem8Reg8
 };
+
+static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_InstructionArgType type2) {
+    if (type1 == type2)
+        return true;
+    if (type1 == Fy_InstructionArgType_Memory8 && type2 == Fy_InstructionArgType_Memory16)
+        return true;
+    return false;
+}
 
 static void Fy_InstructionArg_Destruct(Fy_InstructionArg *arg) {
     switch (arg->type) {
     case Fy_InstructionArgType_Label:
         free(arg->as_label);
         break;
-    case Fy_InstructionArgType_Memory:
+    case Fy_InstructionArgType_Memory8:
+    case Fy_InstructionArgType_Memory16:
         Fy_AST_Delete(arg->as_memory);
         break;
     default:
@@ -587,6 +608,14 @@ static Fy_Instruction *Fy_ParseOpMemReg16(Fy_Parser *parser, Fy_InstructionArg *
     return (Fy_Instruction*)instruction;
 }
 
+static Fy_Instruction *Fy_ParseOpMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
+    Fy_Instruction_OpMem8Reg8 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpMem8Reg8, *type);
+    (void)parser;
+    instruction->address_ast = arg1->as_memory;
+    instruction->reg_id = arg2->as_reg16;
+    return (Fy_Instruction*)instruction;
+}
+
 /* Parsing functions */
 static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser) {
     (void)parser;
@@ -697,6 +726,10 @@ static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg 
     return Fy_ParseOpMemReg16(parser, arg1, arg2, &Fy_instructionTypeMovMemReg16);
 }
 
+static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    return Fy_ParseOpMem8Reg8(parser, arg1, arg2, &Fy_instructionTypeMovMem8Reg8);
+}
+
 /* Processing functions */
 
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
@@ -718,7 +751,12 @@ static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *i
     Fy_AST_Delete(instruction->address_ast);
 }
 
-static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction) {
+static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpMemReg16 *instruction) {
+    Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
+    Fy_AST_Delete(instruction->address_ast);
+}
+
+static void Fy_ProcessOpMem8Reg8(Fy_Parser *parser, Fy_Instruction_OpMem8Reg8 *instruction) {
     Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
     Fy_AST_Delete(instruction->address_ast);
 }
@@ -823,27 +861,35 @@ static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
     return expr;
 }
 
-static Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser) {
+static Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser, Fy_InstructionArgType *out) {
+    Fy_InstructionArgType type;
     Fy_AST *ast;
 
     if (!Fy_Parser_match(parser, Fy_TokenType_LeftBracket, true))
         return NULL;
+
+    // Decide which memory type this is
+    if (Fy_Parser_match(parser, Fy_TokenType_Byte, true))
+        type = Fy_InstructionArgType_Memory8;
+else if (Fy_Parser_match(parser, Fy_TokenType_Word, true))
+        type = Fy_InstructionArgType_Memory16;
+    else
+        type = Fy_InstructionArgType_Memory16;
 
     ast = Fy_Parser_parseSumExpr(parser);
 
     if (!Fy_Parser_match(parser, Fy_TokenType_RightBracket, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "']'");
 
+    *out = type;
     return ast;
 }
 
 static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     Fy_ParserState backtrack;
 
-    if ((out->as_memory = Fy_Parser_parseMemExpr(parser))) {
-        out->type = Fy_InstructionArgType_Memory;
+    if ((out->as_memory = Fy_Parser_parseMemExpr(parser, &out->type)))
         return true;
-    }
 
     Fy_Parser_dumpState(parser, &backtrack);
     if (!Fy_Parser_lex(parser, true))
@@ -911,11 +957,11 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
                 instruction = rule->func_no_params(parser);
                 break;
             case Fy_ParserParseRuleType_OneParam:
-                if (arg1.type == rule->arg1_type)
+                if (Fy_InstructionArgType_is(arg1.type, rule->arg1_type))
                     instruction = rule->func_one_param(parser, &arg1);
                 break;
             case Fy_ParserParseRuleType_TwoParams:
-                if (arg1.type == rule->arg1_type && arg2.type == rule->arg2_type)
+                if (Fy_InstructionArgType_is(arg1.type, rule->arg1_type) && Fy_InstructionArgType_is(arg2.type, rule->arg2_type))
                     instruction = rule->func_two_params(parser, &arg1, &arg2);
                 break;
             default:

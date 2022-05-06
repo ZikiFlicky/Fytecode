@@ -70,7 +70,8 @@ enum Fy_InstructionArgType {
     Fy_InstructionArgType_Reg8,
     Fy_InstructionArgType_Constant,
     Fy_InstructionArgType_Label,
-    Fy_InstructionArgType_Memory
+    Fy_InstructionArgType_Memory16,
+    Fy_InstructionArgType_Memory8
 };
 
 struct Fy_InstructionArg {

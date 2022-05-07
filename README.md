@@ -36,4 +36,4 @@ To run a generated executable, run `build/fy -r <path-to-executable>`.
 # Name
 When thinking about a name for the project, I wanted to incorporate the word "bytecode"
 with something else. That made me think of words that rhyme with "byte" and I immediately
-thought of "fight", then I just glued the words together without any meaning.
+thought of "fight", then I just glued the words together without aiming for any meaning.

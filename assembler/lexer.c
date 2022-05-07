@@ -211,6 +211,24 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     }
 
+    if (lexer->stream[0] == '(') {
+        lexer->token.type = Fy_TokenType_LeftParen;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        ++lexer->column;
+        return true;
+    }
+
+    if (lexer->stream[0] == ')') {
+        lexer->token.type = Fy_TokenType_RightParen;
+        lexer->token.start = lexer->stream;
+        lexer->token.length = 1;
+        ++lexer->stream;
+        ++lexer->column;
+        return true;
+    }
+
     if (lexer->stream[0] == '-') {
         // If this is actually a constant
         if (Fy_Lexer_lexConst(lexer))

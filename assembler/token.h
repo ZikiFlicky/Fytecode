@@ -51,6 +51,8 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Colon,
     Fy_TokenType_LeftBracket,
     Fy_TokenType_RightBracket,
+    Fy_TokenType_LeftParen,
+    Fy_TokenType_RightParen,
     Fy_TokenType_Byte,
     Fy_TokenType_Word,
     Fy_TokenType_Plus,

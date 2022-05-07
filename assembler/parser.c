@@ -43,6 +43,8 @@ static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parse
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
 /* Get a token */
 static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval);
+/* Lowest priority function */
+static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser);
 
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleNop = {
@@ -820,10 +822,23 @@ static Fy_AST *Fy_Parser_parseLiteralExpr(Fy_Parser *parser) {
     return expr;
 }
 
+static Fy_AST *Fy_Parser_parseSingle(Fy_Parser *parser) {
+    Fy_AST *ast;
+    if (Fy_Parser_match(parser, Fy_TokenType_LeftParen, true)) {
+        if (!(ast = Fy_Parser_parseSumExpr(parser)))
+           Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
+        if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
+            Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
+    } else if (!(ast = Fy_Parser_parseLiteralExpr(parser))) {
+        ast = NULL;
+    }
+    return ast;
+}
+
 static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
     Fy_AST *expr;
 
-    if (!(expr = Fy_Parser_parseLiteralExpr(parser)))
+    if (!(expr = Fy_Parser_parseSingle(parser)))
         return NULL;
 
     for (;;) {
@@ -848,7 +863,7 @@ static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
             return expr;
         }
 
-        if (!(rhs = Fy_Parser_parseLiteralExpr(parser)))
+        if (!(rhs = Fy_Parser_parseSingle(parser)))
             Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
 
         new_expr = Fy_AST_New(type);

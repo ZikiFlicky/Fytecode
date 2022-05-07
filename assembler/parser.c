@@ -1025,37 +1025,6 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
     return false;
 }
 
-static bool Fy_Parser_parseDupWord(Fy_Parser *parser) {
-    Fy_ParserState backtrack;
-    uint16_t amount;
-    uint16_t value;
-
-    Fy_Parser_dumpState(parser, &backtrack);
-
-    if (!Fy_Parser_getConst16(parser, &amount))
-        return false;
-
-    if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
-        Fy_Parser_loadState(parser, &backtrack);
-        return false;
-    }
-
-    if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
-
-    if (!Fy_Parser_getConst16(parser, &value))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
-
-    if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
-
-    // TODO: This can probably be optimized
-    for (uint16_t i = 0; i < amount; ++i)
-        Fy_Parser_addData16(parser, value);
-
-    return true;
-}
-
 static bool Fy_Parser_parseDupByte(Fy_Parser *parser) {
     Fy_ParserState backtrack;
     uint16_t amount;
@@ -1087,6 +1056,60 @@ static bool Fy_Parser_parseDupByte(Fy_Parser *parser) {
     return true;
 }
 
+static bool Fy_Parser_parseDupWord(Fy_Parser *parser) {
+    Fy_ParserState backtrack;
+    uint16_t amount;
+    uint16_t value;
+
+    Fy_Parser_dumpState(parser, &backtrack);
+
+    if (!Fy_Parser_getConst16(parser, &amount))
+        return false;
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
+        Fy_Parser_loadState(parser, &backtrack);
+        return false;
+    }
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
+
+    if (!Fy_Parser_getConst16(parser, &value))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
+
+    // TODO: This can probably be optimized
+    for (uint16_t i = 0; i < amount; ++i)
+        Fy_Parser_addData16(parser, value);
+
+    return true;
+}
+
+static bool Fy_Parser_parseByteString(Fy_Parser *parser) {
+    size_t length;
+    if (!Fy_Parser_match(parser, Fy_TokenType_String, true))
+        return false;
+    length = parser->token.length;
+    for (size_t i = 0; i < length; ++i)
+        Fy_Parser_addData8(parser, parser->token.start[i]);
+    return true;
+}
+
+static bool Fy_Parser_parseWordString(Fy_Parser *parser) {
+    size_t length;
+    if (!Fy_Parser_match(parser, Fy_TokenType_String, true))
+        return false;
+    length = parser->token.length;
+    for (size_t i = 0; i < length; ++i)
+        Fy_Parser_addData8(parser, parser->token.start[i]);
+    // If we don't align as bytes pad with 0
+    if (length % 2 != 0)
+        Fy_Parser_addData8(parser, 0);
+    return true;
+}
+
 static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     char *variable_name;
     uint16_t variable_offset;
@@ -1105,7 +1128,9 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     if (Fy_Parser_match(parser, Fy_TokenType_Eb, true)) {
         do {
             uint8_t value;
-            if (Fy_Parser_parseDupByte(parser)) {
+            if (Fy_Parser_parseByteString(parser)) {
+                ;
+            } else if (Fy_Parser_parseDupByte(parser)) {
                 ;
             } else if (Fy_Parser_getConst8(parser, &value)) {
                 Fy_Parser_addData8(parser, *(int8_t*)&value);
@@ -1116,7 +1141,9 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     } else if (Fy_Parser_match(parser, Fy_TokenType_Ew, true)) {
         do {
             uint16_t value;
-            if (Fy_Parser_parseDupWord(parser)) {
+            if (Fy_Parser_parseWordString(parser)) {
+                ;
+            } else if (Fy_Parser_parseDupWord(parser)) {
                 ;
             } else if (Fy_Parser_getConst16(parser, &value)) {
                 Fy_Parser_addData16(parser, *(int16_t*)&value);

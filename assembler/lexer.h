@@ -13,6 +13,7 @@ typedef struct Fy_Lexer {
 
 typedef enum Fy_LexerError {
     Fy_LexerError_Syntax = 1,
+    Fy_LexerError_EOLReached
 } Fy_LexerError;
 
 void Fy_Lexer_Init(char *stream, Fy_Lexer *out);

@@ -17,6 +17,8 @@ char *Fy_LexerError_toString(Fy_LexerError error) {
     switch (error) {
     case Fy_LexerError_Syntax:
         return "Syntax error";
+    case Fy_LexerError_EOLReached:
+        return "Reached EOL/EOF";
     default:
         FY_UNREACHABLE();
     }
@@ -28,6 +30,14 @@ void Fy_Lexer_Init(char *stream, Fy_Lexer *out) {
     out->stream = stream;
     out->line = 1;
     out->column = 1;
+}
+
+/* Show lexer error message and exit */
+void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
+    printf("LexerError[%zu,%zu]: %s\n",
+            lexer->line, lexer->column,
+            Fy_LexerError_toString(error));
+    exit(1);
 }
 
 /*
@@ -142,6 +152,31 @@ bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer) {
     return true;
 }
 
+bool Fy_Lexer_lexString(Fy_Lexer *lexer) {
+    if (lexer->stream[0] != '"')
+        return false;
+
+    ++lexer->stream;
+    ++lexer->column;
+
+    lexer->token.type = Fy_TokenType_String;
+    lexer->token.start = lexer->stream;
+    lexer->token.length = 0;
+
+    while (lexer->stream[0] != '"') {
+        if (lexer->stream[0] == '\n' || lexer->stream[0] == '\0')
+            Fy_Lexer_error(lexer, Fy_LexerError_EOLReached);
+        ++lexer->stream;
+        ++lexer->column;
+        ++lexer->token.length;
+    }
+
+    ++lexer->stream;
+    ++lexer->column;
+
+    return true;
+}
+
 /*
  * Lex a newline.
  * Returns false on failure.
@@ -160,14 +195,6 @@ bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
         Fy_Lexer_removeWhitespace(lexer);
     } while (lexer->stream[0] == '\n');
     return true;
-}
-
-/* Show lexer error message and exit */
-void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
-    printf("LexerError[%zu,%zu]: %s\n",
-            lexer->line, lexer->column,
-            Fy_LexerError_toString(error));
-    exit(1);
 }
 
 /*
@@ -350,6 +377,9 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
 
     if (Fy_Lexer_lexSymbol(lexer))
+        return true;
+
+    if (Fy_Lexer_lexString(lexer))
         return true;
 
     Fy_Lexer_error(lexer, Fy_LexerError_Syntax);

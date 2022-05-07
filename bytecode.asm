@@ -1,6 +1,6 @@
 DATA
-    bytes eb "ABCDEFG", 2, 0
-    words ew "ABCDEFG", 2
+    bytes eb 3 dup(0xFF, 0xEE, 0xDD, 0xBC)
+    words ew 2 dup(0xFFEE, 0xDD33, 0x3)
 CODE
 start: ; This is currently not needed
     mov al 0xf3

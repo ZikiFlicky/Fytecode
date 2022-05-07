@@ -1027,12 +1027,13 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
 
 static bool Fy_Parser_parseDupByte(Fy_Parser *parser) {
     Fy_ParserState backtrack;
-    uint16_t amount;
-    uint8_t value;
+    uint16_t amount_duplicates;
+    uint16_t amount_values = 0, allocated_values = 0;
+    uint8_t *values;
 
     Fy_Parser_dumpState(parser, &backtrack);
 
-    if (!Fy_Parser_getConst16(parser, &amount))
+    if (!Fy_Parser_getConst16(parser, &amount_duplicates))
         return false;
 
     if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
@@ -1043,27 +1044,41 @@ static bool Fy_Parser_parseDupByte(Fy_Parser *parser) {
     if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
 
-    if (!Fy_Parser_getConst8(parser, &value))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+    do {
+        uint8_t value;
+        if (!Fy_Parser_getConst8(parser, &value))
+            Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+        if (allocated_values == 0)
+            values = malloc((allocated_values = 4) * sizeof(uint8_t));
+        else if (amount_values == allocated_values)
+            values = realloc(values, (allocated_values += 4) * sizeof(uint8_t));
+        values[amount_values++] = value;
+    } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
 
     if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
 
     // TODO: This can probably be optimized
-    for (uint16_t i = 0; i < amount; ++i)
-        Fy_Parser_addData8(parser, value);
+    for (uint16_t i = 0; i < amount_duplicates; ++i) {
+        for (uint16_t j = 0; j < amount_values; ++j) {
+            Fy_Parser_addData8(parser, values[j]);
+        }
+    }
+
+    free(values);
 
     return true;
 }
 
 static bool Fy_Parser_parseDupWord(Fy_Parser *parser) {
     Fy_ParserState backtrack;
-    uint16_t amount;
-    uint16_t value;
+    uint16_t amount_duplicates;
+    uint16_t amount_values = 0, allocated_values = 0;
+    uint16_t *values;
 
     Fy_Parser_dumpState(parser, &backtrack);
 
-    if (!Fy_Parser_getConst16(parser, &amount))
+    if (!Fy_Parser_getConst16(parser, &amount_duplicates))
         return false;
 
     if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
@@ -1074,15 +1089,28 @@ static bool Fy_Parser_parseDupWord(Fy_Parser *parser) {
     if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
 
-    if (!Fy_Parser_getConst16(parser, &value))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+    do {
+        uint16_t value;
+        if (!Fy_Parser_getConst16(parser, &value))
+            Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+        if (allocated_values == 0)
+            values = malloc((allocated_values = 4) * sizeof(uint16_t));
+        else if (amount_values == allocated_values)
+            values = realloc(values, (allocated_values += 4) * sizeof(uint16_t));
+        values[amount_values++] = value;
+    } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
 
     if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
 
     // TODO: This can probably be optimized
-    for (uint16_t i = 0; i < amount; ++i)
-        Fy_Parser_addData16(parser, value);
+    for (uint16_t i = 0; i < amount_duplicates; ++i) {
+        for (uint16_t j = 0; j < amount_values; ++j) {
+            Fy_Parser_addData16(parser, values[j]);
+        }
+    }
+
+    free(values);
 
     return true;
 }

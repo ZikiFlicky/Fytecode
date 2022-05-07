@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+typedef enum Fy_ASTParserType Fy_ASTParserType;
+typedef struct Fy_ASTParser Fy_ASTParser;
 typedef struct Fy_AST Fy_AST;
 typedef struct Fy_InlineValue Fy_InlineValue;
 
@@ -36,6 +38,16 @@ struct Fy_AST {
     };
 };
 
+enum Fy_ASTParserType {
+    Fy_ASTParserType_Memory = 1,
+    Fy_ASTParserType_Number
+};
+
+struct Fy_ASTParser {
+    Fy_ASTParserType type;
+    Fy_Parser *regular_parser;
+};
+
 struct Fy_InlineValue {
     bool has_variable;
     uint16_t variable_offset;
@@ -44,6 +56,9 @@ struct Fy_InlineValue {
     int16_t times_bp;
 };
 
+Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser, Fy_InstructionArgType *out);
+bool Fy_Parser_getConst16(Fy_Parser *parser, uint16_t *out);
+bool Fy_Parser_getConst8(Fy_Parser *parser, uint8_t *out);
 Fy_AST *Fy_AST_New(Fy_ASTType type);
 void Fy_AST_Delete(Fy_AST *ast);
 void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out);

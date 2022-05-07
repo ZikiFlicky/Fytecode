@@ -110,6 +110,10 @@ extern Fy_ParserParseRule *Fy_parserRules[];
 
 void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out);
 void Fy_Parser_Destruct(Fy_Parser *parser);
+void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state);
+void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state);
+bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval);
+bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval);
 void Fy_Parser_parseAll(Fy_Parser *parser);
 void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, Fy_ParserState *state, char *additional, ...);
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);

@@ -41,10 +41,6 @@ static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parse
 
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
-/* Get a token */
-static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval);
-/* Lowest priority function */
-static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser);
 
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleNop = {
@@ -399,7 +395,7 @@ void Fy_Parser_Destruct(Fy_Parser *parser) {
     Fy_Symbolmap_Destruct(&parser->symmap);
 }
 
-static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
+void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     out_state->stream = parser->lexer->stream;
     out_state->line = parser->lexer->line;
     out_state->column = parser->lexer->column;
@@ -407,7 +403,7 @@ static void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state) {
     memcpy(out_state->macros, parser->macros, parser->amount_macros * sizeof(Fy_MacroEvalInstance));
 }
 
-static void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
+void Fy_Parser_loadState(Fy_Parser *parser, Fy_ParserState *state) {
     parser->lexer->stream = state->stream;
     parser->lexer->line = state->line;
     parser->lexer->column = state->column;
@@ -444,7 +440,7 @@ static bool Fy_Parser_loadToken(Fy_Parser *parser, Fy_Token *token) {
     return true;
 }
 
-static bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval) {
+bool Fy_Parser_lex(Fy_Parser *parser, bool macro_eval) {
     if (macro_eval && parser->amount_macros > 0) {
         Fy_MacroEvalInstance *instance = &parser->macros[parser->amount_macros - 1];
         if (instance->macro_idx < instance->macro->token_amount) {
@@ -523,7 +519,7 @@ static void Fy_Parser_addData16(Fy_Parser *parser, uint16_t value) {
 }
 
 /* Returns a boolean specifying whether a token of the given type was found. */
-static bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
+bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
     Fy_ParserState backtrack;
     Fy_Parser_dumpState(parser, &backtrack);
 
@@ -788,123 +784,16 @@ static bool Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
     return false;
 }
 
-static Fy_AST *Fy_Parser_parseLiteralExpr(Fy_Parser *parser) {
-    Fy_AST *expr;
-    Fy_ParserState backtrack;
-    Fy_Parser_dumpState(parser, &backtrack);
-
-    if (!Fy_Parser_lex(parser, true))
-        return NULL;
-
-    switch (parser->token.type) {
-    case Fy_TokenType_Const: {
-        uint16_t literal = Fy_Token_toConst16(&parser->token, parser);
-        expr = Fy_AST_New(Fy_ASTType_Number);
-        expr->as_number = literal;
-        break;
-    }
-    case Fy_TokenType_Symbol: {
-        expr = Fy_AST_New(Fy_ASTType_Variable);
-        expr->as_variable = Fy_Token_toLowercaseCStr(&parser->token);
-        break;
-    }
-    case Fy_TokenType_Bx:
-        expr = Fy_AST_New(Fy_ASTType_Bx);
-        break;
-    case Fy_TokenType_Bp:
-        expr = Fy_AST_New(Fy_ASTType_Bp);
-        break;
-    default:
-        Fy_Parser_loadState(parser, &backtrack);
-        return NULL;
-    }
-    expr->state = backtrack;
-    return expr;
-}
-
-static Fy_AST *Fy_Parser_parseSingle(Fy_Parser *parser) {
-    Fy_AST *ast;
-    if (Fy_Parser_match(parser, Fy_TokenType_LeftParen, true)) {
-        if (!(ast = Fy_Parser_parseSumExpr(parser)))
-           Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
-        if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
-            Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
-    } else if (!(ast = Fy_Parser_parseLiteralExpr(parser))) {
-        ast = NULL;
-    }
-    return ast;
-}
-
-static Fy_AST *Fy_Parser_parseSumExpr(Fy_Parser *parser) {
-    Fy_AST *expr;
-
-    if (!(expr = Fy_Parser_parseSingle(parser)))
-        return NULL;
-
-    for (;;) {
-        Fy_ParserState backtrack;
-        Fy_AST *new_expr, *rhs;
-        Fy_ASTType type;
-
-        Fy_Parser_dumpState(parser, &backtrack);
-
-        if (!Fy_Parser_lex(parser, true))
-            break;
-
-        switch (parser->token.type) {
-        case Fy_TokenType_Plus:
-            type = Fy_ASTType_Add;
-            break;
-        case Fy_TokenType_Minus:
-            type = Fy_ASTType_Sub;
-            break;
-        default:
-            Fy_Parser_loadState(parser, &backtrack);
-            return expr;
-        }
-
-        if (!(rhs = Fy_Parser_parseSingle(parser)))
-            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
-
-        new_expr = Fy_AST_New(type);
-        new_expr->lhs = expr;
-        new_expr->rhs = rhs;
-        new_expr->state = backtrack;
-        expr = new_expr;
-    }
-
-    return expr;
-}
-
-static Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser, Fy_InstructionArgType *out) {
-    Fy_InstructionArgType type;
-    Fy_AST *ast;
-
-    if (!Fy_Parser_match(parser, Fy_TokenType_LeftBracket, true))
-        return NULL;
-
-    // Decide which memory type this is
-    if (Fy_Parser_match(parser, Fy_TokenType_Byte, true))
-        type = Fy_InstructionArgType_Memory8;
-else if (Fy_Parser_match(parser, Fy_TokenType_Word, true))
-        type = Fy_InstructionArgType_Memory16;
-    else
-        type = Fy_InstructionArgType_Memory16;
-
-    ast = Fy_Parser_parseSumExpr(parser);
-
-    if (!Fy_Parser_match(parser, Fy_TokenType_RightBracket, true))
-        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "']'");
-
-    *out = type;
-    return ast;
-}
-
 static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     Fy_ParserState backtrack;
 
     if ((out->as_memory = Fy_Parser_parseMemExpr(parser, &out->type)))
         return true;
+
+    if (Fy_Parser_getConst16(parser, &out->as_const)) {
+        out->type = Fy_InstructionArgType_Constant;
+        return true;
+    }
 
     Fy_Parser_dumpState(parser, &backtrack);
     if (!Fy_Parser_lex(parser, true))
@@ -925,12 +814,6 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     if (parser->token.type == Fy_TokenType_Symbol) {
         out->type = Fy_InstructionArgType_Label;
         out->as_label = Fy_Token_toLowercaseCStr(&parser->token);
-        return true;
-    }
-
-    if (parser->token.type == Fy_TokenType_Const) {
-        out->type = Fy_InstructionArgType_Constant;
-        out->as_const = Fy_Token_toConst16(&parser->token, parser);
         return true;
     }
 
@@ -1157,19 +1040,17 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
 
     if (Fy_Parser_match(parser, Fy_TokenType_Eb, true)) {
         do {
-            int8_t value;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Const, true))
-                Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Constant");
-            value = Fy_Token_toConst8(&parser->token, parser);
-            Fy_Parser_addData8(parser, value);
+            uint8_t value;
+            if (!Fy_Parser_getConst8(parser, &value))
+                Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+            Fy_Parser_addData8(parser, *(int8_t*)&value);
         } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
     } else if (Fy_Parser_match(parser, Fy_TokenType_Ew, true)) {
         do {
-            int16_t value;
-            if (!Fy_Parser_match(parser, Fy_TokenType_Const, true))
-                Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Constant");
-            value = Fy_Token_toConst16(&parser->token, parser);
-            Fy_Parser_addData16(parser, value);
+            uint16_t value;
+            if (!Fy_Parser_getConst16(parser, &value))
+                Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+            Fy_Parser_addData16(parser, *(int16_t*)&value);
         } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
     } else {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "EB or EW");

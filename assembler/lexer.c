@@ -343,6 +343,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "word", Fy_TokenType_Word))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "dup", Fy_TokenType_Dup))
+        return true;
 
     if (Fy_Lexer_lexConst(lexer))
         return true;

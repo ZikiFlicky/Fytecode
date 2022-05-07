@@ -1025,6 +1025,68 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser) {
     return false;
 }
 
+static bool Fy_Parser_parseDupWord(Fy_Parser *parser) {
+    Fy_ParserState backtrack;
+    uint16_t amount;
+    uint16_t value;
+
+    Fy_Parser_dumpState(parser, &backtrack);
+
+    if (!Fy_Parser_getConst16(parser, &amount))
+        return false;
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
+        Fy_Parser_loadState(parser, &backtrack);
+        return false;
+    }
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
+
+    if (!Fy_Parser_getConst16(parser, &value))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
+
+    // TODO: This can probably be optimized
+    for (uint16_t i = 0; i < amount; ++i)
+        Fy_Parser_addData16(parser, value);
+
+    return true;
+}
+
+static bool Fy_Parser_parseDupByte(Fy_Parser *parser) {
+    Fy_ParserState backtrack;
+    uint16_t amount;
+    uint8_t value;
+
+    Fy_Parser_dumpState(parser, &backtrack);
+
+    if (!Fy_Parser_getConst16(parser, &amount))
+        return false;
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_Dup, true)) {
+        Fy_Parser_loadState(parser, &backtrack);
+        return false;
+    }
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_LeftParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "'('");
+
+    if (!Fy_Parser_getConst8(parser, &value))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
+
+    if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
+        Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
+
+    // TODO: This can probably be optimized
+    for (uint16_t i = 0; i < amount; ++i)
+        Fy_Parser_addData8(parser, value);
+
+    return true;
+}
+
 static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     char *variable_name;
     uint16_t variable_offset;
@@ -1043,16 +1105,24 @@ static void Fy_Parser_parseSetVariable(Fy_Parser *parser) {
     if (Fy_Parser_match(parser, Fy_TokenType_Eb, true)) {
         do {
             uint8_t value;
-            if (!Fy_Parser_getConst8(parser, &value))
+            if (Fy_Parser_parseDupByte(parser)) {
+                ;
+            } else if (Fy_Parser_getConst8(parser, &value)) {
+                Fy_Parser_addData8(parser, *(int8_t*)&value);
+            } else {
                 Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
-            Fy_Parser_addData8(parser, *(int8_t*)&value);
+            }
         } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
     } else if (Fy_Parser_match(parser, Fy_TokenType_Ew, true)) {
         do {
             uint16_t value;
-            if (!Fy_Parser_getConst16(parser, &value))
+            if (Fy_Parser_parseDupWord(parser)) {
+                ;
+            } else if (Fy_Parser_getConst16(parser, &value)) {
+                Fy_Parser_addData16(parser, *(int16_t*)&value);
+            } else {
                 Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "Const");
-            Fy_Parser_addData16(parser, *(int16_t*)&value);
+            }
         } while (Fy_Parser_match(parser, Fy_TokenType_Comma, true));
     } else {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "EB or EW");

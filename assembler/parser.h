@@ -46,7 +46,8 @@ enum Fy_ParserError {
     Fy_ParserError_SymbolNotVariable,
     Fy_ParserError_SymbolAlreadyDefined,
     Fy_ParserError_RecursiveMacro,
-    Fy_ParserError_MaxMacroDepthReached
+    Fy_ParserError_MaxMacroDepthReached,
+    Fy_ParserError_InvalidInlineValue
 };
 
 struct Fy_Parser {

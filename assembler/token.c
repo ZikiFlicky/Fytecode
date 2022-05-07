@@ -90,19 +90,11 @@ static size_t char_to_number(char c) {
 }
 
 static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parser) {
-    bool is_neg;
     size_t i = 0;
     size_t positive = 0;
     size_t base;
 
     assert(token->type == Fy_TokenType_Const);
-
-    if (token->start[0] == '-') {
-        is_neg = true;
-        ++i;
-    } else {
-        is_neg = false;
-    }
 
     if (token->start[0] == '0' && token->start[1] == 'x') {
         base = 16;
@@ -118,13 +110,13 @@ static int16_t Fy_Token_toConst(Fy_Token *token, uint8_t width, Fy_Parser *parse
         positive *= base;
         positive += char_to_number(token->start[i]);
 
-        if (positive >= (size_t)(1 << (is_neg ? width - 1 : width)))
+        if (positive >= (size_t)(1 << width))
             Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, NULL);
 
         ++i;
     } while (i < token->length);
 
-    return (int16_t)((is_neg ? -1 : 1) * positive);
+    return (int16_t)positive;
 }
 
 /* Convert Fy_Token with type Fy_TokenType_Const to 16-bit integer */

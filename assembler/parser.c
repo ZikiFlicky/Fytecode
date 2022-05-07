@@ -366,6 +366,8 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Recursive macro definition";
     case Fy_ParserError_MaxMacroDepthReached:
         return "Max macro depth reached";
+    case Fy_ParserError_InvalidInlineValue:
+        return "Invalid inline value";
     default:
         FY_UNREACHABLE();
     }

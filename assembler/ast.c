@@ -58,6 +58,12 @@ static Fy_AST *Fy_ASTParser_parseSingle(Fy_ASTParser *ast_parser) {
            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
         if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
             Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "')'");
+    } else if (Fy_Parser_match(parser, Fy_TokenType_Minus, true)) {
+        Fy_AST *inner;
+        if (!(inner = Fy_ASTParser_parseSingle(ast_parser)))
+           Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
+        ast = Fy_AST_New(Fy_ASTType_Neg);
+        ast->as_neg = inner;
     } else if (!(ast = Fy_ASTParser_parseLiteralExpr(ast_parser))) {
         ast = NULL;
     }
@@ -249,6 +255,17 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
         out->times_bp = lhs.times_bp - rhs.times_bp;
         break;
     }
+    case Fy_ASTType_Neg: {
+        Fy_InlineValue value;
+        Fy_AST_eval(ast->as_neg, parser, &value);
+        if (value.has_variable)
+            Fy_Parser_error(parser, Fy_ParserError_InvalidInlineValue, &ast->as_neg->state, "has variable");
+        out->has_variable = false;
+        out->numeric = -value.numeric;
+        out->times_bp = -value.times_bp;
+        out->times_bx = -value.times_bx;
+        break;
+    }
     default:
         FY_UNREACHABLE();
     }
@@ -268,6 +285,11 @@ void Fy_AST_Delete(Fy_AST *ast) {
         Fy_AST_Delete(ast->lhs);
         Fy_AST_Delete(ast->rhs);
         break;
+    case Fy_ASTType_Neg:
+        Fy_AST_Delete(ast->as_neg);
+        break;
+    default:
+        FY_UNREACHABLE();
     }
     free(ast);
 }

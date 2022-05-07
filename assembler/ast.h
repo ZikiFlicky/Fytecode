@@ -22,7 +22,8 @@ typedef enum Fy_ASTType {
     Fy_ASTType_Bx,
     Fy_ASTType_Bp,
     Fy_ASTType_Add,
-    Fy_ASTType_Sub
+    Fy_ASTType_Sub,
+    Fy_ASTType_Neg
 } Fy_ASTType;
 
 struct Fy_AST {
@@ -33,6 +34,7 @@ struct Fy_AST {
             Fy_AST *lhs;
             Fy_AST *rhs;
         };
+        Fy_AST *as_neg;
         uint16_t as_number;
         char *as_variable;
     };

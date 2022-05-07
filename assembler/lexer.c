@@ -83,9 +83,6 @@ void Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
 bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
     size_t i = 0;
 
-    if (lexer->stream[0] == '-')
-        ++i;
-
     if (lexer->stream[i] == '0' && lexer->stream[i + 1] == 'x') {
         i += 2;
         if (!isxdigit(lexer->stream[i]))
@@ -230,10 +227,6 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     }
 
     if (lexer->stream[0] == '-') {
-        // If this is actually a constant
-        if (Fy_Lexer_lexConst(lexer))
-            return true;
-
         lexer->token.type = Fy_TokenType_Minus;
         lexer->token.start = lexer->stream;
         lexer->token.length = 1;

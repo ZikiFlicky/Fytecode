@@ -4,7 +4,10 @@ start:
     push 1
     push 0
     call fib
-    debug
+    int 0
+    ; newline
+    mov al 10
+    int 1
     end
 
 ; returns into ax

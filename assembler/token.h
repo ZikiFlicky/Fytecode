@@ -65,7 +65,8 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Eb,
     Fy_TokenType_Ew,
     Fy_TokenType_Dup,
-    Fy_TokenType_String
+    Fy_TokenType_String,
+    Fy_TokenType_Char
 } Fy_TokenType;
 
 typedef struct Fy_Token {

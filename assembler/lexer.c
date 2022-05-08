@@ -177,6 +177,25 @@ bool Fy_Lexer_lexString(Fy_Lexer *lexer) {
     return true;
 }
 
+static bool Fy_Lexer_lexChar(Fy_Lexer *lexer) {
+    if (lexer->stream[0] == '\'') {
+        if (lexer->stream[1] == '\0' || lexer->stream[1] == '\n')
+            Fy_Lexer_error(lexer, Fy_LexerError_EOLReached);
+        if (lexer->stream[1] == '\'')
+            Fy_Lexer_error(lexer, Fy_LexerError_Syntax);
+        if (lexer->stream[2] != '\'')
+            Fy_Lexer_error(lexer, Fy_LexerError_Syntax);
+        lexer->token.type = Fy_TokenType_Char;
+        lexer->token.length = 1;
+        lexer->token.start = &lexer->stream[1];
+        lexer->stream += 3;
+        lexer->column += 3;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 /*
  * Lex a newline.
  * Returns false on failure.
@@ -382,6 +401,9 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
 
     if (Fy_Lexer_lexString(lexer))
+        return true;
+
+    if (Fy_Lexer_lexChar(lexer))
         return true;
 
     Fy_Lexer_error(lexer, Fy_LexerError_Syntax);

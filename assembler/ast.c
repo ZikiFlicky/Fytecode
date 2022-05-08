@@ -23,6 +23,13 @@ static Fy_AST *Fy_ASTParser_parseLiteralExpr(Fy_ASTParser *ast_parser) {
         return expr;
     }
 
+    if (Fy_Parser_match(parser, Fy_TokenType_Char, true)) {
+        uint16_t char_value = parser->token.start[0];
+        expr = Fy_AST_New(Fy_ASTType_Number);
+        expr->as_number = char_value;
+        return expr;
+    }
+
     if (ast_parser->type == Fy_ASTParserType_Memory) {
         if (!Fy_Parser_lex(parser, true))
             return NULL;

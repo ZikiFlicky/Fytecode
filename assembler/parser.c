@@ -29,6 +29,7 @@ static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg 
 static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
+static Fy_Instruction *Fy_ParseInt(Fy_Parser *parser, Fy_InstructionArg *arg);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
@@ -276,6 +277,14 @@ Fy_ParserParseRule Fy_parseRuleMovMem8Reg8 = {
     .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpMem8Reg8,
     .process_label_func = NULL
 };
+Fy_ParserParseRule Fy_parseRuleInt = {
+    .type = Fy_ParserParseRuleType_OneParam,
+    .start_token = Fy_TokenType_Int,
+    .arg1_type = Fy_InstructionArgType_Constant,
+    .func_one_param = Fy_ParseInt,
+    .process_func = NULL,
+    .process_label_func = NULL
+};
 
 
 /* Array that stores all rules (pointers to rules) */
@@ -307,7 +316,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMovReg16Mem,
     &Fy_parseRuleLea,
     &Fy_parseRuleMovMemReg16,
-    &Fy_parseRuleMovMem8Reg8
+    &Fy_parseRuleMovMem8Reg8,
+    &Fy_parseRuleInt
 };
 
 static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_InstructionArgType type2) {
@@ -368,6 +378,8 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Max macro depth reached";
     case Fy_ParserError_InvalidInlineValue:
         return "Invalid inline value";
+    case Fy_ParserError_InterruptNotFound:
+        return "Interrupt not found";
     default:
         FY_UNREACHABLE();
     }
@@ -730,6 +742,18 @@ static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg 
     return Fy_ParseOpMem8Reg8(parser, arg1, arg2, &Fy_instructionTypeMovMem8Reg8);
 }
 
+static Fy_Instruction *Fy_ParseInt(Fy_Parser *parser, Fy_InstructionArg *arg) {
+    Fy_Instruction_OpConst8 *instruction;
+    (void)parser;
+    if (arg->as_const > 0xff)
+        Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, "%d", arg->as_const);
+    if (!Fy_findInterruptDefByOpcode((uint8_t)arg->as_const))
+        Fy_Parser_error(parser, Fy_ParserError_InterruptNotFound, &arg->state, "%d", arg->as_const);
+    instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpConst8, Fy_instructionTypeInt);
+    instruction->value = arg->as_const;
+    return (Fy_Instruction*)instruction;
+}
+
 /* Processing functions */
 
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
@@ -789,38 +813,34 @@ static bool Fy_Parser_expectNewline(Fy_Parser *parser, bool do_error) {
 static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     Fy_ParserState backtrack;
 
-    if ((out->as_memory = Fy_Parser_parseMemExpr(parser, &out->type)))
-        return true;
-
-    if (Fy_Parser_getConst16(parser, &out->as_const)) {
-        out->type = Fy_InstructionArgType_Constant;
-        return true;
-    }
-
     Fy_Parser_dumpState(parser, &backtrack);
-    if (!Fy_Parser_lex(parser, true))
-        return false;
 
-    if (Fy_TokenType_isReg16(parser->token.type)) {
-        out->type = Fy_InstructionArgType_Reg16;
-        out->as_reg16 = Fy_TokenType_toReg16(parser->token.type);
-        return true;
+    if ((out->as_memory = Fy_Parser_parseMemExpr(parser, &out->type))) {
+        ;
+    } else if (Fy_Parser_getConst16(parser, &out->as_const)) {
+        out->type = Fy_InstructionArgType_Constant;
+        ;
+    } else {
+        if (!Fy_Parser_lex(parser, true))
+            return false;
+
+        if (Fy_TokenType_isReg16(parser->token.type)) {
+            out->type = Fy_InstructionArgType_Reg16;
+            out->as_reg16 = Fy_TokenType_toReg16(parser->token.type);
+        } else if (Fy_TokenType_isReg8(parser->token.type)) {
+            out->type = Fy_InstructionArgType_Reg8;
+            out->as_reg8 = Fy_TokenType_toReg8(parser->token.type);
+        } else if (parser->token.type == Fy_TokenType_Symbol) {
+            out->type = Fy_InstructionArgType_Label;
+            out->as_label = Fy_Token_toLowercaseCStr(&parser->token);
+        } else {
+            Fy_Parser_loadState(parser, &backtrack);
+            return false;
+        }
     }
 
-    if (Fy_TokenType_isReg8(parser->token.type)) {
-        out->type = Fy_InstructionArgType_Reg8;
-        out->as_reg8 = Fy_TokenType_toReg8(parser->token.type);
-        return true;
-    }
-
-    if (parser->token.type == Fy_TokenType_Symbol) {
-        out->type = Fy_InstructionArgType_Label;
-        out->as_label = Fy_Token_toLowercaseCStr(&parser->token);
-        return true;
-    }
-
-    Fy_Parser_loadState(parser, &backtrack);
-    return false;
+    out->state = backtrack;
+    return true;
 }
 
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {

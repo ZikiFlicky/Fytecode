@@ -21,7 +21,8 @@ enum Fy_RuntimeError {
     Fy_RuntimeError_ReadableReg16NotFound,
     Fy_RuntimeError_WritableReg16NotFound,
     Fy_RuntimeError_ReadableReg8NotFound,
-    Fy_RuntimeError_WritableReg8NotFound
+    Fy_RuntimeError_WritableReg8NotFound,
+    Fy_RuntimeError_InterruptNotFound
 };
 
 struct Fy_VM {

@@ -326,6 +326,8 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "pop", Fy_TokenType_Pop))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "int", Fy_TokenType_Int))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "ax", Fy_TokenType_Ax))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "bx", Fy_TokenType_Bx))

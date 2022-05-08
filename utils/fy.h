@@ -22,6 +22,7 @@
 
 #include "../vm/vm.h"
 #include "../vm/registers.h"
+#include "../vm/interrupts.h"
 
 #define FY_UNREACHABLE() assert(0)
 

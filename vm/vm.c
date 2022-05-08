@@ -62,6 +62,8 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
         return "Could not find readable 8-bit register from opcode";
     case Fy_RuntimeError_WritableReg8NotFound:
         return "Could not find writable 8-bit register from opcode";
+    case Fy_RuntimeError_InterruptNotFound:
+        return "Interrupt not found";
     default:
         FY_UNREACHABLE();
     }

@@ -47,7 +47,8 @@ enum Fy_ParserError {
     Fy_ParserError_SymbolAlreadyDefined,
     Fy_ParserError_RecursiveMacro,
     Fy_ParserError_MaxMacroDepthReached,
-    Fy_ParserError_InvalidInlineValue
+    Fy_ParserError_InvalidInlineValue,
+    Fy_ParserError_InterruptNotFound
 };
 
 struct Fy_Parser {
@@ -76,6 +77,7 @@ enum Fy_InstructionArgType {
 };
 
 struct Fy_InstructionArg {
+    Fy_ParserState state;
     Fy_InstructionArgType type;
     union {
         uint8_t as_reg16;

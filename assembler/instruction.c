@@ -385,6 +385,22 @@ static void Fy_instructionTypeMovMem8Reg8_run(Fy_VM *vm, uint16_t address) {
     vm->reg_ip += 1 + memparam_size + 1;
 }
 
+
+static void Fy_instructionTypeInt_write(Fy_Generator *generator, Fy_Instruction_OpConst8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->value);
+}
+
+static void Fy_instructionTypeInt_run(Fy_VM *vm, uint16_t address) {
+    uint8_t opcode = Fy_VM_getMem8(vm, address + 0);
+    Fy_InterruptDef *interrupt = Fy_findInterruptDefByOpcode(opcode);
+    if (!interrupt) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InterruptNotFound, "%d", opcode);
+        return;
+    }
+    Fy_InterruptDef_run(interrupt, vm);
+}
+
+
 /* Type definitions */
 Fy_InstructionType Fy_instructionTypeNop = {
     .opcode = 0,
@@ -582,6 +598,13 @@ Fy_InstructionType Fy_instructionTypeMovMem8Reg8 = {
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMovMem8Reg8_write,
     .run_func = Fy_instructionTypeMovMem8Reg8_run
 };
+Fy_InstructionType Fy_instructionTypeInt = {
+    .opcode = 28,
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeInt_write,
+    .run_func = Fy_instructionTypeInt_run
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeNop,
@@ -611,5 +634,6 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeMovReg16Mem,
     &Fy_instructionTypeLea,
     &Fy_instructionTypeMovMemReg16,
-    &Fy_instructionTypeMovMem8Reg8
+    &Fy_instructionTypeMovMem8Reg8,
+    &Fy_instructionTypeInt
 };

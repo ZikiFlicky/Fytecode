@@ -104,6 +104,7 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     out->reg_sp = stack_offset;
     out->reg_bp = 0;
     out->running = true;
+    out->error = false;
     out->flags = 0;
 }
 
@@ -123,6 +124,7 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     }
     printf("\n");
     vm->running = false;
+    vm->error = true;
 }
 
 uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address) {
@@ -291,10 +293,15 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
     Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "'%.2x'", opcode);
 }
 
-void Fy_VM_runAll(Fy_VM *vm) {
+/* Returns exit code */
+int Fy_VM_runAll(Fy_VM *vm) {
     while (vm->running) {
         Fy_VM_runInstruction(vm);
     }
+    if (vm->error)
+        return 1;
+    else
+        return 0;
 }
 
 void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {

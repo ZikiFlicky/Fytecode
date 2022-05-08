@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(argv[1], "-r") == 0) {
         Fy_BytecodeFileStream bc;
         Fy_VM vm;
+        int exit_code;
 
         if (argc != 3) {
             printf("Expected one argument after '-r' switch\n");
@@ -79,10 +80,11 @@ int main(int argc, char **argv) {
         }
 
         Fy_VM_Init(&bc, &vm);
-        Fy_VM_runAll(&vm);
+        exit_code = Fy_VM_runAll(&vm);
         Fy_VM_Destruct(&vm);
 
         Fy_BytecodeFileStream_Destruct(&bc);
+        return exit_code;
     } else if (strcmp(argv[1], "-h")) {
         Fy_PrintHelp();
     } else {

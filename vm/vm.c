@@ -33,7 +33,16 @@ void Fy_BytecodeFileStream_Destruct(Fy_BytecodeFileStream *bc) {
         free(bc->code);
 }
 
-uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc) {
+static uint16_t Fy_BytecodeFileStream_readByte(Fy_BytecodeFileStream *bc) {
+    uint8_t b;
+    if (bc->idx + 1 > bc->length)
+        FY_UNREACHABLE(); // FIXME: Error
+    b = bc->code[bc->idx];
+    ++bc->idx;
+    return b;
+}
+
+static uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc) {
     uint16_t w;
     if (bc->idx + 2 > bc->length)
         FY_UNREACHABLE(); // FIXME: Error
@@ -42,7 +51,38 @@ uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc) {
     return w;
 }
 
-void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out) {
+static void Fy_BytecodeFileStream_readBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out, bool advance) {
+    if (bc->idx + amount > bc->length)
+        FY_UNREACHABLE(); // FIXME: Error
+    for (uint16_t i = 0; i < amount; ++i)
+        out[i] = bc->code[bc->idx + i];
+    if (advance)
+        bc->idx += amount;
+}
+
+static void Fy_BytecodeFileStream_readShebang(Fy_BytecodeFileStream *bc) {
+    uint8_t shebang_start[2];
+    Fy_BytecodeFileStream_readBytesInto(bc, 2, shebang_start, false);
+    if (shebang_start[0] == '#' && shebang_start[1] == '!') {
+        uint8_t c;
+        bc->idx += 2;
+        do {
+            c = Fy_BytecodeFileStream_readByte(bc);
+        } while (c != '\n');
+    }
+}
+
+static void Fy_BytecodeFileStream_readNameHeader(Fy_BytecodeFileStream *bc) {
+    uint8_t name[2];
+    Fy_BytecodeFileStream_readBytesInto(bc, 2, name, false);
+    if (name[0] == 'F' && name[1] == 'Y') {
+        bc->idx += 2;
+    } else {
+        FY_UNREACHABLE();
+    }
+}
+
+static void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out) {
     if (bc->idx + amount > bc->length) {
         FY_UNREACHABLE();
     }
@@ -82,6 +122,8 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     uint16_t data_offset, code_offset, stack_offset;
 
     out->mem_space_bottom = malloc((1 << 16) * sizeof(uint8_t));
+    Fy_BytecodeFileStream_readShebang(bc);
+    Fy_BytecodeFileStream_readNameHeader(bc);
     // Parse header
     data_size = Fy_BytecodeFileStream_readWord(bc);
     code_size = Fy_BytecodeFileStream_readWord(bc);

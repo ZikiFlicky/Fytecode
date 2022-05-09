@@ -53,8 +53,6 @@ struct Fy_VM {
 
 bool Fy_OpenBytecodeFile(char *filename, Fy_BytecodeFileStream *out);
 void Fy_BytecodeFileStream_Destruct(Fy_BytecodeFileStream *bc);
-uint16_t Fy_BytecodeFileStream_readWord(Fy_BytecodeFileStream *bc);
-void Fy_BytecodeFileStream_writeBytesInto(Fy_BytecodeFileStream *bc, uint16_t amount, uint8_t *out);
 
 void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out);
 void Fy_VM_Destruct(Fy_VM *vm);

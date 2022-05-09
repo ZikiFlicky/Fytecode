@@ -1323,35 +1323,45 @@ void Fy_Parser_logParsed(Fy_Parser *parser) {
 }
 
 /* Generate bytecode from parsed values */
-void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out) {
-    Fy_Generator generator;
-    Fy_Generator_Init(&generator);
-
+void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *generator) {
     // Add size of data, code and stack to header
-    Fy_Generator_addWord(&generator, parser->data_size);
-    Fy_Generator_addWord(&generator, parser->code_size);
-    Fy_Generator_addWord(&generator, 0x100); // Stack size
+    Fy_Generator_addWord(generator, parser->data_size);
+    Fy_Generator_addWord(generator, parser->code_size);
+    Fy_Generator_addWord(generator, 0x100); // Stack size
 
     // TODO: Optimize this
     // Add all of the data bytes
     for (size_t i = 0; i < parser->data_size; ++i)
-        Fy_Generator_addByte(&generator, parser->data_part[i]);
+        Fy_Generator_addByte(generator, parser->data_part[i]);
 
     // Add all of the instructions
     for (size_t i = 0; i < parser->amount_used; ++i) {
         Fy_Instruction *instruction = parser->instructions[i];
-        Fy_Generator_addInstruction(&generator, instruction);
+        Fy_Generator_addInstruction(generator, instruction);
     }
-
-    *out = generator;
 }
 
-void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename) {
+void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename, char *shebang_path) {
     FILE *file = fopen(filename, "w+");
+    char *shebang_start = "#!";
+    char *shebang_end = " -r \n";
     Fy_Generator generator;
 
     if (!file)
         Fy_Parser_error(parser, Fy_ParserError_CannotOpenFileForWrite, NULL, "%s", filename);
+
+    Fy_Generator_Init(&generator);
+
+    // If there's a shebang that needs to be added, add it
+    if (shebang_path) {
+        Fy_Generator_addString(&generator, shebang_start);
+        Fy_Generator_addString(&generator, shebang_path);
+        Fy_Generator_addString(&generator, shebang_end);
+    }
+
+    // Add FY to signal start of binary file
+    Fy_Generator_addByte(&generator, 'F');
+    Fy_Generator_addByte(&generator, 'Y');
 
     Fy_Parser_generateBytecode(parser, &generator);
     fwrite(generator.output, 1, generator.idx, file);

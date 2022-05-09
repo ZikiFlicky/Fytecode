@@ -120,7 +120,7 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval);
 void Fy_Parser_parseAll(Fy_Parser *parser);
 void Fy_Parser_error(Fy_Parser *parser, Fy_ParserError error, Fy_ParserState *state, char *additional, ...);
 void Fy_Parser_generateBytecode(Fy_Parser *parser, Fy_Generator *out);
-void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename);
+void Fy_Parser_generateToFile(Fy_Parser *parser, char *filename, char *shebang_path);
 void Fy_Parser_logParsed(Fy_Parser *parser); /* NOTE: Debug function */
 uint16_t Fy_Parser_getCodeOffsetByInstructionIndex(Fy_Parser *parser, size_t index);
 

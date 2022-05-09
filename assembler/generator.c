@@ -35,6 +35,11 @@ void Fy_Generator_addWord(Fy_Generator *generator, uint16_t w) {
     generator->idx += 2;
 }
 
+void Fy_Generator_addString(Fy_Generator *generator, char *string) {
+    for (size_t i = 0; string[i] != '\0'; ++i)
+        Fy_Generator_addByte(generator, (uint8_t)string[i]);
+}
+
 void Fy_Generator_addMemory(Fy_Generator *generator, Fy_InlineValue *mem) {
     uint8_t mapping;
     Fy_InlineValue_getMapping(mem, &mapping);

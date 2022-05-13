@@ -156,8 +156,10 @@ extern Fy_InstructionType Fy_instructionTypeMovMem8Reg8;
 extern Fy_InstructionType Fy_instructionTypeInt;
 extern Fy_InstructionType Fy_instructionTypeCmpReg8Const;
 extern Fy_InstructionType Fy_instructionTypeCmpReg8Reg8;
+extern Fy_InstructionType Fy_instructionTypeAddReg8Const;
+extern Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
 
-extern Fy_InstructionType *Fy_instructionTypes[31];
+extern Fy_InstructionType *Fy_instructionTypes[33];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);

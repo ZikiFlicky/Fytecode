@@ -15,6 +15,8 @@ static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_InstructionAr
 static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
+static Fy_Instruction *Fy_ParseCmpReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
+static Fy_Instruction *Fy_ParseCmpReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg);
@@ -162,6 +164,24 @@ Fy_ParserParseRule Fy_parseRuleCmpReg16Reg16 = {
     .process_func = NULL,
     .process_label_func = NULL
 };
+Fy_ParserParseRule Fy_parseRuleCmpReg8Const = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Cmp,
+    .arg1_type = Fy_InstructionArgType_Reg8,
+    .arg2_type = Fy_InstructionArgType_Constant,
+    .func_two_params = Fy_ParseCmpReg8Const,
+    .process_func = NULL,
+    .process_label_func = NULL
+};
+Fy_ParserParseRule Fy_parseRuleCmpReg8Reg8 = {
+    .type = Fy_ParserParseRuleType_TwoParams,
+    .start_token = Fy_TokenType_Cmp,
+    .arg1_type = Fy_InstructionArgType_Reg8,
+    .arg2_type = Fy_InstructionArgType_Reg8,
+    .func_two_params = Fy_ParseCmpReg8Reg8,
+    .process_func = NULL,
+    .process_label_func = NULL
+};
 Fy_ParserParseRule Fy_parseRuleJmp = {
     .type = Fy_ParserParseRuleType_OneParam,
     .start_token = Fy_TokenType_Jmp,
@@ -300,6 +320,8 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleSubReg16Reg16,
     &Fy_parseRuleCmpReg16Const,
     &Fy_parseRuleCmpReg16Reg16,
+    &Fy_parseRuleCmpReg8Const,
+    &Fy_parseRuleCmpReg8Reg8,
     &Fy_parseRuleDebug,
     &Fy_parseRuleDebugStack,
     &Fy_parseRuleEnd,
@@ -684,6 +706,14 @@ static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_InstructionAr
 
 static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
     return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeCmpReg16Reg16);
+}
+
+static Fy_Instruction *Fy_ParseCmpReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_instructionTypeCmpReg8Const);
+}
+
+static Fy_Instruction *Fy_ParseCmpReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_instructionTypeCmpReg8Reg8);
 }
 
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg) {

@@ -400,6 +400,42 @@ static void Fy_instructionTypeInt_run(Fy_VM *vm, uint16_t address) {
     Fy_InterruptDef_run(interrupt, vm);
 }
 
+static void Fy_instructionTypeCmpReg8Const_write(Fy_Generator *generator, Fy_Instruction_OpReg8Const *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addByte(generator, instruction->value);
+}
+
+static void Fy_instructionTypeCmpReg8Const_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint8_t value = Fy_VM_getMem8(vm, address + 1);
+    uint8_t reg_value;
+    uint8_t res;
+
+    if (!Fy_VM_getReg8(vm, reg_id, &reg_value))
+        return;
+    res = reg_value - value;
+    Fy_VM_setResult8InFlags(vm, *((int8_t*)&res));
+}
+
+static void Fy_instructionTypeCmpReg8Reg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8Reg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+    Fy_Generator_addByte(generator, instruction->reg2_id);
+}
+
+void Fy_instructionTypeCmpReg8Reg8_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg = Fy_VM_getMem8(vm, address + 0);
+    uint8_t reg2 = Fy_VM_getMem8(vm, address + 1);
+    uint8_t reg_value;
+    uint8_t reg2_value;
+    uint8_t res;
+
+    if (!Fy_VM_getReg8(vm, reg, &reg_value))
+        return;
+    if (!Fy_VM_getReg8(vm, reg2, &reg2_value))
+        return;
+    res = reg_value - reg2_value;
+    Fy_VM_setResult8InFlags(vm, *(int8_t*)&res);
+}
 
 /* Type definitions */
 Fy_InstructionType Fy_instructionTypeNop = {
@@ -605,6 +641,20 @@ Fy_InstructionType Fy_instructionTypeInt = {
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeInt_write,
     .run_func = Fy_instructionTypeInt_run
 };
+Fy_InstructionType Fy_instructionTypeCmpReg8Const = {
+    .opcode = 29,
+    .variable_size = false,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCmpReg8Const_write,
+    .run_func = Fy_instructionTypeCmpReg8Const_run
+};
+Fy_InstructionType Fy_instructionTypeCmpReg8Reg8 = {
+    .opcode = 30,
+    .variable_size = false,
+    .additional_size = 2,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCmpReg8Reg8_write,
+    .run_func = Fy_instructionTypeCmpReg8Reg8_run
+};
 
 Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeNop,
@@ -635,5 +685,7 @@ Fy_InstructionType *Fy_instructionTypes[] = {
     &Fy_instructionTypeLea,
     &Fy_instructionTypeMovMemReg16,
     &Fy_instructionTypeMovMem8Reg8,
-    &Fy_instructionTypeInt
+    &Fy_instructionTypeInt,
+    &Fy_instructionTypeCmpReg8Const,
+    &Fy_instructionTypeCmpReg8Reg8
 };

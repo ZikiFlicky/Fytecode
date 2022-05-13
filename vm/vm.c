@@ -104,6 +104,8 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
         return "Could not find writable 8-bit register from opcode";
     case Fy_RuntimeError_InterruptNotFound:
         return "Interrupt not found";
+    case Fy_RuntimeError_InterruptError:
+        return "Interrupt error";
     default:
         FY_UNREACHABLE();
     }
@@ -148,6 +150,8 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     out->running = true;
     out->error = false;
     out->flags = 0;
+    out->window = NULL;
+    out->surface = NULL;
 }
 
 void Fy_VM_Destruct(Fy_VM *vm) {

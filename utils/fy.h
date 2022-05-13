@@ -3,14 +3,7 @@
 
 /* Fytecode forward file */
 
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <assert.h>
-#include <string.h>
-#include <stdarg.h>
+#define FY_UNREACHABLE() assert(0)
 
 #include "../assembler/token.h"
 #include "../assembler/lexer.h"
@@ -24,6 +17,15 @@
 #include "../vm/registers.h"
 #include "../vm/interrupts.h"
 
-#define FY_UNREACHABLE() assert(0)
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <assert.h>
+#include <string.h>
+#include <stdarg.h>
+
+#include <SDL2/SDL.h>
 
 #endif /* FY_FY_H */

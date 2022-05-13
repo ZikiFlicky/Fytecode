@@ -1,5 +1,5 @@
 CC=gcc
-LINK=-lm
+LINK=-lm -lSDL2
 CFLAGS=-Wall -Wextra -std=c99 -Wno-missing-braces -Iutils/
 
 SRCDIR=.

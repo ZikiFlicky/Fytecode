@@ -4,6 +4,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include <SDL2/SDL.h>
+
 #define FY_FLAGS_ZERO (1 << 0)
 #define FY_FLAGS_SIGN (1 << 1)
 
@@ -22,7 +24,8 @@ enum Fy_RuntimeError {
     Fy_RuntimeError_WritableReg16NotFound,
     Fy_RuntimeError_ReadableReg8NotFound,
     Fy_RuntimeError_WritableReg8NotFound,
-    Fy_RuntimeError_InterruptNotFound
+    Fy_RuntimeError_InterruptNotFound,
+    Fy_RuntimeError_InterruptError
 };
 
 struct Fy_VM {
@@ -49,6 +52,10 @@ struct Fy_VM {
     /* Is there an error? combined with `running` */
     bool error;
     uint8_t flags;
+
+    /* Graphics-related */
+    SDL_Window *window;
+    SDL_Surface *surface;
 };
 
 bool Fy_OpenBytecodeFile(char *filename, Fy_BytecodeFileStream *out);

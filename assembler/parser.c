@@ -2,23 +2,9 @@
 
 /* Parse-function (step 1) declarations */
 static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser);
-static Fy_Instruction *Fy_ParseMovReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
-static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseAddReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseAddReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseCmpReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseCmpReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg);
@@ -29,17 +15,12 @@ static Fy_Instruction *Fy_ParseRetConst16(Fy_Parser *parser, Fy_InstructionArg *
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePushReg16(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
-static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2);
 static Fy_Instruction *Fy_ParseInt(Fy_Parser *parser, Fy_InstructionArg *arg);
 
 /* Process-function (parsing step 2) declarations */
 static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
-static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpMemReg16 *instruction);
-static void Fy_ProcessOpMem8Reg8(Fy_Parser *parser, Fy_Instruction_OpMem8Reg8 *instruction);
 
 /* Process-label-function (parsing step 3) declarations */
 static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser);
@@ -49,301 +30,213 @@ static bool Fy_Parser_parseLine(Fy_Parser *parser);
 
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleNop = {
-    .type = Fy_ParserParseRuleType_NoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Nop,
-    .func_no_params = Fy_ParseNop,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovReg8Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseMovReg8Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovReg8Reg8 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Reg8,
-    .func_two_params = Fy_ParseMovReg8Reg8,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovReg16Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseMovReg16Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovReg16Reg16 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Reg16,
-    .func_two_params = Fy_ParseMovReg16Reg16,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 0,
+        .func_no_params = Fy_ParseNop,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleDebug = {
-    .type = Fy_ParserParseRuleType_NoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Debug,
-    .func_no_params = Fy_ParseDebug,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 0,
+        .func_no_params = Fy_ParseDebug,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleDebugStack = {
-    .type = Fy_ParserParseRuleType_NoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_DebugStack,
-    .func_no_params = Fy_ParseDebugStack,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 0,
+        .func_no_params = Fy_ParseDebugStack,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleEnd = {
-    .type = Fy_ParserParseRuleType_NoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_End,
-    .func_no_params = Fy_ParseEnd,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleAddReg16Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Add,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseAddReg16Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleAddReg16Reg16 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Add,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Reg16,
-    .func_two_params = Fy_ParseAddReg16Reg16,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleSubReg16Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Sub,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseSubReg16Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleSubReg16Reg16 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Sub,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Reg16,
-    .func_two_params = Fy_ParseSubReg16Reg16,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleCmpReg16Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Cmp,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseCmpReg16Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleCmpReg16Reg16 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Cmp,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Reg16,
-    .func_two_params = Fy_ParseCmpReg16Reg16,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleAddReg8Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Add,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseAddReg8Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleAddReg8Reg8 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Add,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Reg8,
-    .func_two_params = Fy_ParseAddReg8Reg8,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleCmpReg8Const = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Cmp,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Constant,
-    .func_two_params = Fy_ParseCmpReg8Const,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleCmpReg8Reg8 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Cmp,
-    .arg1_type = Fy_InstructionArgType_Reg8,
-    .arg2_type = Fy_InstructionArgType_Reg8,
-    .func_two_params = Fy_ParseCmpReg8Reg8,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 0,
+        .func_no_params = Fy_ParseEnd,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleJmp = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jmp,
-    .arg1_type = Fy_InstructionArgType_Label,
-    .func_one_param = Fy_ParseJmp,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJmp,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
 };
 Fy_ParserParseRule Fy_parseRuleJe = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Je,
-    .arg1_type = Fy_InstructionArgType_Label,
-    .func_one_param = Fy_ParseJe,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJe,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
 };
 Fy_ParserParseRule Fy_parseRuleJl = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jl,
-    .arg1_type = Fy_InstructionArgType_Label,
-    .func_one_param = Fy_ParseJl,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJl,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
 };
 Fy_ParserParseRule Fy_parseRuleJg = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jg,
-    .arg1_type = Fy_InstructionArgType_Label,
-    .func_one_param = Fy_ParseJg,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJg,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
 };
 Fy_ParserParseRule Fy_parseRulePushConst = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Push,
-    .arg1_type = Fy_InstructionArgType_Constant,
-    .func_one_param = Fy_ParsePushConst,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Constant,
+        .func_one_param = Fy_ParsePushConst,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRulePushReg16 = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Push,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .func_one_param = Fy_ParsePushReg16,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Reg16,
+        .func_one_param = Fy_ParsePushReg16,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRulePop = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Pop,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .func_one_param = Fy_ParsePop,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Reg16,
+        .func_one_param = Fy_ParsePop,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleCall = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Call,
-    .arg1_type = Fy_InstructionArgType_Label,
-    .func_one_param = Fy_ParseCall,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-    .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseCall,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
 };
 Fy_ParserParseRule Fy_parseRuleRet = {
-    .type = Fy_ParserParseRuleType_NoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Ret,
-    .func_no_params = Fy_ParseRet,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 0,
+        .func_no_params = Fy_ParseRet,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleRetConst16 = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Ret,
-    .arg1_type = Fy_InstructionArgType_Constant,
-    .func_one_param = Fy_ParseRetConst16,
-    .process_func = NULL,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovReg16Mem = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Memory16,
-    .func_two_params = Fy_ParseMovReg16Mem,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Constant,
+        .func_one_param = Fy_ParseRetConst16,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleLea = {
-    .type = Fy_ParserParseRuleType_TwoParams,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Lea,
-    .arg1_type = Fy_InstructionArgType_Reg16,
-    .arg2_type = Fy_InstructionArgType_Memory16,
-    .func_two_params = Fy_ParseLea,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovMemReg16 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Memory16,
-    .arg2_type = Fy_InstructionArgType_Reg16,
-    .func_two_params = Fy_ParseMovMemReg16,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpMemReg16,
-    .process_label_func = NULL
-};
-Fy_ParserParseRule Fy_parseRuleMovMem8Reg8 = {
-    .type = Fy_ParserParseRuleType_TwoParams,
-    .start_token = Fy_TokenType_Mov,
-    .arg1_type = Fy_InstructionArgType_Memory8,
-    .arg2_type = Fy_InstructionArgType_Reg8,
-    .func_two_params = Fy_ParseMovMem8Reg8,
-    .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpMem8Reg8,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 2,
+        .arg1_type = Fy_InstructionArgType_Reg16,
+        .arg2_type = Fy_InstructionArgType_Memory16,
+        .func_two_params = Fy_ParseLea,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
+        .process_label_func = NULL
+    }
 };
 Fy_ParserParseRule Fy_parseRuleInt = {
-    .type = Fy_ParserParseRuleType_OneParam,
+    .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Int,
-    .arg1_type = Fy_InstructionArgType_Constant,
-    .func_one_param = Fy_ParseInt,
-    .process_func = NULL,
-    .process_label_func = NULL
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Constant,
+        .func_one_param = Fy_ParseInt,
+        .process_func = NULL,
+        .process_label_func = NULL
+    }
 };
-
+Fy_ParserParseRule Fy_parseRuleMov = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Mov,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Mov
+    }
+};
+Fy_ParserParseRule Fy_parseRuleAdd = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Add,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Add
+    }
+};
+Fy_ParserParseRule Fy_parseRuleSub = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Sub,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Sub
+    }
+};
+Fy_ParserParseRule Fy_parseRuleCmp = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Cmp,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Cmp
+    }
+};
 
 /* Array that stores all rules (pointers to rules) */
 Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleNop,
-    &Fy_parseRuleMovReg8Const,
-    &Fy_parseRuleMovReg8Reg8,
-    &Fy_parseRuleMovReg16Const,
-    &Fy_parseRuleMovReg16Reg16,
-    &Fy_parseRuleAddReg16Const,
-    &Fy_parseRuleAddReg16Reg16,
-    &Fy_parseRuleSubReg16Const,
-    &Fy_parseRuleSubReg16Reg16,
-    &Fy_parseRuleCmpReg16Const,
-    &Fy_parseRuleCmpReg16Reg16,
-    &Fy_parseRuleAddReg8Const,
-    &Fy_parseRuleAddReg8Reg8,
-    &Fy_parseRuleCmpReg8Const,
-    &Fy_parseRuleCmpReg8Reg8,
+    &Fy_parseRuleMov,
+    &Fy_parseRuleAdd,
+    &Fy_parseRuleSub,
+    &Fy_parseRuleCmp,
     &Fy_parseRuleDebug,
     &Fy_parseRuleDebugStack,
     &Fy_parseRuleEnd,
@@ -357,10 +250,7 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleCall,
     &Fy_parseRuleRet,
     &Fy_parseRuleRetConst16,
-    &Fy_parseRuleMovReg16Mem,
     &Fy_parseRuleLea,
-    &Fy_parseRuleMovMemReg16,
-    &Fy_parseRuleMovMem8Reg8,
     &Fy_parseRuleInt
 };
 
@@ -590,38 +480,6 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
 }
 
 /* Parsing helpers */
-static Fy_Instruction *Fy_ParseOpReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpReg8Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg8Const, *type);
-    (void)parser;
-    instruction->reg_id = arg1->as_reg8;
-    instruction->value = arg2->as_const; // FIXME: Verify that this is indeed 8-bit
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseOpReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpReg8Reg8 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg8Reg8, *type);
-    (void)parser;
-    instruction->reg_id = arg1->as_reg8;
-    instruction->reg2_id = arg2->as_reg8;
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseOpReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpReg16Const *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Const, *type);
-    (void)parser;
-    instruction->reg_id = arg1->as_reg8;
-    instruction->value = arg2->as_const;
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseOpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpReg16Reg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Reg16, *type);
-    (void)parser;
-    instruction->reg_id = arg1->as_reg16;
-    instruction->reg2_id = arg2->as_reg16;
-    return (Fy_Instruction*)instruction;
-}
-
 static Fy_Instruction *Fy_ParseOpLabel(Fy_Parser *parser, Fy_InstructionArg *arg, Fy_InstructionType *type) {
     Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, *type);
     (void)parser;
@@ -656,42 +514,10 @@ static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *
     return (Fy_Instruction*)instruction;
 }
 
-static Fy_Instruction *Fy_ParseOpMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpMemReg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpMemReg16, *type);
-    (void)parser;
-    instruction->address_ast = arg1->as_memory;
-    instruction->reg_id = arg2->as_reg16;
-    return (Fy_Instruction*)instruction;
-}
-
-static Fy_Instruction *Fy_ParseOpMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
-    Fy_Instruction_OpMem8Reg8 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpMem8Reg8, *type);
-    (void)parser;
-    instruction->address_ast = arg1->as_memory;
-    instruction->reg_id = arg2->as_reg16;
-    return (Fy_Instruction*)instruction;
-}
-
 /* Parsing functions */
 static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser) {
     (void)parser;
     return Fy_ParseOpNoParams(parser, &Fy_instructionTypeNop);
-}
-
-static Fy_Instruction *Fy_ParseMovReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_instructionTypeMovReg8Const);
-}
-
-static Fy_Instruction *Fy_ParseMovReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_instructionTypeMovReg8Reg8);
-}
-
-static Fy_Instruction *Fy_ParseMovReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeMovReg16Const);
-}
-
-static Fy_Instruction *Fy_ParseMovReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeMovReg16Reg16);
 }
 
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser) {
@@ -704,46 +530,6 @@ static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser) {
 
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
     return Fy_ParseOpNoParams(parser, &Fy_instructionTypeEndProgram);
-}
-
-static Fy_Instruction *Fy_ParseAddReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeAddReg16Const);
-}
-
-static Fy_Instruction *Fy_ParseAddReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeAddReg16Reg16);
-}
-
-static Fy_Instruction *Fy_ParseSubReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeSubReg16Const);
-}
-
-static Fy_Instruction *Fy_ParseSubReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeSubReg16Reg16);
-}
-
-static Fy_Instruction *Fy_ParseCmpReg16Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Const(parser, arg1, arg2, &Fy_instructionTypeCmpReg16Const);
-}
-
-static Fy_Instruction *Fy_ParseCmpReg16Reg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Reg16(parser, arg1, arg2, &Fy_instructionTypeCmpReg16Reg16);
-}
-
-static Fy_Instruction *Fy_ParseAddReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_instructionTypeAddReg8Const);
-}
-
-static Fy_Instruction *Fy_ParseAddReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_instructionTypeAddReg8Reg8);
-}
-
-static Fy_Instruction *Fy_ParseCmpReg8Const(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Const(parser, arg1, arg2, &Fy_instructionTypeCmpReg8Const);
-}
-
-static Fy_Instruction *Fy_ParseCmpReg8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg8Reg8(parser, arg1, arg2, &Fy_instructionTypeCmpReg8Reg8);
 }
 
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg) {
@@ -786,20 +572,8 @@ static Fy_Instruction *Fy_ParsePop(Fy_Parser *parser, Fy_InstructionArg *arg) {
     return Fy_ParseOpReg16(parser, arg, &Fy_instructionTypePop);
 }
 
-static Fy_Instruction *Fy_ParseMovReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_instructionTypeMovReg16Mem);
-}
-
 static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
     return Fy_ParseOpReg16Mem(parser, arg1, arg2, &Fy_instructionTypeLea);
-}
-
-static Fy_Instruction *Fy_ParseMovMemReg16(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpMemReg16(parser, arg1, arg2, &Fy_instructionTypeMovMemReg16);
-}
-
-static Fy_Instruction *Fy_ParseMovMem8Reg8(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    return Fy_ParseOpMem8Reg8(parser, arg1, arg2, &Fy_instructionTypeMovMem8Reg8);
 }
 
 static Fy_Instruction *Fy_ParseInt(Fy_Parser *parser, Fy_InstructionArg *arg) {
@@ -831,16 +605,6 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
 }
 
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction) {
-    Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
-    Fy_AST_Delete(instruction->address_ast);
-}
-
-static void Fy_ProcessOpMemReg16(Fy_Parser *parser, Fy_Instruction_OpMemReg16 *instruction) {
-    Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
-    Fy_AST_Delete(instruction->address_ast);
-}
-
-static void Fy_ProcessOpMem8Reg8(Fy_Parser *parser, Fy_Instruction_OpMem8Reg8 *instruction) {
     Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
     Fy_AST_Delete(instruction->address_ast);
 }
@@ -903,10 +667,122 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     return true;
 }
 
+static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, Fy_ParserParseRule *rule,
+                                                    uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    Fy_Instruction *instruction;
+
+    assert(rule->type == Fy_ParserParseRuleType_Custom);
+
+    if (amount_args == rule->as_custom.amount_params) {
+        switch (amount_args) {
+        case 0:
+            instruction = rule->as_custom.func_no_params(parser);
+            break;
+        case 1:
+            if (Fy_InstructionArgType_is(arg1->type, rule->as_custom.arg1_type))
+                instruction = rule->as_custom.func_one_param(parser, arg1);
+            break;
+        case 2:
+            if (Fy_InstructionArgType_is(arg1->type, rule->as_custom.arg1_type) && Fy_InstructionArgType_is(arg2->type, rule->as_custom.arg2_type))
+                instruction = rule->as_custom.func_two_params(parser, arg1, arg2);
+            break;
+        default:
+            FY_UNREACHABLE();
+        }
+    } else {
+        instruction = NULL;
+    }
+
+    return instruction;
+}
+
+static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_ParserParseRule *rule, uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    Fy_Instruction_BinaryOperator *instruction;
+    Fy_BinaryOperatorArgsType args_type;
+
+    if (amount_args != 2)
+        return NULL;
+
+    // Decide how we handle the instruction arguments
+    if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg16Const;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg16Reg16;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory16)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg16Memory16;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg8Const;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg8Reg8;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory8)) {
+        args_type = Fy_BinaryOperatorArgsType_Reg8Memory8;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+        args_type = Fy_BinaryOperatorArgsType_Memory16Const;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
+        args_type = Fy_BinaryOperatorArgsType_Memory16Reg16;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+        args_type = Fy_BinaryOperatorArgsType_Memory8Const;
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
+        args_type = Fy_BinaryOperatorArgsType_Memory8Reg8;
+    } else {
+        return NULL;
+    }
+
+    instruction = FY_INSTRUCTION_NEW(Fy_Instruction_BinaryOperator, Fy_instructionTypeBinaryOperator);
+    instruction->operator = rule->as_operator.operator_id;
+    instruction->type = args_type;
+    switch (args_type) {
+    case Fy_BinaryOperatorArgsType_Reg16Const:
+        instruction->as_reg16const.reg_id = arg1->as_reg16;
+        instruction->as_reg16const.value = arg2->as_const;
+        break;
+    case Fy_BinaryOperatorArgsType_Reg16Reg16:
+        instruction->as_reg16reg16.reg_id = arg1->as_reg16;
+        instruction->as_reg16reg16.reg2_id = arg2->as_reg16;
+        break;
+    case Fy_BinaryOperatorArgsType_Reg16Memory16:
+        instruction->as_reg16mem16.reg_id = arg1->as_reg16;
+        instruction->as_reg16mem16.ast = arg2->as_memory;
+        break;
+    case Fy_BinaryOperatorArgsType_Reg8Const:
+        instruction->as_reg8const.reg_id = arg1->as_reg8;
+        instruction->as_reg8const.value = arg2->as_const;
+        break;
+    case Fy_BinaryOperatorArgsType_Reg8Reg8:
+        instruction->as_reg8reg8.reg_id = arg1->as_reg8;
+        instruction->as_reg8reg8.reg2_id = arg2->as_reg8;
+        break;
+    case Fy_BinaryOperatorArgsType_Reg8Memory8:
+        instruction->as_reg8mem8.reg_id = arg1->as_reg8;
+        instruction->as_reg8mem8.ast = arg2->as_memory;
+        break;
+    case Fy_BinaryOperatorArgsType_Memory16Const:
+        instruction->as_mem16const.ast = arg1->as_memory;
+        instruction->as_mem16const.value = arg2->as_const;
+        break;
+    case Fy_BinaryOperatorArgsType_Memory16Reg16:
+        instruction->as_mem16reg16.ast = arg1->as_memory;
+        instruction->as_mem16reg16.reg_id = arg2->as_reg16;
+        break;
+    case Fy_BinaryOperatorArgsType_Memory8Const:
+        instruction->as_mem8const.ast = arg1->as_memory;
+        instruction->as_mem8const.value = arg2->as_const;
+        break;
+    case Fy_BinaryOperatorArgsType_Memory8Reg8:
+        instruction->as_mem8reg8.ast = arg1->as_memory;
+        instruction->as_mem8reg8.reg_id = arg2->as_reg8;
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+
+    return (Fy_Instruction*)instruction;
+}
+
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack;
     Fy_TokenType start_token;
-    Fy_ParserParseRuleType type;
+    uint8_t amount_args;
     Fy_InstructionArg arg1, arg2;
     Fy_ParserParseRule *rule;
     Fy_Instruction *instruction = NULL;
@@ -918,32 +794,27 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
         return NULL;
     start_token = parser->token.type;
 
+    amount_args = 0;
     if (Fy_Parser_parseArgument(parser, &arg1)) {
+        ++amount_args;
         if (Fy_Parser_parseArgument(parser, &arg2))
-            type = Fy_ParserParseRuleType_TwoParams;
-        else
-            type = Fy_ParserParseRuleType_OneParam;
-    } else {
-        type = Fy_ParserParseRuleType_NoParams;
+            ++amount_args;
     }
     Fy_Parser_expectNewline(parser, true);
 
     for (size_t i = 0; !instruction && i < sizeof(Fy_parserRules) / sizeof(Fy_ParserParseRule*); ++i) {
         rule = Fy_parserRules[i];
 
-        if (start_token == rule->start_token && type == rule->type) {
-            switch (type) {
-            case Fy_ParserParseRuleType_NoParams:
-                instruction = rule->func_no_params(parser);
+        if (start_token == rule->start_token) {
+            switch (rule->type) {
+            case Fy_ParserParseRuleType_Custom: {
+                instruction = Fy_Parser_parseByCustomRule(parser, rule, amount_args, &arg1, &arg2);
                 break;
-            case Fy_ParserParseRuleType_OneParam:
-                if (Fy_InstructionArgType_is(arg1.type, rule->arg1_type))
-                    instruction = rule->func_one_param(parser, &arg1);
+            }
+            case Fy_ParserParseRuleType_BinaryOperator: {
+                instruction = Fy_Parser_parseByBinaryOperatorRule(rule, amount_args, &arg1, &arg2);
                 break;
-            case Fy_ParserParseRuleType_TwoParams:
-                if (Fy_InstructionArgType_is(arg1.type, rule->arg1_type) && Fy_InstructionArgType_is(arg2.type, rule->arg2_type))
-                    instruction = rule->func_two_params(parser, &arg1, &arg2);
-                break;
+            }
             default:
                 FY_UNREACHABLE();
             }
@@ -957,13 +828,13 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     }
 
     // Remove arguments
-    switch (type) {
-    case Fy_ParserParseRuleType_NoParams:
+    switch (amount_args) {
+    case 0:
         break;
-    case Fy_ParserParseRuleType_OneParam:
+    case 1:
         Fy_InstructionArg_Destruct(&arg1);
         break;
-    case Fy_ParserParseRuleType_TwoParams:
+    case 2:
         Fy_InstructionArg_Destruct(&arg1);
         Fy_InstructionArg_Destruct(&arg2);
         break;
@@ -1292,8 +1163,44 @@ static void Fy_Parser_processInstructions(Fy_Parser *parser) {
     for (size_t i = 0; i < parser->amount_used; ++i) {
         Fy_Instruction *instruction = parser->instructions[i];
         Fy_Parser_loadState(parser, &instruction->start_state);
-        if (instruction->parse_rule->process_func) {
-            instruction->parse_rule->process_func(parser, instruction);
+        switch (instruction->parse_rule->type) {
+        case Fy_ParserParseRuleType_Custom:
+            if (instruction->parse_rule->as_custom.process_func)
+                instruction->parse_rule->as_custom.process_func(parser, instruction);
+            break;
+        case Fy_ParserParseRuleType_BinaryOperator: {
+            Fy_Instruction_BinaryOperator *binary_instruction = (Fy_Instruction_BinaryOperator*)instruction;
+            switch (binary_instruction->type) {
+            case Fy_BinaryOperatorArgsType_Reg16Const:
+            case Fy_BinaryOperatorArgsType_Reg16Reg16:
+            case Fy_BinaryOperatorArgsType_Reg8Const:
+            case Fy_BinaryOperatorArgsType_Reg8Reg8:
+                break;
+            case Fy_BinaryOperatorArgsType_Memory16Const:
+                Fy_AST_eval(binary_instruction->as_mem16const.ast, parser, &binary_instruction->as_mem16const.address);
+                break;
+            case Fy_BinaryOperatorArgsType_Reg16Memory16:
+                Fy_AST_eval(binary_instruction->as_reg16mem16.ast, parser, &binary_instruction->as_reg16mem16.address);
+                break;
+            case Fy_BinaryOperatorArgsType_Reg8Memory8:
+                Fy_AST_eval(binary_instruction->as_reg8mem8.ast, parser, &binary_instruction->as_reg8mem8.address);
+                break;
+            case Fy_BinaryOperatorArgsType_Memory16Reg16:
+                Fy_AST_eval(binary_instruction->as_mem16reg16.ast, parser, &binary_instruction->as_mem16reg16.address);
+                break;
+            case Fy_BinaryOperatorArgsType_Memory8Const:
+                Fy_AST_eval(binary_instruction->as_mem8const.ast, parser, &binary_instruction->as_mem8const.address);
+                break;
+            case Fy_BinaryOperatorArgsType_Memory8Reg8:
+                Fy_AST_eval(binary_instruction->as_mem8reg8.ast, parser, &binary_instruction->as_mem8reg8.address);
+                break;
+            default:
+                FY_UNREACHABLE();
+            }
+            break;
+        }
+        default:
+            FY_UNREACHABLE();
         }
     }
 }
@@ -1335,8 +1242,15 @@ static void Fy_Parser_processLabels(Fy_Parser *parser) {
     Fy_Parser_storeOffsetsInInstructions(parser);
     for (size_t i = 0; i < parser->amount_used; ++i) {
         Fy_Instruction *instruction = parser->instructions[i];
-        if (instruction->parse_rule->process_label_func) {
-            instruction->parse_rule->process_label_func(instruction, parser);
+        switch (instruction->parse_rule->type) {
+        case Fy_ParserParseRuleType_Custom:
+            if (instruction->parse_rule->as_custom.process_label_func)
+                instruction->parse_rule->as_custom.process_label_func(instruction, parser);
+            break;
+        case Fy_ParserParseRuleType_BinaryOperator:
+            break;
+        default:
+            FY_UNREACHABLE();
         }
     }
 }

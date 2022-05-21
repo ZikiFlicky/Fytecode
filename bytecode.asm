@@ -1,5 +1,7 @@
 DATA
     bytes eb "Hello world!", 10, 0
+
+    x ew 3
 CODE
 start: ; This is currently not needed
     lea ax [bytes]
@@ -26,6 +28,23 @@ end_fill_x:
     add al 1
     jmp fill_y
 end_fill_y:
+
+    ; mov ax 3
+    mov ax 22
+    int 0
+
+    sub ax [x]
+    mov [x] ax
+    sub [x] 4
+    mov ax [x]
+    int 0
+
+    mov [word x] 1
+    cmp [word x] 0
+    je no_do_something
+
+    debug
+no_do_something:
 
     ; mov al '*' + 3
     ; int 1

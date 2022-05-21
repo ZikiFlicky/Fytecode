@@ -17,6 +17,7 @@ typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_InstructionArgType Fy_InstructionArgType;
 typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
+typedef enum Fy_BinaryOperator Fy_BinaryOperator;
 typedef struct Fy_AST Fy_AST;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
@@ -89,24 +90,38 @@ struct Fy_InstructionArg {
 };
 
 enum Fy_ParserParseRuleType {
-    Fy_ParserParseRuleType_NoParams = 1,
-    Fy_ParserParseRuleType_OneParam,
-    Fy_ParserParseRuleType_TwoParams
+    Fy_ParserParseRuleType_Custom = 1,
+    Fy_ParserParseRuleType_BinaryOperator
+};
+
+enum Fy_BinaryOperator {
+    Fy_BinaryOperator_Mov = 1,
+    Fy_BinaryOperator_Add,
+    Fy_BinaryOperator_Sub,
+    Fy_BinaryOperator_Cmp
 };
 
 struct Fy_ParserParseRule {
     Fy_ParserParseRuleType type;
     Fy_TokenType start_token; /* Type of token to be expected at start */
-    Fy_InstructionArgType arg1_type, arg2_type;
-    /* A function that always returns a valid ParserInstruction based on the given token */
     union {
-        Fy_Instruction *(*func_no_params)(Fy_Parser*);
-        Fy_Instruction *(*func_one_param)(Fy_Parser*, Fy_InstructionArg*);
-        Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_InstructionArg*, Fy_InstructionArg*);
+        struct {
+            uint8_t amount_params;
+            Fy_InstructionArgType arg1_type, arg2_type;
+            /* A function that always returns a valid ParserInstruction based on the given token */
+            union {
+                Fy_Instruction *(*func_no_params)(Fy_Parser*);
+                Fy_Instruction *(*func_one_param)(Fy_Parser*, Fy_InstructionArg*);
+                Fy_Instruction *(*func_two_params)(Fy_Parser*, Fy_InstructionArg*, Fy_InstructionArg*);
+            };
+            /* Process instruction after full file parsing */
+            Fy_InstructionProcessFunc process_func;
+            Fy_InstructionProcessLabelFunc process_label_func;
+        } as_custom;
+        struct {
+            Fy_BinaryOperator operator_id;
+        } as_operator;
     };
-    /* Process instruction after full file parsing */
-    Fy_InstructionProcessFunc process_func;
-    Fy_InstructionProcessLabelFunc process_label_func;
 };
 
 extern Fy_ParserParseRule *Fy_parserRules[];

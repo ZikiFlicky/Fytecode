@@ -189,6 +189,10 @@ void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
     vm->mem_space_bottom[address + 1] = value >> 8;
 }
 
+void Fy_VM_setMem8(Fy_VM *vm, uint16_t address, uint8_t value) {
+    vm->mem_space_bottom[address] = value;
+}
+
 static uint8_t *Fy_VM_getDividedReg16Ptr(Fy_VM *vm, uint8_t reg) {
     uint8_t *reg_ptr;
 
@@ -321,6 +325,144 @@ bool Fy_VM_isWritableReg8(Fy_VM *vm, uint8_t reg) {
     if (Fy_VM_getReg8Ptr(vm, reg))
         return true;
     return false;
+}
+
+bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint16_t value) {
+    switch (operator) {
+    case Fy_BinaryOperator_Mov:
+        if (!Fy_VM_setReg16(vm, reg_id, value))
+            return false;
+        break;
+    case Fy_BinaryOperator_Add: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value += value;
+        if (!Fy_VM_setReg16(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Sub: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value -= value;
+        if (!Fy_VM_setReg16(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Cmp: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value -= value;
+        Fy_VM_setResult16InFlags(vm, new_value);
+        break;
+    }
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+    return true;
+}
+
+bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint8_t value) {
+    switch (operator) {
+    case Fy_BinaryOperator_Mov:
+        if (!Fy_VM_setReg8(vm, reg_id, value))
+            return false;
+        break;
+    case Fy_BinaryOperator_Add: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value += value;
+        if (!Fy_VM_setReg8(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Sub: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value -= value;
+        if (!Fy_VM_setReg8(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Cmp: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value -= value;
+        Fy_VM_setResult8InFlags(vm, new_value);
+        break;
+    }
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+    return true;
+}
+
+bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint16_t value) {
+    switch (operator) {
+    case Fy_BinaryOperator_Mov:
+        Fy_VM_setMem16(vm, address, value);
+        break;
+    case Fy_BinaryOperator_Add: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value += value;
+        Fy_VM_setMem16(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Sub: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value -= value;
+        Fy_VM_setMem16(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Cmp: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value -= value;
+        Fy_VM_setResult16InFlags(vm, new_value);
+        break;
+    }
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+    return true;
+}
+
+bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint8_t value) {
+    switch (operator) {
+    case Fy_BinaryOperator_Mov:
+        Fy_VM_setMem8(vm, address, value);
+        break;
+    case Fy_BinaryOperator_Add: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value += value;
+        Fy_VM_setMem8(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Sub: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value -= value;
+        Fy_VM_setMem8(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Cmp: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value -= value;
+        Fy_VM_setResult8InFlags(vm, new_value);
+        break;
+    }
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+    return true;
 }
 
 static void Fy_VM_runInstruction(Fy_VM *vm) {

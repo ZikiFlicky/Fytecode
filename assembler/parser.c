@@ -1347,7 +1347,8 @@ void Fy_Parser_parseAll(Fy_Parser *parser) {
     if (Fy_Parser_match(parser, Fy_TokenType_Data, true)) {
         Fy_Parser_expectNewline(parser, true);
         while (!Fy_Parser_match(parser, Fy_TokenType_Code, true)) {
-            Fy_Parser_parseSetVariable(parser);
+            if (!Fy_Parser_parseMacroDef(parser))
+                Fy_Parser_parseSetVariable(parser);
         }
     } else if (!Fy_Parser_match(parser, Fy_TokenType_Code, true)) {
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "CODE");

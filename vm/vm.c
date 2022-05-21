@@ -185,7 +185,8 @@ uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address) {
 }
 
 void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
-    *(uint16_t*)&vm->mem_space_bottom[address] = value;
+    vm->mem_space_bottom[address] = value & 0xFF;
+    vm->mem_space_bottom[address + 1] = value >> 8;
 }
 
 static uint8_t *Fy_VM_getDividedReg16Ptr(Fy_VM *vm, uint8_t reg) {

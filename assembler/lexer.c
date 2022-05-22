@@ -70,15 +70,19 @@ bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
 }
 
 /* Removes space and tab (indent characters) */
-void Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
+size_t Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
     bool removing = true;
+    size_t amount_removed = 0;
     while (removing) {
         char c = lexer->stream[0];
         if (c == ' ' || c == '\t') {
             ++lexer->stream;
             ++lexer->column;
+            ++amount_removed;
         } else if (c == ';') {
+            ++amount_removed;
             do {
+                ++amount_removed;
                 ++lexer->stream;
                 ++lexer->column;
                 c = lexer->stream[0];
@@ -87,6 +91,7 @@ void Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
             removing = false;
         }
     }
+    return amount_removed;
 }
 
 /* Lex a constant value */
@@ -211,7 +216,7 @@ bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
         ++lexer->line;
         lexer->column = 1;
         ++lexer->token.length;
-        Fy_Lexer_removeWhitespace(lexer);
+        lexer->token.length += Fy_Lexer_removeWhitespace(lexer);
     } while (lexer->stream[0] == '\n');
     return true;
 }

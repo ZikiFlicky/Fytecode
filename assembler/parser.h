@@ -71,7 +71,8 @@ struct Fy_Parser {
 enum Fy_InstructionArgType {
     Fy_InstructionArgType_Reg16 = 1,
     Fy_InstructionArgType_Reg8,
-    Fy_InstructionArgType_Constant,
+    Fy_InstructionArgType_Const16,
+    Fy_InstructionArgType_Const8,
     Fy_InstructionArgType_Label,
     Fy_InstructionArgType_Memory16,
     Fy_InstructionArgType_Memory8
@@ -83,6 +84,7 @@ struct Fy_InstructionArg {
     union {
         uint8_t as_reg16;
         uint8_t as_reg8;
+        /* NOTE: as_const is used for both const16 and const8, the type only indicates the maximum size of the constant */
         uint16_t as_const;
         char *as_label;
         Fy_AST *as_memory;

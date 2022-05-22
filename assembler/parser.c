@@ -118,7 +118,7 @@ Fy_ParserParseRule Fy_parseRulePushConst = {
     .start_token = Fy_TokenType_Push,
     .as_custom = {
         .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Constant,
+        .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParsePushConst,
         .process_func = NULL,
         .process_label_func = NULL
@@ -172,7 +172,7 @@ Fy_ParserParseRule Fy_parseRuleRetConst16 = {
     .start_token = Fy_TokenType_Ret,
     .as_custom = {
         .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Constant,
+        .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParseRetConst16,
         .process_func = NULL,
         .process_label_func = NULL
@@ -195,7 +195,7 @@ Fy_ParserParseRule Fy_parseRuleInt = {
     .start_token = Fy_TokenType_Int,
     .as_custom = {
         .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Constant,
+        .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParseInt,
         .process_func = NULL,
         .process_label_func = NULL
@@ -282,6 +282,8 @@ static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_Instruction
     if (type1 == type2)
         return true;
     if (type1 == Fy_InstructionArgType_Memory8 && type2 == Fy_InstructionArgType_Memory16)
+        return true;
+    if (type1 == Fy_InstructionArgType_Const8 && type2 == Fy_InstructionArgType_Const16)
         return true;
     return false;
 }
@@ -666,8 +668,13 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     if ((out->as_memory = Fy_Parser_parseMemExpr(parser, &out->type))) {
         ;
     } else if (Fy_Parser_getConst16(parser, &out->as_const)) {
-        out->type = Fy_InstructionArgType_Constant;
-        ;
+        int16_t as_signed = (int16_t)out->as_const;
+        // If in range of 8-bit integers you can mark it as 8-bit
+        if (as_signed >= -0x80 && as_signed <= 0xff) {
+            out->type = Fy_InstructionArgType_Const8;
+        } else {
+            out->type = Fy_InstructionArgType_Const16;
+        }
     } else {
         if (!Fy_Parser_lex(parser, true))
             return false;
@@ -728,23 +735,23 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_ParserParseRule *r
         return NULL;
 
     // Decide how we handle the instruction arguments
-    if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+    if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const16)) {
         args_type = Fy_BinaryOperatorArgsType_Reg16Const;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
         args_type = Fy_BinaryOperatorArgsType_Reg16Reg16;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory16)) {
         args_type = Fy_BinaryOperatorArgsType_Reg16Memory16;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const8)) {
         args_type = Fy_BinaryOperatorArgsType_Reg8Const;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
         args_type = Fy_BinaryOperatorArgsType_Reg8Reg8;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory8)) {
         args_type = Fy_BinaryOperatorArgsType_Reg8Memory8;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const16)) {
         args_type = Fy_BinaryOperatorArgsType_Memory16Const;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
         args_type = Fy_BinaryOperatorArgsType_Memory16Reg16;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Constant)) {
+    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const8)) {
         args_type = Fy_BinaryOperatorArgsType_Memory8Const;
     } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
         args_type = Fy_BinaryOperatorArgsType_Memory8Reg8;

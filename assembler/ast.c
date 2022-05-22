@@ -175,7 +175,6 @@ bool Fy_Parser_getConst16(Fy_Parser *parser, uint16_t *out) {
 
 bool Fy_Parser_getConst8(Fy_Parser *parser, uint8_t *out) {
     Fy_InlineValue inline_value;
-    uint16_t as_numeric;
     Fy_AST *ast = Fy_Parser_parseNumericLiteral(parser);
 
     if (!ast)
@@ -184,11 +183,10 @@ bool Fy_Parser_getConst8(Fy_Parser *parser, uint8_t *out) {
     Fy_AST_eval(ast, parser, &inline_value);
     Fy_AST_Delete(ast);
 
-    as_numeric = *(uint16_t*)&inline_value.numeric;
-    if (as_numeric > 0xFF)
-        Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, "%d", as_numeric); // FIXME: Error out of range
+    if (inline_value.numeric > 0xff || inline_value.numeric < -0x80)
+        Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, "%d", inline_value.numeric); // FIXME: Error out of range
 
-    *out = (uint8_t)as_numeric;
+    *out = (uint8_t)(int8_t)inline_value.numeric;
     return true;
 }
 

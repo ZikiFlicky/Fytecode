@@ -339,6 +339,12 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "sub", Fy_TokenType_Sub))
         return true;
+    if (Fy_Lexer_matchKeyword(lexer, "and", Fy_TokenType_And))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "or", Fy_TokenType_Or))
+        return true;
+    if (Fy_Lexer_matchKeyword(lexer, "xor", Fy_TokenType_Xor))
+        return true;
     if (Fy_Lexer_matchKeyword(lexer, "cmp", Fy_TokenType_Cmp))
         return true;
     if (Fy_Lexer_matchKeyword(lexer, "push", Fy_TokenType_Push))

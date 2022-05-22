@@ -351,6 +351,33 @@ bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg
             return false;
         break;
     }
+    case Fy_BinaryOperator_And: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value &= value;
+        if (!Fy_VM_setReg16(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Or: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value |= value;
+        if (!Fy_VM_setReg16(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Xor: {
+        uint16_t new_value;
+        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
+            return false;
+        new_value ^= value;
+        if (!Fy_VM_setReg16(vm, reg_id, new_value))
+            return false;
+        break;
+    }
     case Fy_BinaryOperator_Cmp: {
         uint16_t new_value;
         if (!Fy_VM_getReg16(vm, reg_id, &new_value))
@@ -390,6 +417,33 @@ bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_
             return false;
         break;
     }
+    case Fy_BinaryOperator_And: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value &= value;
+        if (!Fy_VM_setReg8(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Or: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value |= value;
+        if (!Fy_VM_setReg8(vm, reg_id, new_value))
+            return false;
+        break;
+    }
+    case Fy_BinaryOperator_Xor: {
+        uint8_t new_value;
+        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
+            return false;
+        new_value ^= value;
+        if (!Fy_VM_setReg8(vm, reg_id, new_value))
+            return false;
+        break;
+    }
     case Fy_BinaryOperator_Cmp: {
         uint8_t new_value;
         if (!Fy_VM_getReg8(vm, reg_id, &new_value))
@@ -422,6 +476,24 @@ bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t ad
         Fy_VM_setMem16(vm, address, new_value);
         break;
     }
+    case Fy_BinaryOperator_And: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value &= value;
+        Fy_VM_setMem16(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Or: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value |= value;
+        Fy_VM_setMem16(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Xor: {
+        uint16_t new_value = Fy_VM_getMem16(vm, address);
+        new_value ^= value;
+        Fy_VM_setMem16(vm, address, new_value);
+        break;
+    }
     case Fy_BinaryOperator_Cmp: {
         uint16_t new_value = Fy_VM_getMem16(vm, address);
         new_value -= value;
@@ -449,6 +521,24 @@ bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t add
     case Fy_BinaryOperator_Sub: {
         uint8_t new_value = Fy_VM_getMem8(vm, address);
         new_value -= value;
+        Fy_VM_setMem8(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_And: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value &= value;
+        Fy_VM_setMem8(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Or: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value |= value;
+        Fy_VM_setMem8(vm, address, new_value);
+        break;
+    }
+    case Fy_BinaryOperator_Xor: {
+        uint8_t new_value = Fy_VM_getMem8(vm, address);
+        new_value ^= value;
         Fy_VM_setMem8(vm, address, new_value);
         break;
     }

@@ -17,8 +17,8 @@ typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_InstructionArgType Fy_InstructionArgType;
 typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
-typedef enum Fy_BinaryOperator Fy_BinaryOperator;
 typedef struct Fy_AST Fy_AST;
+typedef enum Fy_BinaryOperator Fy_BinaryOperator;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
 typedef void (*Fy_InstructionProcessLabelFunc)(Fy_Instruction*, Fy_Parser*);
@@ -98,6 +98,9 @@ enum Fy_BinaryOperator {
     Fy_BinaryOperator_Mov = 1,
     Fy_BinaryOperator_Add,
     Fy_BinaryOperator_Sub,
+    Fy_BinaryOperator_And,
+    Fy_BinaryOperator_Or,
+    Fy_BinaryOperator_Xor,
     Fy_BinaryOperator_Cmp
 };
 

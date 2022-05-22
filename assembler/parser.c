@@ -222,6 +222,27 @@ Fy_ParserParseRule Fy_parseRuleSub = {
         .operator_id = Fy_BinaryOperator_Sub
     }
 };
+Fy_ParserParseRule Fy_parseRuleAnd = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_And,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_And
+    }
+};
+Fy_ParserParseRule Fy_parseRuleOr = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Or,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Or
+    }
+};
+Fy_ParserParseRule Fy_parseRuleXor = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Xor,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Xor
+    }
+};
 Fy_ParserParseRule Fy_parseRuleCmp = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Cmp,
@@ -236,6 +257,9 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleMov,
     &Fy_parseRuleAdd,
     &Fy_parseRuleSub,
+    &Fy_parseRuleAnd,
+    &Fy_parseRuleOr,
+    &Fy_parseRuleXor,
     &Fy_parseRuleCmp,
     &Fy_parseRuleDebug,
     &Fy_parseRuleDebugStack,

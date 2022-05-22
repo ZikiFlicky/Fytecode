@@ -33,15 +33,13 @@ end_fill_y:
     mov ax 22
     int 0
 
-    sub ax [x]
-    mov [x] ax
-    sub [x] 4
-    mov ax [x]
+    mov ax 0b1100
+    mov bx 0b1010
+    xor ax bx
     int 0
-
-    mov [word x] 1
-    cmp [word x] 0
-    je no_do_something
+    xor ax bx
+    or ax bx
+    int 0
 
     debug
 no_do_something:

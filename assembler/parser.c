@@ -487,7 +487,7 @@ static void Fy_Parser_addData8(Fy_Parser *parser, uint8_t value) {
 
 static void Fy_Parser_addData16(Fy_Parser *parser, uint16_t value) {
     Fy_Parser_extendData(parser, 2);
-    parser->data_part[parser->data_size] = value & 0xFF;
+    parser->data_part[parser->data_size] = value & 0xff;
     parser->data_part[parser->data_size + 1] = value >> 8;
     parser->data_size += 2;
 }

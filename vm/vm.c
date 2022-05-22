@@ -185,7 +185,7 @@ uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address) {
 }
 
 void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
-    vm->mem_space_bottom[address] = value & 0xFF;
+    vm->mem_space_bottom[address] = value & 0xff;
     vm->mem_space_bottom[address + 1] = value >> 8;
 }
 
@@ -254,7 +254,7 @@ bool Fy_VM_setReg16(Fy_VM *vm, uint8_t reg, uint16_t value) {
     uint16_t *reg_ptr;
 
     if ((div_reg_ptr = Fy_VM_getDividedReg16Ptr(vm, reg))) {
-        div_reg_ptr[0] = value & 0xFF;
+        div_reg_ptr[0] = value & 0xff;
         div_reg_ptr[1] = value >> 8;
     } else if ((reg_ptr = Fy_VM_getReg16Ptr(vm, reg))) {
         *reg_ptr = value;

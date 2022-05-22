@@ -277,7 +277,7 @@ static void Fy_instructionTypeBinaryOperator_write(Fy_Generator *generator, Fy_I
 static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
     uint8_t info_byte = Fy_VM_getMem8(vm, address + 0);
     uint8_t type = info_byte >> 4;
-    uint8_t operator = info_byte & 0x0F;
+    uint8_t operator = info_byte & 0x0f;
     uint16_t instruction_size = 1 + 1; // How much we need to advance
 
     switch (type) {

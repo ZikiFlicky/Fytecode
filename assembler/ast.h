@@ -23,6 +23,8 @@ typedef enum Fy_ASTType {
     Fy_ASTType_Bp,
     Fy_ASTType_Add,
     Fy_ASTType_Sub,
+    Fy_ASTType_Mul,
+    Fy_ASTType_Div,
     Fy_ASTType_Neg
 } Fy_ASTType;
 

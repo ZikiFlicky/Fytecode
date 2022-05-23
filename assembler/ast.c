@@ -1,6 +1,7 @@
 #include "fy.h"
 
 static Fy_AST *Fy_ASTParser_parseSumExpr(Fy_ASTParser *ast_parser);
+static inline bool Fy_InlineValue_isFullyNumeric(Fy_InlineValue *inline_value);
 
 Fy_AST *Fy_AST_New(Fy_ASTType type) {
     Fy_AST *ast = malloc(sizeof(Fy_AST));
@@ -60,7 +61,7 @@ static Fy_AST *Fy_ASTParser_parseSingle(Fy_ASTParser *ast_parser) {
     Fy_Parser *parser = ast_parser->regular_parser;
     Fy_AST *ast;
 
-    if (Fy_Parser_match(parser, Fy_TokenType_LeftParen, true)) {
+    if (Fy_Parser_match(parser, Fy_TokenType_LeftParen, true)) { // Paren expression
         if (!(ast = Fy_ASTParser_parseSumExpr(ast_parser)))
            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
         if (!Fy_Parser_match(parser, Fy_TokenType_RightParen, true))
@@ -78,11 +79,53 @@ static Fy_AST *Fy_ASTParser_parseSingle(Fy_ASTParser *ast_parser) {
     return ast;
 }
 
-static Fy_AST *Fy_ASTParser_parseSumExpr(Fy_ASTParser *ast_parser) {
+static Fy_AST *Fy_ASTParser_parseProductExpr(Fy_ASTParser *ast_parser) {
     Fy_Parser *parser = ast_parser->regular_parser;
     Fy_AST *expr;
 
     if (!(expr = Fy_ASTParser_parseSingle(ast_parser)))
+        return NULL;
+
+    for (;;) {
+        Fy_ParserState backtrack;
+        Fy_AST *new_expr, *rhs;
+        Fy_ASTType type;
+
+        Fy_Parser_dumpState(parser, &backtrack);
+
+        if (!Fy_Parser_lex(parser, true))
+            break;
+
+        switch (parser->token.type) {
+        case Fy_TokenType_Star:
+            type = Fy_ASTType_Mul;
+            break;
+        case Fy_TokenType_Slash:
+            type = Fy_ASTType_Div;
+            break;
+        default:
+            Fy_Parser_loadState(parser, &backtrack);
+            return expr;
+        }
+
+        if (!(rhs = Fy_ASTParser_parseSingle(ast_parser)))
+            Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
+
+        new_expr = Fy_AST_New(type);
+        new_expr->lhs = expr;
+        new_expr->rhs = rhs;
+        new_expr->state = backtrack;
+        expr = new_expr;
+    }
+
+    return expr;
+}
+
+static Fy_AST *Fy_ASTParser_parseSumExpr(Fy_ASTParser *ast_parser) {
+    Fy_Parser *parser = ast_parser->regular_parser;
+    Fy_AST *expr;
+
+    if (!(expr = Fy_ASTParser_parseProductExpr(ast_parser)))
         return NULL;
 
     for (;;) {
@@ -107,7 +150,7 @@ static Fy_AST *Fy_ASTParser_parseSumExpr(Fy_ASTParser *ast_parser) {
             return expr;
         }
 
-        if (!(rhs = Fy_ASTParser_parseSingle(ast_parser)))
+        if (!(rhs = Fy_ASTParser_parseProductExpr(ast_parser)))
             Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, NULL);
 
         new_expr = Fy_AST_New(type);
@@ -260,6 +303,56 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
         out->times_bp = lhs.times_bp - rhs.times_bp;
         break;
     }
+    case Fy_ASTType_Mul: {
+        Fy_InlineValue lhs;
+        Fy_InlineValue rhs;
+        int16_t multiplier;
+
+        Fy_AST_eval(ast->lhs, parser, &lhs);
+        Fy_AST_eval(ast->rhs, parser, &rhs);
+
+        if (Fy_InlineValue_isFullyNumeric(&lhs)) {
+            if (rhs.has_variable)
+                Fy_Parser_error(parser, Fy_ParserError_InvalidOperation, &ast->rhs->state, "Variables in addresses cannot be multiplied");
+            multiplier = (int16_t)lhs.numeric;
+            out->numeric = multiplier * rhs.numeric;
+            out->times_bp = multiplier * rhs.times_bp;
+            out->times_bx = multiplier * rhs.times_bx;
+        } else if (Fy_InlineValue_isFullyNumeric(&rhs)) {
+            if (lhs.has_variable)
+                Fy_Parser_error(parser, Fy_ParserError_InvalidOperation, &ast->lhs->state, "Variables in addresses cannot be multiplied");
+            multiplier = (int16_t)rhs.numeric;
+            out->numeric = multiplier * lhs.numeric;
+            out->times_bp = multiplier * lhs.times_bp;
+            out->times_bx = multiplier * lhs.times_bx;
+        } else {
+            Fy_Parser_error(parser, Fy_ParserError_InvalidOperation, &ast->state, NULL);
+        }
+        out->has_variable = false;
+        break;
+    }
+    case Fy_ASTType_Div: {
+        Fy_InlineValue lhs;
+        Fy_InlineValue rhs;
+        int16_t divider;
+
+        Fy_AST_eval(ast->lhs, parser, &lhs);
+        Fy_AST_eval(ast->rhs, parser, &rhs);
+
+        if (!Fy_InlineValue_isFullyNumeric(&rhs))
+            Fy_Parser_error(parser, Fy_ParserError_InvalidOperation, &ast->rhs->state, "Expected to divide in a number");
+
+        if (lhs.has_variable)
+            Fy_Parser_error(parser, Fy_ParserError_InvalidOperation, &ast->lhs->state, "Variables in addresses cannot be divided");
+
+        divider = (int16_t)rhs.numeric;
+
+        out->has_variable = false;
+        out->numeric = lhs.numeric / divider;
+        out->times_bp = lhs.times_bp / divider;
+        out->times_bx = lhs.times_bx / divider;
+        break;
+    }
     case Fy_ASTType_Neg: {
         Fy_InlineValue value;
         Fy_AST_eval(ast->as_neg, parser, &value);
@@ -287,6 +380,8 @@ void Fy_AST_Delete(Fy_AST *ast) {
         break;
     case Fy_ASTType_Add:
     case Fy_ASTType_Sub:
+    case Fy_ASTType_Mul:
+    case Fy_ASTType_Div:
         Fy_AST_Delete(ast->lhs);
         Fy_AST_Delete(ast->rhs);
         break;
@@ -297,6 +392,10 @@ void Fy_AST_Delete(Fy_AST *ast) {
         FY_UNREACHABLE();
     }
     free(ast);
+}
+
+static inline bool Fy_InlineValue_isFullyNumeric(Fy_InlineValue *inline_value) {
+    return !inline_value->has_variable && !inline_value->times_bp && !inline_value->times_bx;
 }
 
 uint16_t Fy_InlineValue_getMapping(Fy_InlineValue *inline_value, uint8_t *mapping) {

@@ -1,22 +1,26 @@
 DATA
+    SCREEN_WIDTH = 100
+    SCREEN_HEIGHT = 100
+
     bytes eb "Hello world!", 10, 0
 
-    x ew 3
+    left_y eb SCREEN_HEIGHT * 2
 CODE
 start: ; This is currently not needed
-    mov al 255
-    int 0
-
-    call newline
-
-no_do_something:
-
-    ; mov al '*' + 3
-    ; int 1
+    mov al [byte 2 * bx]
+    debug
     end
+;     mov al 255
+;     int 1
 
-proc newline
-    mov al 10
-    int 1
-    ret
-endp newline
+;     call newline
+
+; no_do_something:
+
+;     end
+
+; proc newline
+;     mov al 10
+;     int 1
+;     ret
+; endp newline

@@ -61,6 +61,8 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Word,
     Fy_TokenType_Plus,
     Fy_TokenType_Minus,
+    Fy_TokenType_Star,
+    Fy_TokenType_Slash,
     Fy_TokenType_EqualSign,
     Fy_TokenType_Comma,
     Fy_TokenType_Data,

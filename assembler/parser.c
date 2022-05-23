@@ -338,6 +338,8 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Invalid inline value";
     case Fy_ParserError_InterruptNotFound:
         return "Interrupt not found";
+    case Fy_ParserError_InvalidOperation:
+        return "Invalid operation";
     default:
         FY_UNREACHABLE();
     }

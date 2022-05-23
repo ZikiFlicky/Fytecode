@@ -49,7 +49,8 @@ enum Fy_ParserError {
     Fy_ParserError_RecursiveMacro,
     Fy_ParserError_MaxMacroDepthReached,
     Fy_ParserError_InvalidInlineValue,
-    Fy_ParserError_InterruptNotFound
+    Fy_ParserError_InterruptNotFound,
+    Fy_ParserError_InvalidOperation
 };
 
 struct Fy_Parser {

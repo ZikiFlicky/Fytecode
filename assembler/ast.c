@@ -183,6 +183,8 @@ Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser, Fy_InstructionArgType *out) {
         type = Fy_InstructionArgType_MemoryUnknownSize;
 
     ast = Fy_ASTParser_parseSumExpr(&ast_parser);
+    if (!ast)
+        Fy_Parser_error(parser, Fy_ParserError_SyntaxError, NULL, "Expected address");
 
     if (!Fy_Parser_match(parser, Fy_TokenType_RightBracket, true))
         Fy_Parser_error(parser, Fy_ParserError_ExpectedDifferentToken, NULL, "']'");

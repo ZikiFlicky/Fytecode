@@ -8,12 +8,7 @@ DATA
 CODE
 start: ; This is currently not needed
     ; mov al [byte 2 * bx]
-    mov [var1] 12323
-    mov ax [var1]
-    debug
-    mov [word var1] 0
-    mov [byte var1] 23
-    mov ax [var1]
+    mov [var1] 12
     debug
     end
 ;     mov al 255

@@ -28,6 +28,12 @@ static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parse
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
 
+// TODO: Move this from here
+typedef struct Fy_BinaryOperatorRule {
+    Fy_InstructionArgType arg1_type, arg2_type;
+    Fy_BinaryOperatorArgsType binary_instruction_type;
+} Fy_BinaryOperatorRule;
+
 /* Define rules */
 Fy_ParserParseRule Fy_parseRuleNop = {
     .type = Fy_ParserParseRuleType_Custom,
@@ -278,6 +284,21 @@ Fy_ParserParseRule *Fy_parserRules[] = {
     &Fy_parseRuleInt
 };
 
+/* Binary expression instruction rules */
+static const Fy_BinaryOperatorRule binary_operator_rules[] = {
+    { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Const16, Fy_BinaryOperatorArgsType_Reg16Const },
+    { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Reg16, Fy_BinaryOperatorArgsType_Reg16Reg16 },
+    { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Memory16, Fy_BinaryOperatorArgsType_Reg16Memory16 },
+    { Fy_InstructionArgType_Reg8, Fy_InstructionArgType_Const8, Fy_BinaryOperatorArgsType_Reg8Const },
+    { Fy_InstructionArgType_Reg8, Fy_InstructionArgType_Reg8, Fy_BinaryOperatorArgsType_Reg8Reg8 },
+    { Fy_InstructionArgType_Reg8, Fy_InstructionArgType_Memory8, Fy_BinaryOperatorArgsType_Reg8Memory8 },
+    { Fy_InstructionArgType_Memory16, Fy_InstructionArgType_Const16, Fy_BinaryOperatorArgsType_Memory16Const },
+    { Fy_InstructionArgType_Memory16, Fy_InstructionArgType_Reg16, Fy_BinaryOperatorArgsType_Memory16Reg16 },
+    { Fy_InstructionArgType_Memory8, Fy_InstructionArgType_Const8, Fy_BinaryOperatorArgsType_Memory8Const },
+    { Fy_InstructionArgType_Memory8, Fy_InstructionArgType_Reg8, Fy_BinaryOperatorArgsType_Memory8Reg8 }
+};
+
+
 static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_InstructionArgType type2) {
     if (type1 == type2)
         return true;
@@ -344,6 +365,8 @@ static char *Fy_ParserError_toString(Fy_ParserError error) {
         return "Interrupt not found";
     case Fy_ParserError_InvalidOperation:
         return "Invalid operation";
+    case Fy_ParserError_AmbiguousInstructionParameters:
+        return "Ambiguous instruction parameters";
     default:
         FY_UNREACHABLE();
     }
@@ -731,36 +754,30 @@ static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, Fy_ParserP
     return instruction;
 }
 
-static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_ParserParseRule *rule, uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, Fy_ParserParseRule *rule, uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_ParserState *start_state) {
     Fy_Instruction_BinaryOperator *instruction;
     Fy_BinaryOperatorArgsType args_type;
+    size_t amount_matches = 0;
 
     if (amount_args != 2)
         return NULL;
 
     // Decide how we handle the instruction arguments
-    if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const16)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg16Const;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg16Reg16;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory16)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg16Memory16;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const8)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg8Const;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg8Reg8;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Reg8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Memory8)) {
-        args_type = Fy_BinaryOperatorArgsType_Reg8Memory8;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const16)) {
-        args_type = Fy_BinaryOperatorArgsType_Memory16Const;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory16) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg16)) {
-        args_type = Fy_BinaryOperatorArgsType_Memory16Reg16;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Const8)) {
-        args_type = Fy_BinaryOperatorArgsType_Memory8Const;
-    } else if (Fy_InstructionArgType_is(arg1->type, Fy_InstructionArgType_Memory8) && Fy_InstructionArgType_is(arg2->type, Fy_InstructionArgType_Reg8)) {
-        args_type = Fy_BinaryOperatorArgsType_Memory8Reg8;
-    } else {
+
+    for (size_t i = 0; i < sizeof(binary_operator_rules) / sizeof(Fy_BinaryOperatorRule); ++i) {
+        if (Fy_InstructionArgType_is(arg1->type, binary_operator_rules[i].arg1_type) && Fy_InstructionArgType_is(arg2->type, binary_operator_rules[i].arg2_type)) {
+            args_type = binary_operator_rules[i].binary_instruction_type;
+            ++amount_matches;
+        }
+    }
+
+    switch (amount_matches) {
+    case 0:
         return NULL;
+    case 1:
+        break;
+    default:
+        Fy_Parser_error(parser, Fy_ParserError_AmbiguousInstructionParameters, start_state, NULL);
     }
 
     instruction = FY_INSTRUCTION_NEW(Fy_Instruction_BinaryOperator, Fy_instructionTypeBinaryOperator);
@@ -837,21 +854,29 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     }
     Fy_Parser_expectNewline(parser, true);
 
-    for (size_t i = 0; !instruction && i < sizeof(Fy_parserRules) / sizeof(Fy_ParserParseRule*); ++i) {
+    for (size_t i = 0; i < sizeof(Fy_parserRules) / sizeof(Fy_ParserParseRule*); ++i) {
         rule = Fy_parserRules[i];
 
         if (start_token == rule->start_token) {
+            Fy_Instruction *new_instruction;
+
             switch (rule->type) {
-            case Fy_ParserParseRuleType_Custom: {
-                instruction = Fy_Parser_parseByCustomRule(parser, rule, amount_args, &arg1, &arg2);
+            case Fy_ParserParseRuleType_Custom:
+                new_instruction = Fy_Parser_parseByCustomRule(parser, rule, amount_args, &arg1, &arg2);
                 break;
-            }
-            case Fy_ParserParseRuleType_BinaryOperator: {
-                instruction = Fy_Parser_parseByBinaryOperatorRule(rule, amount_args, &arg1, &arg2);
+            case Fy_ParserParseRuleType_BinaryOperator:
+                new_instruction = Fy_Parser_parseByBinaryOperatorRule(parser, rule, amount_args, &arg1, &arg2, &start_backtrack);
                 break;
-            }
             default:
                 FY_UNREACHABLE();
+            }
+
+            if (new_instruction) {
+                // If we were able to parse a new instruction from the same information
+                if (instruction)
+                    Fy_Parser_error(parser, Fy_ParserError_AmbiguousInstructionParameters, &start_backtrack, NULL);
+                else // FIXME: Free here
+                    instruction = new_instruction;
             }
         }
     }

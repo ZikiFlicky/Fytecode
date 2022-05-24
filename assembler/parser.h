@@ -50,7 +50,8 @@ enum Fy_ParserError {
     Fy_ParserError_MaxMacroDepthReached,
     Fy_ParserError_InvalidInlineValue,
     Fy_ParserError_InterruptNotFound,
-    Fy_ParserError_InvalidOperation
+    Fy_ParserError_InvalidOperation,
+    Fy_ParserError_AmbiguousInstructionParameters
 };
 
 struct Fy_Parser {

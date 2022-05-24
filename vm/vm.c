@@ -558,7 +558,7 @@ bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t add
 static void Fy_VM_runInstruction(Fy_VM *vm) {
     uint8_t opcode = Fy_VM_getMem8(vm, vm->reg_ip);
     for (size_t i = 0; i < sizeof(Fy_instructionTypes) / sizeof(Fy_InstructionType*); ++i) {
-        Fy_InstructionType *type = Fy_instructionTypes[i];
+        const Fy_InstructionType *type = Fy_instructionTypes[i];
         if (opcode == type->opcode) {
             uint16_t address = vm->reg_ip + 1;
             if (!type->variable_size)

@@ -43,8 +43,8 @@ struct Fy_InstructionType {
 
 /* Base instruction */
 struct Fy_Instruction {
-    Fy_InstructionType *type;
-    Fy_ParserParseRule *parse_rule;
+    const Fy_InstructionType *type;
+    const Fy_ParserParseRule *parse_rule;
     Fy_ParserState start_state;
     /* Stores information needed for code labels */
     uint16_t code_offset, size;
@@ -190,44 +190,44 @@ struct Fy_Instruction_BinaryOperator {
 };
 
 /* Instruction types */
-extern Fy_InstructionType Fy_instructionTypeNop;
-extern Fy_InstructionType Fy_instructionTypeMovReg16Const;
-extern Fy_InstructionType Fy_instructionTypeMovReg16Reg16;
-extern Fy_InstructionType Fy_instructionTypeEndProgram;
-extern Fy_InstructionType Fy_instructionTypeAddReg16Const;
-extern Fy_InstructionType Fy_instructionTypeAddReg16Reg16;
-extern Fy_InstructionType Fy_instructionTypeSubReg16Const;
-extern Fy_InstructionType Fy_instructionTypeSubReg16Reg16;
-extern Fy_InstructionType Fy_instructionTypeCmpReg16Const;
-extern Fy_InstructionType Fy_instructionTypeCmpReg16Reg16;
-extern Fy_InstructionType Fy_instructionTypeJmp;
-extern Fy_InstructionType Fy_instructionTypeJe;
-extern Fy_InstructionType Fy_instructionTypeJl;
-extern Fy_InstructionType Fy_instructionTypeJg;
-extern Fy_InstructionType Fy_instructionTypePushConst;
-extern Fy_InstructionType Fy_instructionTypePushReg16;
-extern Fy_InstructionType Fy_instructionTypePop;
-extern Fy_InstructionType Fy_instructionTypeMovReg8Const;
-extern Fy_InstructionType Fy_instructionTypeMovReg8Reg8;
-extern Fy_InstructionType Fy_instructionTypeCall;
-extern Fy_InstructionType Fy_instructionTypeRet;
-extern Fy_InstructionType Fy_instructionTypeRetConst16;
-extern Fy_InstructionType Fy_instructionTypeDebug;
-extern Fy_InstructionType Fy_instructionTypeDebugStack;
-extern Fy_InstructionType Fy_instructionTypeMovReg16Mem;
-extern Fy_InstructionType Fy_instructionTypeLea;
-extern Fy_InstructionType Fy_instructionTypeMovMemReg16;
-extern Fy_InstructionType Fy_instructionTypeMovMem8Reg8;
-extern Fy_InstructionType Fy_instructionTypeInt;
-extern Fy_InstructionType Fy_instructionTypeCmpReg8Const;
-extern Fy_InstructionType Fy_instructionTypeCmpReg8Reg8;
-extern Fy_InstructionType Fy_instructionTypeAddReg8Const;
-extern Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
-extern Fy_InstructionType Fy_instructionTypeBinaryOperator;
+extern const Fy_InstructionType Fy_instructionTypeNop;
+extern const Fy_InstructionType Fy_instructionTypeMovReg16Const;
+extern const Fy_InstructionType Fy_instructionTypeMovReg16Reg16;
+extern const Fy_InstructionType Fy_instructionTypeEndProgram;
+extern const Fy_InstructionType Fy_instructionTypeAddReg16Const;
+extern const Fy_InstructionType Fy_instructionTypeAddReg16Reg16;
+extern const Fy_InstructionType Fy_instructionTypeSubReg16Const;
+extern const Fy_InstructionType Fy_instructionTypeSubReg16Reg16;
+extern const Fy_InstructionType Fy_instructionTypeCmpReg16Const;
+extern const Fy_InstructionType Fy_instructionTypeCmpReg16Reg16;
+extern const Fy_InstructionType Fy_instructionTypeJmp;
+extern const Fy_InstructionType Fy_instructionTypeJe;
+extern const Fy_InstructionType Fy_instructionTypeJl;
+extern const Fy_InstructionType Fy_instructionTypeJg;
+extern const Fy_InstructionType Fy_instructionTypePushConst;
+extern const Fy_InstructionType Fy_instructionTypePushReg16;
+extern const Fy_InstructionType Fy_instructionTypePop;
+extern const Fy_InstructionType Fy_instructionTypeMovReg8Const;
+extern const Fy_InstructionType Fy_instructionTypeMovReg8Reg8;
+extern const Fy_InstructionType Fy_instructionTypeCall;
+extern const Fy_InstructionType Fy_instructionTypeRet;
+extern const Fy_InstructionType Fy_instructionTypeRetConst16;
+extern const Fy_InstructionType Fy_instructionTypeDebug;
+extern const Fy_InstructionType Fy_instructionTypeDebugStack;
+extern const Fy_InstructionType Fy_instructionTypeMovReg16Mem;
+extern const Fy_InstructionType Fy_instructionTypeLea;
+extern const Fy_InstructionType Fy_instructionTypeMovMemReg16;
+extern const Fy_InstructionType Fy_instructionTypeMovMem8Reg8;
+extern const Fy_InstructionType Fy_instructionTypeInt;
+extern const Fy_InstructionType Fy_instructionTypeCmpReg8Const;
+extern const Fy_InstructionType Fy_instructionTypeCmpReg8Reg8;
+extern const Fy_InstructionType Fy_instructionTypeAddReg8Const;
+extern const Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
+extern const Fy_InstructionType Fy_instructionTypeBinaryOperator;
 
-extern Fy_InstructionType *Fy_instructionTypes[17];
+extern const Fy_InstructionType* const Fy_instructionTypes[17];
 
 /* Instruction methods/functions */
-Fy_Instruction *Fy_Instruction_New(Fy_InstructionType *type, size_t size);
+Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size);
 
 #endif /* FY_INSTRUCTION_H */

@@ -35,7 +35,7 @@ typedef struct Fy_BinaryOperatorRule {
 } Fy_BinaryOperatorRule;
 
 /* Define rules */
-Fy_ParserParseRule Fy_parseRuleNop = {
+static const Fy_ParserParseRule Fy_parseRuleNop = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Nop,
     .as_custom = {
@@ -45,7 +45,7 @@ Fy_ParserParseRule Fy_parseRuleNop = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleDebug = {
+static const Fy_ParserParseRule Fy_parseRuleDebug = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Debug,
     .as_custom = {
@@ -55,7 +55,7 @@ Fy_ParserParseRule Fy_parseRuleDebug = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleDebugStack = {
+static const Fy_ParserParseRule Fy_parseRuleDebugStack = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_DebugStack,
     .as_custom = {
@@ -65,7 +65,7 @@ Fy_ParserParseRule Fy_parseRuleDebugStack = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleEnd = {
+static const Fy_ParserParseRule Fy_parseRuleEnd = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_End,
     .as_custom = {
@@ -75,7 +75,7 @@ Fy_ParserParseRule Fy_parseRuleEnd = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleJmp = {
+static const Fy_ParserParseRule Fy_parseRuleJmp = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jmp,
     .as_custom = {
@@ -86,7 +86,7 @@ Fy_ParserParseRule Fy_parseRuleJmp = {
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
 };
-Fy_ParserParseRule Fy_parseRuleJe = {
+static const Fy_ParserParseRule Fy_parseRuleJe = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Je,
     .as_custom = {
@@ -97,7 +97,7 @@ Fy_ParserParseRule Fy_parseRuleJe = {
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
 };
-Fy_ParserParseRule Fy_parseRuleJl = {
+static const Fy_ParserParseRule Fy_parseRuleJl = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jl,
     .as_custom = {
@@ -108,7 +108,7 @@ Fy_ParserParseRule Fy_parseRuleJl = {
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
 };
-Fy_ParserParseRule Fy_parseRuleJg = {
+static const Fy_ParserParseRule Fy_parseRuleJg = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Jg,
     .as_custom = {
@@ -119,7 +119,7 @@ Fy_ParserParseRule Fy_parseRuleJg = {
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
 };
-Fy_ParserParseRule Fy_parseRulePushConst = {
+static const Fy_ParserParseRule Fy_parseRulePushConst = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Push,
     .as_custom = {
@@ -130,7 +130,7 @@ Fy_ParserParseRule Fy_parseRulePushConst = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRulePushReg16 = {
+static const Fy_ParserParseRule Fy_parseRulePushReg16 = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Push,
     .as_custom = {
@@ -141,7 +141,7 @@ Fy_ParserParseRule Fy_parseRulePushReg16 = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRulePop = {
+static const Fy_ParserParseRule Fy_parseRulePop = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Pop,
     .as_custom = {
@@ -152,7 +152,7 @@ Fy_ParserParseRule Fy_parseRulePop = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleCall = {
+static const Fy_ParserParseRule Fy_parseRuleCall = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Call,
     .as_custom = {
@@ -163,7 +163,7 @@ Fy_ParserParseRule Fy_parseRuleCall = {
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
 };
-Fy_ParserParseRule Fy_parseRuleRet = {
+static const Fy_ParserParseRule Fy_parseRuleRet = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Ret,
     .as_custom = {
@@ -173,7 +173,7 @@ Fy_ParserParseRule Fy_parseRuleRet = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleRetConst16 = {
+static const Fy_ParserParseRule Fy_parseRuleRetConst16 = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Ret,
     .as_custom = {
@@ -184,7 +184,7 @@ Fy_ParserParseRule Fy_parseRuleRetConst16 = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleLea = {
+static const Fy_ParserParseRule Fy_parseRuleLea = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Lea,
     .as_custom = {
@@ -196,7 +196,7 @@ Fy_ParserParseRule Fy_parseRuleLea = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleInt = {
+static const Fy_ParserParseRule Fy_parseRuleInt = {
     .type = Fy_ParserParseRuleType_Custom,
     .start_token = Fy_TokenType_Int,
     .as_custom = {
@@ -207,49 +207,49 @@ Fy_ParserParseRule Fy_parseRuleInt = {
         .process_label_func = NULL
     }
 };
-Fy_ParserParseRule Fy_parseRuleMov = {
+static const Fy_ParserParseRule Fy_parseRuleMov = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Mov,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_Mov
     }
 };
-Fy_ParserParseRule Fy_parseRuleAdd = {
+static const Fy_ParserParseRule Fy_parseRuleAdd = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Add,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_Add
     }
 };
-Fy_ParserParseRule Fy_parseRuleSub = {
+static const Fy_ParserParseRule Fy_parseRuleSub = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Sub,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_Sub
     }
 };
-Fy_ParserParseRule Fy_parseRuleAnd = {
+static const Fy_ParserParseRule Fy_parseRuleAnd = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_And,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_And
     }
 };
-Fy_ParserParseRule Fy_parseRuleOr = {
+static const Fy_ParserParseRule Fy_parseRuleOr = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Or,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_Or
     }
 };
-Fy_ParserParseRule Fy_parseRuleXor = {
+static const Fy_ParserParseRule Fy_parseRuleXor = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Xor,
     .as_operator = {
         .operator_id = Fy_BinaryOperator_Xor
     }
 };
-Fy_ParserParseRule Fy_parseRuleCmp = {
+static const Fy_ParserParseRule Fy_parseRuleCmp = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Cmp,
     .as_operator = {
@@ -258,7 +258,7 @@ Fy_ParserParseRule Fy_parseRuleCmp = {
 };
 
 /* Array that stores all rules (pointers to rules) */
-Fy_ParserParseRule *Fy_parserRules[] = {
+const Fy_ParserParseRule* const Fy_parserRules[] = {
     &Fy_parseRuleNop,
     &Fy_parseRuleMov,
     &Fy_parseRuleAdd,
@@ -533,33 +533,33 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
 }
 
 /* Parsing helpers */
-static Fy_Instruction *Fy_ParseOpLabel(Fy_Parser *parser, Fy_InstructionArg *arg, Fy_InstructionType *type) {
+static Fy_Instruction *Fy_ParseOpLabel(Fy_Parser *parser, Fy_InstructionArg *arg, const Fy_InstructionType *type) {
     Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, *type);
     (void)parser;
     instruction->name = arg->as_label;
     return (Fy_Instruction*)instruction;
 }
 
-static Fy_Instruction *Fy_ParseOpReg16(Fy_Parser *parser, Fy_InstructionArg *arg, Fy_InstructionType *type) {
+static Fy_Instruction *Fy_ParseOpReg16(Fy_Parser *parser, Fy_InstructionArg *arg, const Fy_InstructionType *type) {
     Fy_Instruction_OpReg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16, *type);
     (void)parser;
     instruction->reg_id = arg->as_reg16;
     return (Fy_Instruction*)instruction;
 }
 
-static Fy_Instruction *Fy_ParseOpNoParams(Fy_Parser *parser, Fy_InstructionType *type) {
+static Fy_Instruction *Fy_ParseOpNoParams(Fy_Parser *parser, const Fy_InstructionType *type) {
     (void)parser;
     return FY_INSTRUCTION_NEW(Fy_Instruction, *type);
 }
 
-static Fy_Instruction *Fy_ParseOpConst16(Fy_Parser *parser, Fy_InstructionArg *arg, Fy_InstructionType *type) {
+static Fy_Instruction *Fy_ParseOpConst16(Fy_Parser *parser, Fy_InstructionArg *arg, const Fy_InstructionType *type) {
     Fy_Instruction_OpConst16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpConst16, *type);
     (void)parser;
     instruction->value = arg->as_const;
     return (Fy_Instruction*)instruction;
 }
 
-static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_InstructionType *type) {
+static Fy_Instruction *Fy_ParseOpReg16Mem(Fy_Parser *parser, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, const Fy_InstructionType *type) {
     Fy_Instruction_OpReg16Mem *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16Mem, *type);
     (void)parser;
     instruction->reg_id = arg1->as_reg16;
@@ -725,7 +725,7 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
     return true;
 }
 
-static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, Fy_ParserParseRule *rule,
+static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, const Fy_ParserParseRule *rule,
                                                     uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
     Fy_Instruction *instruction;
 
@@ -754,7 +754,8 @@ static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, Fy_ParserP
     return instruction;
 }
 
-static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, Fy_ParserParseRule *rule, uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_ParserState *start_state) {
+static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, const Fy_ParserParseRule *rule, uint8_t amount_args,
+                                                            Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_ParserState *start_state) {
     Fy_Instruction_BinaryOperator *instruction;
     Fy_BinaryOperatorArgsType args_type;
     size_t amount_matches = 0;
@@ -836,7 +837,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_TokenType start_token;
     uint8_t amount_args;
     Fy_InstructionArg arg1, arg2;
-    Fy_ParserParseRule *rule;
+    const Fy_ParserParseRule *rule;
     Fy_Instruction *instruction = NULL;
 
     Fy_Parser_dumpState(parser, &start_backtrack);

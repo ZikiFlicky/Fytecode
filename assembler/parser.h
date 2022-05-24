@@ -75,6 +75,7 @@ enum Fy_InstructionArgType {
     Fy_InstructionArgType_Const16,
     Fy_InstructionArgType_Const8,
     Fy_InstructionArgType_Label,
+    Fy_InstructionArgType_MemoryUnknownSize,
     Fy_InstructionArgType_Memory16,
     Fy_InstructionArgType_Memory8
 };

@@ -4,10 +4,16 @@ DATA
 
     bytes eb "Hello world!", 10, 0
 
-    left_y eb SCREEN_HEIGHT * 2
+    var1 ew 0
 CODE
 start: ; This is currently not needed
-    mov al [byte 2 * bx]
+    ; mov al [byte 2 * bx]
+    mov [var1] 12323
+    mov ax [var1]
+    debug
+    mov [word var1] 0
+    mov [byte var1] 23
+    mov ax [var1]
     debug
     end
 ;     mov al 255

@@ -180,7 +180,7 @@ Fy_AST *Fy_Parser_parseMemExpr(Fy_Parser *parser, Fy_InstructionArgType *out) {
     else if (Fy_Parser_match(parser, Fy_TokenType_Word, true))
         type = Fy_InstructionArgType_Memory16;
     else
-        type = Fy_InstructionArgType_Memory16;
+        type = Fy_InstructionArgType_MemoryUnknownSize;
 
     ast = Fy_ASTParser_parseSumExpr(&ast_parser);
 

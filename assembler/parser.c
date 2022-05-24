@@ -281,6 +281,10 @@ Fy_ParserParseRule *Fy_parserRules[] = {
 static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_InstructionArgType type2) {
     if (type1 == type2)
         return true;
+    if (type1 == Fy_InstructionArgType_MemoryUnknownSize && type2 == Fy_InstructionArgType_Memory16)
+        return true;
+    if (type1 == Fy_InstructionArgType_MemoryUnknownSize && type2 == Fy_InstructionArgType_Memory8)
+        return true;
     if (type1 == Fy_InstructionArgType_Const8 && type2 == Fy_InstructionArgType_Const16)
         return true;
     return false;

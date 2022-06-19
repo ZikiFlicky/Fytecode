@@ -1,19 +1,120 @@
 #include "fy.h"
 
+/* Declare all static lex functions */
+static bool Fy_Lexer_lexSingleByteToken(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexAnyKeyword(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexNewline(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexConst(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexString(Fy_Lexer *lexer);
+static bool Fy_Lexer_lexChar(Fy_Lexer *lexer);
+
+/* Define a type for single byte token definitions */
+typedef struct Fy_SingleByteTokenDef {
+    char character;
+    Fy_TokenType type;
+} Fy_SingleByteTokenDef;
+
+/* Define a type for keyword token definitions */
+typedef struct Fy_KeywordTokenDef {
+    char *match_string;
+    Fy_TokenType type;
+} Fy_KeywordTokenDef;
+
+/* Define a function type for the lexer parsing functions */
+typedef bool (*Fy_LexerLexFunc)(Fy_Lexer *lexer);
+
+/* Define all single byte token definitions */
+const Fy_SingleByteTokenDef Fy_singleByteTokens[] = {
+    { ':', Fy_TokenType_Colon },
+    { '[', Fy_TokenType_LeftBracket },
+    { ']', Fy_TokenType_RightBracket },
+    { '(', Fy_TokenType_LeftParen },
+    { ')', Fy_TokenType_RightParen },
+    { '-', Fy_TokenType_Minus },
+    { '+', Fy_TokenType_Plus },
+    { '*', Fy_TokenType_Star },
+    { '/', Fy_TokenType_Slash },
+    { ',', Fy_TokenType_Comma },
+    { '=', Fy_TokenType_EqualSign }
+};
+
+/* Define all keyword token definitions */
+const Fy_KeywordTokenDef Fy_keywordTokens[] = {
+    { "nop", Fy_TokenType_Nop },
+    { "debug", Fy_TokenType_Debug },
+    { "debugstack", Fy_TokenType_DebugStack },
+    { "jmp", Fy_TokenType_Jmp },
+    { "je", Fy_TokenType_Je },
+    { "jl", Fy_TokenType_Jl },
+    { "jg", Fy_TokenType_Jg },
+    { "call", Fy_TokenType_Call },
+    { "ret", Fy_TokenType_Ret },
+    { "end", Fy_TokenType_End },
+    { "mov", Fy_TokenType_Mov },
+    { "lea", Fy_TokenType_Lea },
+    { "add", Fy_TokenType_Add },
+    { "sub", Fy_TokenType_Sub },
+    { "and", Fy_TokenType_And },
+    { "or", Fy_TokenType_Or },
+    { "xor", Fy_TokenType_Xor },
+    { "cmp", Fy_TokenType_Cmp },
+    { "push", Fy_TokenType_Push },
+    { "pop", Fy_TokenType_Pop },
+    { "int", Fy_TokenType_Int },
+    { "ax", Fy_TokenType_Ax },
+    { "bx", Fy_TokenType_Bx },
+    { "cx", Fy_TokenType_Cx },
+    { "dx", Fy_TokenType_Dx },
+    { "sp", Fy_TokenType_Sp },
+    { "bp", Fy_TokenType_Bp },
+    { "ah", Fy_TokenType_Ah },
+    { "al", Fy_TokenType_Al },
+    { "bh", Fy_TokenType_Bh },
+    { "bl", Fy_TokenType_Bl },
+    { "ch", Fy_TokenType_Ch },
+    { "cl", Fy_TokenType_Cl },
+    { "dh", Fy_TokenType_Dh },
+    { "dl", Fy_TokenType_Dl },
+    { "proc", Fy_TokenType_Proc },
+    { "endp", Fy_TokenType_Endp },
+    { "data", Fy_TokenType_Data },
+    { "eb", Fy_TokenType_Eb },
+    { "ew", Fy_TokenType_Ew },
+    { "code", Fy_TokenType_Code },
+    { "byte", Fy_TokenType_Byte },
+    { "word", Fy_TokenType_Word },
+    { "dup", Fy_TokenType_Dup }
+};
+
+/* Store pointers to all lexing functions */
+const Fy_LexerLexFunc Fy_lexFuncs[] = {
+    Fy_Lexer_lexSingleByteToken,
+    Fy_Lexer_lexAnyKeyword,
+    Fy_Lexer_lexNewline,
+    Fy_Lexer_lexConst,
+    Fy_Lexer_lexSymbol,
+    Fy_Lexer_lexString,
+    Fy_Lexer_lexChar
+};
+
+/* Returns whether the byte can be an identifier's start char */
 static inline bool is_keyword_start_char(char c) {
     return isalpha(c) || c == '_';
 }
 
+/* Returns whether the byte can be an identifier's char in any place other than the start */
 static inline bool is_keyword_char(char c) {
     return is_keyword_start_char(c) || isdigit(c);
 }
 
+// Returns whether a character is a binary character (1 or 0)
 static inline bool is_bin_char(char c) {
     return c == '0' || c == '1';
 }
 
 /* Convert Fy_LexerError to string */
-char *Fy_LexerError_toString(Fy_LexerError error) {
+static char *Fy_LexerError_toString(Fy_LexerError error) {
     switch (error) {
     case Fy_LexerError_Syntax:
         return "Syntax error";
@@ -33,7 +134,7 @@ void Fy_Lexer_Init(char *stream, Fy_Lexer *out) {
 }
 
 /* Show lexer error message and exit */
-void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
+static void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
     printf("LexerError[%zu,%zu]: %s\n",
             lexer->line, lexer->column,
             Fy_LexerError_toString(error));
@@ -44,7 +145,7 @@ void Fy_Lexer_error(Fy_Lexer *lexer, Fy_LexerError error) {
  * Returns true if matched a keyword, and puts the keyword in the lexer's token.
  * Parameter `keyword` must be lowercase.
  */
-bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
+static bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
     size_t i;
 
     for (i = 0; keyword[i] != '\0'; ++i) {
@@ -70,7 +171,7 @@ bool Fy_Lexer_matchKeyword(Fy_Lexer *lexer, char *keyword, Fy_TokenType type) {
 }
 
 /* Removes space and tab (indent characters) */
-size_t Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
+static size_t Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
     bool removing = true;
     size_t amount_removed = 0;
     while (removing) {
@@ -95,7 +196,7 @@ size_t Fy_Lexer_removeWhitespace(Fy_Lexer *lexer) {
 }
 
 /* Lex a constant value */
-bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
+static bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
     size_t i = 0;
 
     if (lexer->stream[i] == '0' && lexer->stream[i + 1] == 'x') {
@@ -142,7 +243,7 @@ bool Fy_Lexer_lexConst(Fy_Lexer *lexer) {
     return true;
 }
 
-bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer) {
+static bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer) {
     if (!is_keyword_start_char(lexer->stream[0]))
         return false;
     lexer->token.type = Fy_TokenType_Symbol;
@@ -157,7 +258,7 @@ bool Fy_Lexer_lexSymbol(Fy_Lexer *lexer) {
     return true;
 }
 
-bool Fy_Lexer_lexString(Fy_Lexer *lexer) {
+static bool Fy_Lexer_lexString(Fy_Lexer *lexer) {
     if (lexer->stream[0] != '"')
         return false;
 
@@ -203,9 +304,9 @@ static bool Fy_Lexer_lexChar(Fy_Lexer *lexer) {
 
 /*
  * Lex a newline.
- * Returns false on failure.
+ * Returns false if not found newline.
  */
-bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
+static bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
     if (lexer->stream[0] != '\n')
         return false;
     lexer->token.type = Fy_TokenType_Newline;
@@ -222,6 +323,38 @@ bool Fy_Lexer_lexNewline(Fy_Lexer *lexer) {
 }
 
 /*
+ * Lex a single byte token (like '+' or ':').
+ * Returns false if didn't find token.
+ */
+static bool Fy_Lexer_lexSingleByteToken(Fy_Lexer *lexer) {
+    for (size_t i = 0; i < sizeof(Fy_singleByteTokens) / sizeof(Fy_SingleByteTokenDef); ++i) {
+        const Fy_SingleByteTokenDef *token = &Fy_singleByteTokens[i];
+        if (lexer->stream[0] == token->character) {
+            lexer->token.start = lexer->stream;
+            lexer->token.length = 1;
+            lexer->token.type = token->type;
+            ++lexer->stream;
+            ++lexer->column;
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * Lex a keyword from the keywords defined (like 'mov').
+ * Returns false if didn't find token.
+ */
+static bool Fy_Lexer_lexAnyKeyword(Fy_Lexer *lexer) {
+    for (size_t i = 0; i < sizeof(Fy_keywordTokens) / sizeof(Fy_KeywordTokenDef); ++i) {
+        const Fy_KeywordTokenDef *token = &Fy_keywordTokens[i];
+        if (Fy_Lexer_matchKeyword(lexer, token->match_string, token->type))
+            return true;
+    }
+    return false;
+}
+
+/*
  * Lex a token into the `token` member.
  * If end of file, returns false, otherwise returns true.
  */
@@ -232,208 +365,12 @@ bool Fy_Lexer_lex(Fy_Lexer *lexer) {
     if (lexer->stream[0] == '\0')
         return false;
 
-    if (lexer->stream[0] == ':') {
-        lexer->token.type = Fy_TokenType_Colon;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->stream;
-        ++lexer->column;
-        return true;
+    // Loop through all lex functions and return true if managed to lex using one of them
+    for (size_t i = 0; i < sizeof(Fy_lexFuncs) / sizeof(Fy_LexerLexFunc); ++i) {
+        Fy_LexerLexFunc func = Fy_lexFuncs[i];
+        if (func(lexer))
+            return true;
     }
-
-    if (lexer->stream[0] == '[') {
-        lexer->token.type = Fy_TokenType_LeftBracket;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->stream;
-        ++lexer->column;
-        return true;
-    }
-
-    if (lexer->stream[0] == ']') {
-        lexer->token.type = Fy_TokenType_RightBracket;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->stream;
-        ++lexer->column;
-        return true;
-    }
-
-    if (lexer->stream[0] == '(') {
-        lexer->token.type = Fy_TokenType_LeftParen;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->stream;
-        ++lexer->column;
-        return true;
-    }
-
-    if (lexer->stream[0] == ')') {
-        lexer->token.type = Fy_TokenType_RightParen;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->stream;
-        ++lexer->column;
-        return true;
-    }
-
-    if (lexer->stream[0] == '-') {
-        lexer->token.type = Fy_TokenType_Minus;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (lexer->stream[0] == '+') {
-        lexer->token.type = Fy_TokenType_Plus;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (lexer->stream[0] == '*') {
-        lexer->token.type = Fy_TokenType_Star;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (lexer->stream[0] == '/') {
-        lexer->token.type = Fy_TokenType_Slash;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (lexer->stream[0] == ',') {
-        lexer->token.type = Fy_TokenType_Comma;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (lexer->stream[0] == '=') {
-        lexer->token.type = Fy_TokenType_EqualSign;
-        lexer->token.start = lexer->stream;
-        lexer->token.length = 1;
-        ++lexer->column;
-        ++lexer->stream;
-        return true;
-    }
-
-    if (Fy_Lexer_lexNewline(lexer))
-        return true;
-
-    if (Fy_Lexer_matchKeyword(lexer, "nop", Fy_TokenType_Nop))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "debug", Fy_TokenType_Debug))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "debugstack", Fy_TokenType_DebugStack))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "jmp", Fy_TokenType_Jmp))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "je", Fy_TokenType_Je))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "jl", Fy_TokenType_Jl))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "jg", Fy_TokenType_Jg))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "call", Fy_TokenType_Call))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "ret", Fy_TokenType_Ret))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "end", Fy_TokenType_End))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "mov", Fy_TokenType_Mov))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "lea", Fy_TokenType_Lea))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "add", Fy_TokenType_Add))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "sub", Fy_TokenType_Sub))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "and", Fy_TokenType_And))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "or", Fy_TokenType_Or))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "xor", Fy_TokenType_Xor))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "cmp", Fy_TokenType_Cmp))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "push", Fy_TokenType_Push))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "pop", Fy_TokenType_Pop))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "int", Fy_TokenType_Int))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "ax", Fy_TokenType_Ax))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "bx", Fy_TokenType_Bx))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "cx", Fy_TokenType_Cx))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "dx", Fy_TokenType_Dx))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "sp", Fy_TokenType_Sp))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "bp", Fy_TokenType_Bp))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "ah", Fy_TokenType_Ah))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "al", Fy_TokenType_Al))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "bh", Fy_TokenType_Bh))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "bl", Fy_TokenType_Bl))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "ch", Fy_TokenType_Ch))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "cl", Fy_TokenType_Cl))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "dh", Fy_TokenType_Dh))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "dl", Fy_TokenType_Dl))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "proc", Fy_TokenType_Proc))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "endp", Fy_TokenType_Endp))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "data", Fy_TokenType_Data))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "eb", Fy_TokenType_Eb))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "ew", Fy_TokenType_Ew))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "code", Fy_TokenType_Code))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "byte", Fy_TokenType_Byte))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "word", Fy_TokenType_Word))
-        return true;
-    if (Fy_Lexer_matchKeyword(lexer, "dup", Fy_TokenType_Dup))
-        return true;
-
-    if (Fy_Lexer_lexConst(lexer))
-        return true;
-
-    if (Fy_Lexer_lexSymbol(lexer))
-        return true;
-
-    if (Fy_Lexer_lexString(lexer))
-        return true;
-
-    if (Fy_Lexer_lexChar(lexer))
-        return true;
 
     Fy_Lexer_error(lexer, Fy_LexerError_Syntax);
     return false; // Unreachable

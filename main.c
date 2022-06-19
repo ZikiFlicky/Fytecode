@@ -27,11 +27,11 @@ static char *Fy_LoadTextFile(char *name) {
 
 static void Fy_PrintHelp(void) {
     puts("Welcome to the Fytecode engine!");
-    puts("usage: fy -h | -c source output | -r file [--warn-undefined]");
-    puts("  -c source output: assembles file into bytecode");
-    puts("  -r file:          runs bytecode on virtual machine");
-    puts("  -s:               add shebang");
-    puts("  -h:               shows this help message");
+    puts("usage: fy [--add-shebang | -s] [--help | -h] | [--compile | -c] source output | [--run | -r] file");
+    puts("  --compile or -c source output: assembles file into bytecode");
+    puts("  --run or -r file:              runs bytecode on virtual machine");
+    puts("  --add-shebang or -s:           add shebang");
+    puts("  --help or -h:                  shows this help message");
 }
 
 int main(int argc, char **argv) {
@@ -39,27 +39,27 @@ int main(int argc, char **argv) {
     int i = 1;
 
     while (i < argc) {
-        if (strcmp(argv[i], "-s") == 0) {
+        if (strcmp(argv[i], "--add-shebang") == 0 || strcmp(argv[i], "-s") == 0) {
             if (add_shebang) {
-                printf("Already defined shebang\n");
+                fprintf(stderr, "Already defined shebang\n");
                 return 1;
             }
             add_shebang = true;
             ++i;
-        } else if (strcmp(argv[i], "-c") == 0) {
+        } else if (strcmp(argv[i], "--compile") == 0 || strcmp(argv[i], "-c") == 0) {
             char *stream;
             Fy_Lexer lexer;
             Fy_Parser parser;
             char *shebang;
 
             if (argc - i != 3) {
-                printf("Expected two arguments after '-c' switch\n");
+                fprintf(stderr, "Expected two arguments after '%s' switch\n", argv[i]);
                 return 1;
             }
 
             stream = Fy_LoadTextFile(argv[i + 1]);
             if (!stream) {
-                printf("Couldn't open file '%s' for read\n", argv[i + 1]);
+                fprintf(stderr, "Couldn't open file '%s' for read\n", argv[i + 1]);
                 return 1;
             }
 
@@ -77,18 +77,18 @@ int main(int argc, char **argv) {
 
             free(stream);
             return 0;
-        } else if (strcmp(argv[i], "-r") == 0) {
+        } else if (strcmp(argv[i], "--run") == 0 || strcmp(argv[i], "-r") == 0) {
             Fy_BytecodeFileStream bc;
             Fy_VM vm;
             int exit_code;
 
             if (argc - i != 2) {
-                printf("Expected one argument after '-r' switch\n");
+                fprintf(stderr, "Expected one argument after '%s' switch\n", argv[i]);
                 return 1;
             }
 
             if (!Fy_OpenBytecodeFile(argv[i + 1], &bc)) {
-                printf("Couldn't load binary file '%s' for read\n", argv[2]);
+                fprintf(stderr, "Couldn't load binary file '%s' for read\n", argv[i + 1]);
                 return 1;
             }
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
             Fy_BytecodeFileStream_Destruct(&bc);
             return exit_code;
-        } else if (strcmp(argv[1], "-h")) {
+        } else if (strcmp(argv[i], "--help") || strcmp(argv[i], "-h")) {
             Fy_PrintHelp();
             return 0;
         } else {
@@ -107,6 +107,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stderr, "Not enough arguments\n");
+    Fy_PrintHelp();
     return 1;
 }

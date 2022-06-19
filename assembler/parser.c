@@ -837,7 +837,7 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_TokenType start_token;
     uint8_t amount_args;
     Fy_InstructionArg arg1, arg2;
-    const Fy_ParserParseRule *rule;
+    const Fy_ParserParseRule *rule, *parsedRule;
     Fy_Instruction *instruction = NULL;
 
     Fy_Parser_dumpState(parser, &start_backtrack);
@@ -878,12 +878,14 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
                     Fy_Parser_error(parser, Fy_ParserError_AmbiguousInstructionParameters, &start_backtrack, NULL);
                 else // FIXME: Free here
                     instruction = new_instruction;
+                // Store the rule we parsed with
+                parsedRule = rule;
             }
         }
     }
 
     if (instruction) {
-        instruction->parse_rule = rule;
+        instruction->parse_rule = parsedRule;
         instruction->start_state = start_backtrack;
         return instruction;
     }
@@ -1231,6 +1233,7 @@ static void Fy_Parser_processInstructions(Fy_Parser *parser) {
             break;
         case Fy_ParserParseRuleType_BinaryOperator: {
             Fy_Instruction_BinaryOperator *binary_instruction = (Fy_Instruction_BinaryOperator*)instruction;
+            // Evaluate memory AST in instructions that reference memory
             switch (binary_instruction->type) {
             case Fy_BinaryOperatorArgsType_Reg16Const:
             case Fy_BinaryOperatorArgsType_Reg16Reg16:

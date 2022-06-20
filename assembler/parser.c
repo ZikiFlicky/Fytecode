@@ -91,11 +91,32 @@ static const Fy_ParserParseRule Fy_parseRuleJne = {
         .instruction_type = &Fy_instructionTypeJne
     }
 };
+static const Fy_ParserParseRule Fy_parseRuleJz = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jz,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJe
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJnz = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jnz,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJne
+    }
+};
 static const Fy_ParserParseRule Fy_parseRuleJb = {
     .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jb,
     .as_jump = {
         .instruction_type = &Fy_instructionTypeJb
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJbe = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jbe,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJbe
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJa = {
@@ -105,6 +126,13 @@ static const Fy_ParserParseRule Fy_parseRuleJa = {
         .instruction_type = &Fy_instructionTypeJa
     }
 };
+static const Fy_ParserParseRule Fy_parseRuleJae = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jae,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJae
+    }
+};
 static const Fy_ParserParseRule Fy_parseRuleJl = {
     .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jl,
@@ -112,11 +140,25 @@ static const Fy_ParserParseRule Fy_parseRuleJl = {
         .instruction_type = &Fy_instructionTypeJl
     }
 };
+static const Fy_ParserParseRule Fy_parseRuleJle = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jle,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJle
+    }
+};
 static const Fy_ParserParseRule Fy_parseRuleJg = {
     .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jg,
     .as_jump = {
         .instruction_type = &Fy_instructionTypeJg
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJge = {
+    .type = Fy_ParserParseRuleType_Jump,
+    .start_token = Fy_TokenType_Jge,
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJge
     }
 };
 static const Fy_ParserParseRule Fy_parseRulePushConst = {
@@ -269,10 +311,16 @@ const Fy_ParserParseRule* const Fy_parserRules[] = {
     &Fy_parseRuleJmp,
     &Fy_parseRuleJe,
     &Fy_parseRuleJne,
+    &Fy_parseRuleJz,
+    &Fy_parseRuleJnz,
     &Fy_parseRuleJb,
+    &Fy_parseRuleJbe,
     &Fy_parseRuleJa,
+    &Fy_parseRuleJae,
     &Fy_parseRuleJl,
+    &Fy_parseRuleJle,
     &Fy_parseRuleJg,
+    &Fy_parseRuleJge,
     &Fy_parseRulePushConst,
     &Fy_parseRulePushReg16,
     &Fy_parseRulePop,

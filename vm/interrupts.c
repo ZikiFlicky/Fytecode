@@ -7,38 +7,13 @@ static void Fy_interruptOpenWindow_run(Fy_VM *vm);
 static void Fy_interruptSetPixel_run(Fy_VM *vm);
 static void Fy_interruptUpdate_run(Fy_VM *vm);
 
-Fy_InterruptDef Fy_interruptPutNumber = {
-    .opcode = 0,
-    .func = Fy_interruptPutNumber_run
-};
-Fy_InterruptDef Fy_interruptPutChar = {
-    .opcode = 1,
-    .func = Fy_interruptPutChar_run
-};
-Fy_InterruptDef Fy_interruptPutString = {
-    .opcode = 2,
-    .func = Fy_interruptPutString_run
-};
-Fy_InterruptDef Fy_interruptOpenWindow = {
-    .opcode = 3,
-    .func = Fy_interruptOpenWindow_run
-};
-Fy_InterruptDef Fy_interruptSetPixel = {
-    .opcode = 4,
-    .func = Fy_interruptSetPixel_run
-};
-Fy_InterruptDef Fy_interruptUpdate = {
-    .opcode = 5,
-    .func = Fy_interruptUpdate_run
-};
-
-Fy_InterruptDef *Fy_interruptDefs[] = {
-    &Fy_interruptPutNumber,
-    &Fy_interruptPutChar,
-    &Fy_interruptPutString,
-    &Fy_interruptOpenWindow,
-    &Fy_interruptSetPixel,
-    &Fy_interruptUpdate
+Fy_InterruptRunFunc Fy_interruptFuncs[] = {
+    Fy_interruptPutNumber_run,
+    Fy_interruptPutChar_run,
+    Fy_interruptPutString_run,
+    Fy_interruptOpenWindow_run,
+    Fy_interruptSetPixel_run,
+    Fy_interruptUpdate_run
 };
 
 
@@ -47,7 +22,7 @@ SDL_Color Fy_screenPalette[] = {
     { 0, 0, 0, 0xff },
     { 0xff, 0, 0, 0xff },
     { 0, 0xff, 0, 0xff },
-    { 0, 0, 0xff, 0xff },
+    { 0, 0, 0xff, 0xff }
 };
 
 static void Fy_interruptPutNumber_run(Fy_VM *vm) {
@@ -128,16 +103,9 @@ static void Fy_interruptUpdate_run(Fy_VM *vm) {
     SDL_UpdateWindowSurface(vm->window);
 }
 
-void Fy_InterruptDef_run(Fy_InterruptDef *def, Fy_VM *vm) {
-    assert(def->func);
-    def->func(vm);
-}
-
-Fy_InterruptDef *Fy_findInterruptDefByOpcode(uint8_t opcode) {
-    for (size_t i = 0; i < sizeof(Fy_interruptDefs) / sizeof(Fy_InterruptDef*); ++i) {
-        Fy_InterruptDef *possible_interrupt = Fy_interruptDefs[i];
-        if (opcode == possible_interrupt->opcode)
-            return possible_interrupt;
-    }
-    return NULL;
+Fy_InterruptRunFunc Fy_findInterruptFuncByOpcode(uint8_t opcode) {
+    if (opcode < sizeof(Fy_interruptFuncs) / sizeof(Fy_InterruptRunFunc))
+        return Fy_interruptFuncs[opcode];
+    else
+        return NULL;
 }

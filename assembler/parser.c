@@ -651,10 +651,12 @@ static Fy_Instruction *Fy_ParseLea(Fy_Parser *parser, Fy_InstructionArg *arg1, F
 
 static Fy_Instruction *Fy_ParseInt(Fy_Parser *parser, Fy_InstructionArg *arg) {
     Fy_Instruction_OpConst8 *instruction;
+    Fy_InterruptRunFunc func;
     (void)parser;
     if (arg->as_const > 0xff)
         Fy_Parser_error(parser, Fy_ParserError_ConstTooBig, NULL, "%d", arg->as_const);
-    if (!Fy_findInterruptDefByOpcode((uint8_t)arg->as_const))
+    func = Fy_findInterruptFuncByOpcode((uint8_t)arg->as_const);
+    if (!func)
         Fy_Parser_error(parser, Fy_ParserError_InterruptNotFound, &arg->state, "%d", arg->as_const);
     instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpConst8, Fy_instructionTypeInt);
     instruction->value = arg->as_const;

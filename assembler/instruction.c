@@ -248,12 +248,12 @@ static void Fy_instructionTypeInt_write(Fy_Generator *generator, Fy_Instruction_
 
 static void Fy_instructionTypeInt_run(Fy_VM *vm, uint16_t address) {
     uint8_t opcode = Fy_VM_getMem8(vm, address + 0);
-    Fy_InterruptDef *interrupt = Fy_findInterruptDefByOpcode(opcode);
-    if (!interrupt) {
+    Fy_InterruptRunFunc func = Fy_findInterruptFuncByOpcode(opcode);
+    if (!func) {
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InterruptNotFound, "%d", opcode);
         return;
     }
-    Fy_InterruptDef_run(interrupt, vm);
+    func(vm);
 }
 
 static uint16_t Fy_instructionTypeBinaryOperator_getsize(Fy_Instruction_BinaryOperator *instruction) {
@@ -476,177 +476,153 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
 }
 
 /* Type definitions */
-const Fy_InstructionType Fy_instructionTypeNop = {
-    .opcode = 0,
+Fy_InstructionType Fy_instructionTypeNop = {
     .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = NULL
 };
 
-const Fy_InstructionType Fy_instructionTypeEndProgram = {
-    .opcode = 1,
+Fy_InstructionType Fy_instructionTypeEndProgram = {
     .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeEndProgram_run
 };
-const Fy_InstructionType Fy_instructionTypeJmp = {
-    .opcode = 2,
+Fy_InstructionType Fy_instructionTypeJmp = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJmp_write,
     .run_func = Fy_instructionTypeJmp_run
 };
-const Fy_InstructionType Fy_instructionTypeJe = {
-    .opcode = 3,
+Fy_InstructionType Fy_instructionTypeJe = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJe_write,
     .run_func = Fy_instructionTypeJe_run
 };
-const Fy_InstructionType Fy_instructionTypeJne = {
-    .opcode = 4,
+Fy_InstructionType Fy_instructionTypeJne = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJne_write,
     .run_func = Fy_instructionTypeJne_run
 };
-const Fy_InstructionType Fy_instructionTypeJb = {
-    .opcode = 5,
+Fy_InstructionType Fy_instructionTypeJb = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJb_write,
     .run_func = Fy_instructionTypeJb_run
 };
-const Fy_InstructionType Fy_instructionTypeJbe = {
-    .opcode = 6,
+Fy_InstructionType Fy_instructionTypeJbe = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJbe_write,
     .run_func = Fy_instructionTypeJbe_run
 };
-const Fy_InstructionType Fy_instructionTypeJa = {
-    .opcode = 7,
+Fy_InstructionType Fy_instructionTypeJa = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJa_write,
     .run_func = Fy_instructionTypeJa_run
 };
-const Fy_InstructionType Fy_instructionTypeJae = {
-    .opcode = 8,
+Fy_InstructionType Fy_instructionTypeJae = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJae_write,
     .run_func = Fy_instructionTypeJae_run
 };
-const Fy_InstructionType Fy_instructionTypeJl = {
-    .opcode = 9,
+Fy_InstructionType Fy_instructionTypeJl = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJl_write,
     .run_func = Fy_instructionTypeJl_run
 };
-const Fy_InstructionType Fy_instructionTypeJle = {
-    .opcode = 10,
+Fy_InstructionType Fy_instructionTypeJle = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJle_write,
     .run_func = Fy_instructionTypeJle_run
 };
-const Fy_InstructionType Fy_instructionTypeJg = {
-    .opcode = 11,
+Fy_InstructionType Fy_instructionTypeJg = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJg_write,
     .run_func = Fy_instructionTypeJg_run
 };
-const Fy_InstructionType Fy_instructionTypeJge = {
-    .opcode = 12,
+Fy_InstructionType Fy_instructionTypeJge = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeJge_write,
     .run_func = Fy_instructionTypeJge_run
 };
-const Fy_InstructionType Fy_instructionTypePushConst = {
-    .opcode = 13,
+Fy_InstructionType Fy_instructionTypePushConst = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePushConst_write,
     .run_func = Fy_instructionTypePushConst_run
 };
-const Fy_InstructionType Fy_instructionTypePushReg16 = {
-    .opcode = 14,
+Fy_InstructionType Fy_instructionTypePushReg16 = {
     .variable_size = false,
     .additional_size = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePushReg16_write,
     .run_func = Fy_instructionTypePushReg16_run
 };
-const Fy_InstructionType Fy_instructionTypePop = {
-    .opcode = 15,
+Fy_InstructionType Fy_instructionTypePop = {
     .variable_size = false,
     .additional_size = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypePop_write,
     .run_func = Fy_instructionTypePop_run
 };
-const Fy_InstructionType Fy_instructionTypeCall = {
-    .opcode = 16,
+Fy_InstructionType Fy_instructionTypeCall = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeCall_write,
     .run_func = Fy_instructionTypeCall_run
 };
-const Fy_InstructionType Fy_instructionTypeRet = {
-    .opcode = 17,
+Fy_InstructionType Fy_instructionTypeRet = {
     .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeRet_run
 };
-const Fy_InstructionType Fy_instructionTypeRetConst16 = {
-    .opcode = 18,
+Fy_InstructionType Fy_instructionTypeRetConst16 = {
     .variable_size = false,
     .additional_size = 2,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeRetConst16_write,
     .run_func = Fy_instructionTypeRetConst16_run
 };
-const Fy_InstructionType Fy_instructionTypeDebug = {
-    .opcode = 19,
+Fy_InstructionType Fy_instructionTypeDebug = {
     .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeDebug_run
 };
-const Fy_InstructionType Fy_instructionTypeDebugStack = {
-    .opcode = 20,
+Fy_InstructionType Fy_instructionTypeDebugStack = {
     .variable_size = false,
     .additional_size = 0,
     .write_func = NULL,
     .run_func = Fy_instructionTypeDebugStack_run
 };
-const Fy_InstructionType Fy_instructionTypeLea = {
-    .opcode = 21,
+Fy_InstructionType Fy_instructionTypeLea = {
     .variable_size = true,
     .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeLea_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeLea_write,
     .run_func = Fy_instructionTypeLea_run
 };
-const Fy_InstructionType Fy_instructionTypeInt = {
-    .opcode = 22,
+Fy_InstructionType Fy_instructionTypeInt = {
     .variable_size = false,
     .additional_size = 1,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeInt_write,
     .run_func = Fy_instructionTypeInt_run
 };
-const Fy_InstructionType Fy_instructionTypeBinaryOperator = {
-    .opcode = 23,
+Fy_InstructionType Fy_instructionTypeBinaryOperator = {
     .variable_size = true,
     .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeBinaryOperator_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeBinaryOperator_write,
     .run_func = Fy_InstructionTypeBinaryOperator_run
 };
 
-const Fy_InstructionType* const Fy_instructionTypes[] = {
+Fy_InstructionType* const Fy_instructionTypes[] = {
     &Fy_instructionTypeNop,
     &Fy_instructionTypeEndProgram,
     &Fy_instructionTypeJmp,

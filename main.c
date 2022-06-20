@@ -25,6 +25,12 @@ static char *Fy_LoadTextFile(char *name) {
     return stream;
 }
 
+static void Fy_loadInstructionOpcodes(void) {
+    for (uint8_t i = 0; i < sizeof(Fy_instructionTypes) / sizeof(Fy_InstructionType*); ++i) {
+        Fy_instructionTypes[i]->opcode = i;
+    }
+};
+
 static void Fy_PrintHelp(void) {
     puts("Welcome to the Fytecode engine!");
     puts("usage: fy [--add-shebang | -s] [--help | -h] | [--compile | -c] source output | [--run | -r] file");
@@ -37,6 +43,9 @@ static void Fy_PrintHelp(void) {
 int main(int argc, char **argv) {
     bool add_shebang = false;
     int i = 1;
+
+    // Load constant opcodes for instructions
+    Fy_loadInstructionOpcodes();
 
     while (i < argc) {
         if (strcmp(argv[i], "--add-shebang") == 0 || strcmp(argv[i], "-s") == 0) {

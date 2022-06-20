@@ -100,7 +100,7 @@ static void Fy_instructionTypeJl_write(Fy_Generator *generator, Fy_Instruction_O
 
 static void Fy_instructionTypeJl_run(Fy_VM *vm, uint16_t address) {
     // If we have the sign it means the result was negative, thus the lhs was smaller than the rhs
-    if (!!(vm->flags & FY_FLAGS_SIGN) == !!(vm->flags & FY_FLAGS_OVERFLOW) && !(vm->flags & FY_FLAGS_ZERO))
+    if (!!(vm->flags & FY_FLAGS_SIGN) != !!(vm->flags & FY_FLAGS_OVERFLOW) && !(vm->flags & FY_FLAGS_ZERO))
         Fy_VM_setIpToRelAddress(vm, Fy_VM_getMem16(vm, address + 0));
 }
 
@@ -110,7 +110,7 @@ static void Fy_instructionTypeJg_write(Fy_Generator *generator, Fy_Instruction_O
 
 static void Fy_instructionTypeJg_run(Fy_VM *vm, uint16_t address) {
     // If we don't have the sign and don't equal 0 it means the result was positive, thus the lhs was bigger than than the rhs
-    if (!!(vm->flags & FY_FLAGS_SIGN) != !!(vm->flags & FY_FLAGS_OVERFLOW) && !(vm->flags & FY_FLAGS_ZERO))
+    if (!!(vm->flags & FY_FLAGS_SIGN) == !!(vm->flags & FY_FLAGS_OVERFLOW) && !(vm->flags & FY_FLAGS_ZERO))
         Fy_VM_setIpToRelAddress(vm, Fy_VM_getMem16(vm, address + 0));
 }
 

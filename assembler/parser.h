@@ -15,6 +15,7 @@ typedef struct Fy_ParserState Fy_ParserState;
 typedef enum Fy_ParserError Fy_ParserError;
 typedef struct Fy_Parser Fy_Parser;
 typedef enum Fy_InstructionArgType Fy_InstructionArgType;
+typedef struct Fy_InstructionType Fy_InstructionType;
 typedef struct Fy_InstructionArg Fy_InstructionArg;
 typedef enum Fy_ParserParseRuleType Fy_ParserParseRuleType;
 typedef struct Fy_AST Fy_AST;
@@ -94,11 +95,6 @@ struct Fy_InstructionArg {
     };
 };
 
-enum Fy_ParserParseRuleType {
-    Fy_ParserParseRuleType_Custom = 1,
-    Fy_ParserParseRuleType_BinaryOperator
-};
-
 enum Fy_BinaryOperator {
     Fy_BinaryOperator_Mov = 1,
     Fy_BinaryOperator_Add,
@@ -107,6 +103,12 @@ enum Fy_BinaryOperator {
     Fy_BinaryOperator_Or,
     Fy_BinaryOperator_Xor,
     Fy_BinaryOperator_Cmp
+};
+
+enum Fy_ParserParseRuleType {
+    Fy_ParserParseRuleType_Custom = 1,
+    Fy_ParserParseRuleType_BinaryOperator,
+    Fy_ParserParseRuleType_Jump
 };
 
 struct Fy_ParserParseRule {
@@ -129,6 +131,9 @@ struct Fy_ParserParseRule {
         struct {
             Fy_BinaryOperator operator_id;
         } as_operator;
+        struct {
+            const Fy_InstructionType *instruction_type;
+        } as_jump;
     };
 };
 

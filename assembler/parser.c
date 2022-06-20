@@ -5,14 +5,6 @@ static Fy_Instruction *Fy_ParseNop(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseDebug(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
-static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJne(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJb(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJa(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_InstructionArg *arg);
-static Fy_Instruction *Fy_ParseCall(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseRet(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseRetConst16(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParsePushConst(Fy_Parser *parser, Fy_InstructionArg *arg);
@@ -26,7 +18,7 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction);
 
 /* Process-label-function (parsing step 3) declarations */
-static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser);
+static void Fy_ProcessLabelOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
@@ -79,80 +71,52 @@ static const Fy_ParserParseRule Fy_parseRuleEnd = {
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJmp = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jmp,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJmp,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJmp
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJe = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Je,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJe,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJe
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJne = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jne,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJne,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJne
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJb = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jb,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJb,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJb
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJa = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Ja,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJa,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJa
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJl = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jl,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJl,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJl
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJg = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Jg,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseJg,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeJg
     }
 };
 static const Fy_ParserParseRule Fy_parseRulePushConst = {
@@ -189,14 +153,10 @@ static const Fy_ParserParseRule Fy_parseRulePop = {
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleCall = {
-    .type = Fy_ParserParseRuleType_Custom,
+    .type = Fy_ParserParseRuleType_Jump,
     .start_token = Fy_TokenType_Call,
-    .as_custom = {
-        .amount_params = 1,
-        .arg1_type = Fy_InstructionArgType_Label,
-        .func_one_param = Fy_ParseCall,
-        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
-        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    .as_jump = {
+        .instruction_type = &Fy_instructionTypeCall
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleRet = {
@@ -337,7 +297,7 @@ static const Fy_BinaryOperatorRule binary_operator_rules[] = {
     { Fy_InstructionArgType_Memory8, Fy_InstructionArgType_Reg8, Fy_BinaryOperatorArgsType_Memory8Reg8 }
 };
 
-
+/* Returns whether `type1` can be considered of type `type2` */
 static bool Fy_InstructionArgType_is(Fy_InstructionArgType type1, Fy_InstructionArgType type2) {
     if (type1 == type2)
         return true;
@@ -572,13 +532,6 @@ bool Fy_Parser_match(Fy_Parser *parser, Fy_TokenType type, bool macro_eval) {
 }
 
 /* Parsing helpers */
-static Fy_Instruction *Fy_ParseOpLabel(Fy_Parser *parser, Fy_InstructionArg *arg, const Fy_InstructionType *type) {
-    Fy_Instruction_OpLabel *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, *type);
-    (void)parser;
-    instruction->name = arg->as_label;
-    return (Fy_Instruction*)instruction;
-}
-
 static Fy_Instruction *Fy_ParseOpReg16(Fy_Parser *parser, Fy_InstructionArg *arg, const Fy_InstructionType *type) {
     Fy_Instruction_OpReg16 *instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpReg16, *type);
     (void)parser;
@@ -622,38 +575,6 @@ static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser) {
 
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser) {
     return Fy_ParseOpNoParams(parser, &Fy_instructionTypeEndProgram);
-}
-
-static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJmp);
-}
-
-static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJe);
-}
-
-static Fy_Instruction *Fy_ParseJne(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJne);
-}
-
-static Fy_Instruction *Fy_ParseJb(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJb);
-}
-
-static Fy_Instruction *Fy_ParseJa(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJa);
-}
-
-static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJl);
-}
-
-static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJg);
-}
-
-static Fy_Instruction *Fy_ParseCall(Fy_Parser *parser, Fy_InstructionArg *arg) {
-    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeCall);
 }
 
 static Fy_Instruction *Fy_ParseRet(Fy_Parser *parser) {
@@ -715,7 +636,7 @@ static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *i
 
 /* Label processing functions */
 
-static void Fy_ProcessLabelOpLabel(Fy_Instruction_OpLabel *instruction, Fy_Parser *parser) {
+static void Fy_ProcessLabelOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
     instruction->address = Fy_Parser_getCodeOffsetByInstructionIndex(parser, instruction->instruction_offset);
 }
 
@@ -827,6 +748,7 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, co
     case 1:
         break;
     default:
+        // Got more than 1 match
         Fy_Parser_error(parser, Fy_ParserError_AmbiguousInstructionParameters, start_state, NULL);
     }
 
@@ -881,6 +803,25 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, co
     return (Fy_Instruction*)instruction;
 }
 
+static Fy_Instruction *Fy_Parser_parseByJumpRule(Fy_Parser *parser, const Fy_ParserParseRule *rule, uint8_t amount_args,
+                                                Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
+    Fy_Instruction_OpLabel *instruction;
+
+    (void)parser;
+    (void)arg2;
+
+    if (amount_args != 1)
+        return NULL;
+
+    if (arg1->type != Fy_InstructionArgType_Label)
+        return NULL;
+
+    // Create label instruction and add the code label to it
+    instruction = FY_INSTRUCTION_NEW(Fy_Instruction_OpLabel, *rule->as_jump.instruction_type);
+    instruction->name = arg1->as_label;
+    return (Fy_Instruction*)instruction;
+}
+
 static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
     Fy_ParserState start_backtrack;
     Fy_TokenType start_token;
@@ -916,6 +857,9 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
                 break;
             case Fy_ParserParseRuleType_BinaryOperator:
                 new_instruction = Fy_Parser_parseByBinaryOperatorRule(parser, rule, amount_args, &arg1, &arg2, &start_backtrack);
+                break;
+            case Fy_ParserParseRuleType_Jump:
+                new_instruction = Fy_Parser_parseByJumpRule(parser, rule, amount_args, &arg1, &arg2);
                 break;
             default:
                 FY_UNREACHABLE();
@@ -1312,6 +1256,9 @@ static void Fy_Parser_processInstructions(Fy_Parser *parser) {
             }
             break;
         }
+        case Fy_ParserParseRuleType_Jump:
+            Fy_ProcessOpLabel(parser, (Fy_Instruction_OpLabel*)instruction);
+            break;
         default:
             FY_UNREACHABLE();
         }
@@ -1361,6 +1308,9 @@ static void Fy_Parser_processLabels(Fy_Parser *parser) {
                 instruction->parse_rule->as_custom.process_label_func(instruction, parser);
             break;
         case Fy_ParserParseRuleType_BinaryOperator:
+            break;
+        case Fy_ParserParseRuleType_Jump:
+            Fy_ProcessLabelOpLabel(parser, (Fy_Instruction_OpLabel*)instruction);
             break;
         default:
             FY_UNREACHABLE();

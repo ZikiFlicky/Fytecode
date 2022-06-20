@@ -778,7 +778,7 @@ static bool Fy_Parser_parseArgument(Fy_Parser *parser, Fy_InstructionArg *out) {
 
 static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, const Fy_ParserParseRule *rule,
                                                     uint8_t amount_args, Fy_InstructionArg *arg1, Fy_InstructionArg *arg2) {
-    Fy_Instruction *instruction;
+    Fy_Instruction *instruction = NULL;
 
     assert(rule->type == Fy_ParserParseRuleType_Custom);
 
@@ -798,8 +798,6 @@ static Fy_Instruction *Fy_Parser_parseByCustomRule(Fy_Parser *parser, const Fy_P
         default:
             FY_UNREACHABLE();
         }
-    } else {
-        instruction = NULL;
     }
 
     return instruction;

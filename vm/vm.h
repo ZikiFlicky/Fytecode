@@ -8,6 +8,8 @@
 
 #define FY_FLAGS_ZERO (1 << 0)
 #define FY_FLAGS_SIGN (1 << 1)
+#define FY_FLAGS_OVERFLOW (1 << 2)
+#define FY_FLAGS_CARRY (1 << 3)
 
 typedef struct Fy_VM Fy_VM;
 typedef enum Fy_RuntimeError Fy_RuntimeError;
@@ -79,8 +81,6 @@ bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t ad
 bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint8_t value);
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...);
 int Fy_VM_runAll(Fy_VM *vm);
-void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res);
-void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
 void Fy_VM_setIpToRelAddress(Fy_VM *vm, uint16_t address);
 void Fy_VM_pushToStack(Fy_VM *vm, uint16_t value);
 uint16_t Fy_VM_popFromStack(Fy_VM *vm);

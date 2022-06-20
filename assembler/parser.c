@@ -7,6 +7,9 @@ static Fy_Instruction *Fy_ParseDebugStack(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseEnd(Fy_Parser *parser);
 static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg);
+static Fy_Instruction *Fy_ParseJne(Fy_Parser *parser, Fy_InstructionArg *arg);
+static Fy_Instruction *Fy_ParseJb(Fy_Parser *parser, Fy_InstructionArg *arg);
+static Fy_Instruction *Fy_ParseJa(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseJg(Fy_Parser *parser, Fy_InstructionArg *arg);
 static Fy_Instruction *Fy_ParseCall(Fy_Parser *parser, Fy_InstructionArg *arg);
@@ -93,6 +96,39 @@ static const Fy_ParserParseRule Fy_parseRuleJe = {
         .amount_params = 1,
         .arg1_type = Fy_InstructionArgType_Label,
         .func_one_param = Fy_ParseJe,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJne = {
+    .type = Fy_ParserParseRuleType_Custom,
+    .start_token = Fy_TokenType_Jne,
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJne,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJb = {
+    .type = Fy_ParserParseRuleType_Custom,
+    .start_token = Fy_TokenType_Jb,
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJb,
+        .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
+        .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleJa = {
+    .type = Fy_ParserParseRuleType_Custom,
+    .start_token = Fy_TokenType_Ja,
+    .as_custom = {
+        .amount_params = 1,
+        .arg1_type = Fy_InstructionArgType_Label,
+        .func_one_param = Fy_ParseJa,
         .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpLabel,
         .process_label_func = (Fy_InstructionProcessLabelFunc)Fy_ProcessLabelOpLabel
     }
@@ -272,6 +308,9 @@ const Fy_ParserParseRule* const Fy_parserRules[] = {
     &Fy_parseRuleEnd,
     &Fy_parseRuleJmp,
     &Fy_parseRuleJe,
+    &Fy_parseRuleJne,
+    &Fy_parseRuleJb,
+    &Fy_parseRuleJa,
     &Fy_parseRuleJl,
     &Fy_parseRuleJg,
     &Fy_parseRulePushConst,
@@ -591,6 +630,18 @@ static Fy_Instruction *Fy_ParseJmp(Fy_Parser *parser, Fy_InstructionArg *arg) {
 
 static Fy_Instruction *Fy_ParseJe(Fy_Parser *parser, Fy_InstructionArg *arg) {
     return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJe);
+}
+
+static Fy_Instruction *Fy_ParseJne(Fy_Parser *parser, Fy_InstructionArg *arg) {
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJne);
+}
+
+static Fy_Instruction *Fy_ParseJb(Fy_Parser *parser, Fy_InstructionArg *arg) {
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJb);
+}
+
+static Fy_Instruction *Fy_ParseJa(Fy_Parser *parser, Fy_InstructionArg *arg) {
+    return Fy_ParseOpLabel(parser, arg, &Fy_instructionTypeJa);
 }
 
 static Fy_Instruction *Fy_ParseJl(Fy_Parser *parser, Fy_InstructionArg *arg) {

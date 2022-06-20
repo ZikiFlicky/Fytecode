@@ -202,6 +202,9 @@ extern const Fy_InstructionType Fy_instructionTypeCmpReg16Const;
 extern const Fy_InstructionType Fy_instructionTypeCmpReg16Reg16;
 extern const Fy_InstructionType Fy_instructionTypeJmp;
 extern const Fy_InstructionType Fy_instructionTypeJe;
+extern const Fy_InstructionType Fy_instructionTypeJne;
+extern const Fy_InstructionType Fy_instructionTypeJb;
+extern const Fy_InstructionType Fy_instructionTypeJa;
 extern const Fy_InstructionType Fy_instructionTypeJl;
 extern const Fy_InstructionType Fy_instructionTypeJg;
 extern const Fy_InstructionType Fy_instructionTypePushConst;
@@ -225,7 +228,7 @@ extern const Fy_InstructionType Fy_instructionTypeAddReg8Const;
 extern const Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
 extern const Fy_InstructionType Fy_instructionTypeBinaryOperator;
 
-extern const Fy_InstructionType* const Fy_instructionTypes[17];
+extern const Fy_InstructionType* const Fy_instructionTypes[20];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size);

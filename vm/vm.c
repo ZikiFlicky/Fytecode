@@ -1,5 +1,15 @@
 #include "fy.h"
 
+/* Declare functions */
+static void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
+static void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res);
+static void Fy_VM_setOverflowAndCarry16(Fy_VM *vm, int32_t value);
+static void Fy_VM_setOverflowAndCarry8(Fy_VM *vm, int32_t value);
+static uint16_t Fy_VM_add16(Fy_VM *vm, uint16_t lhs, uint16_t rhs);
+static uint16_t Fy_VM_sub16(Fy_VM *vm, uint16_t lhs, uint16_t rhs);
+static uint8_t Fy_VM_add8(Fy_VM *vm, uint8_t lhs, uint8_t rhs);
+static uint8_t Fy_VM_sub8(Fy_VM *vm, uint8_t lhs, uint8_t rhs);
+
 /*
  * Reads all of the binary file into `out`.
  * Returns false on failure.
@@ -312,7 +322,6 @@ bool Fy_VM_setReg8(Fy_VM *vm, uint8_t reg, uint8_t value) {
     return true;
 }
 
-
 bool Fy_VM_isWritableReg16(Fy_VM *vm, uint8_t reg) {
     if (Fy_VM_getReg16Ptr(vm, reg))
         return true;
@@ -328,240 +337,190 @@ bool Fy_VM_isWritableReg8(Fy_VM *vm, uint8_t reg) {
 }
 
 bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint16_t value) {
+    uint16_t reg_value;
+    bool set_in_flags = true;
+    bool set_in_reg = true;
+
+    if (!Fy_VM_getReg16(vm, reg_id, &reg_value))
+        return false;
+
     switch (operator) {
     case Fy_BinaryOperator_Mov:
-        if (!Fy_VM_setReg16(vm, reg_id, value))
-            return false;
+        reg_value = value;
+        set_in_flags = false;
         break;
-    case Fy_BinaryOperator_Add: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value += value;
-        if (!Fy_VM_setReg16(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Add:
+        reg_value = Fy_VM_add16(vm, reg_value, value);
         break;
-    }
-    case Fy_BinaryOperator_Sub: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value -= value;
-        if (!Fy_VM_setReg16(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Sub:
+        reg_value = Fy_VM_sub16(vm, reg_value, value);
         break;
-    }
-    case Fy_BinaryOperator_And: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value &= value;
-        if (!Fy_VM_setReg16(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_And:
+        reg_value &= value;
         break;
-    }
-    case Fy_BinaryOperator_Or: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value |= value;
-        if (!Fy_VM_setReg16(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Or:
+        reg_value |= value;
         break;
-    }
-    case Fy_BinaryOperator_Xor: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value ^= value;
-        if (!Fy_VM_setReg16(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Xor:
+        reg_value ^= value;
         break;
-    }
-    case Fy_BinaryOperator_Cmp: {
-        uint16_t new_value;
-        if (!Fy_VM_getReg16(vm, reg_id, &new_value))
-            return false;
-        new_value -= value;
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Cmp:
+        reg_value = Fy_VM_sub16(vm, reg_value, value);
+        set_in_reg = false;
         break;
-    }
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
         return false;
+    }
+
+    // Set result in flags unless explicitly not allowed
+    if (set_in_flags)
+        Fy_VM_setResult16InFlags(vm, reg_value);
+    // Set result in the register unless explicitly not allowed
+    if (set_in_reg) {
+        if (!Fy_VM_setReg16(vm, reg_id, reg_value))
+            return false;
     }
     return true;
 }
 
 bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint8_t value) {
+    uint8_t reg_value;
+    bool set_in_flags = true;
+    bool set_in_reg = true;
+
+    if (!Fy_VM_getReg8(vm, reg_id, &reg_value))
+        return false;
+
     switch (operator) {
     case Fy_BinaryOperator_Mov:
-        if (!Fy_VM_setReg8(vm, reg_id, value))
-            return false;
+        reg_value = value;
+        set_in_flags = false;
         break;
-    case Fy_BinaryOperator_Add: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value += value;
-        if (!Fy_VM_setReg8(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Add:
+        reg_value = Fy_VM_add8(vm, reg_value, value);
         break;
-    }
-    case Fy_BinaryOperator_Sub: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value -= value;
-        if (!Fy_VM_setReg8(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Sub:
+        reg_value = Fy_VM_sub8(vm, reg_value, value);
         break;
-    }
-    case Fy_BinaryOperator_And: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value &= value;
-        if (!Fy_VM_setReg8(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_And:
+        reg_value &= value;
         break;
-    }
-    case Fy_BinaryOperator_Or: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value |= value;
-        if (!Fy_VM_setReg8(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Or:
+        reg_value |= value;
         break;
-    }
-    case Fy_BinaryOperator_Xor: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value ^= value;
-        if (!Fy_VM_setReg8(vm, reg_id, new_value))
-            return false;
+    case Fy_BinaryOperator_Xor:
+        reg_value ^= value;
         break;
-    }
-    case Fy_BinaryOperator_Cmp: {
-        uint8_t new_value;
-        if (!Fy_VM_getReg8(vm, reg_id, &new_value))
-            return false;
-        new_value -= value;
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Cmp:
+        // Just for the flags
+        reg_value = Fy_VM_sub8(vm, reg_value, value);
+        set_in_reg = false;
         break;
-    }
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
         return false;
+    }
+
+    // Set result in flags unless explicitly not allowed
+    if (set_in_flags)
+        Fy_VM_setResult8InFlags(vm, reg_value);
+    // Set result in the register unless explicitly not allowed
+    if (set_in_reg) {
+        if (!Fy_VM_setReg8(vm, reg_id, reg_value))
+            return false;
     }
     return true;
 }
 
 bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint16_t value) {
+    uint16_t mem_value;
+    bool set_in_flags = true;
+    bool set_in_mem = true;
+
+    mem_value = Fy_VM_getMem16(vm, address);
+
     switch (operator) {
     case Fy_BinaryOperator_Mov:
-        Fy_VM_setMem16(vm, address, value);
+        mem_value = value;
+        set_in_flags = false;
         break;
-    case Fy_BinaryOperator_Add: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value += value;
-        Fy_VM_setMem16(vm, address, new_value);
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Add:
+        mem_value = Fy_VM_add16(vm, mem_value, value);
         break;
-    }
-    case Fy_BinaryOperator_Sub: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value -= value;
-        Fy_VM_setMem16(vm, address, new_value);
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Sub:
+        mem_value = Fy_VM_sub16(vm, mem_value, value);
         break;
-    }
-    case Fy_BinaryOperator_And: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value &= value;
-        Fy_VM_setMem16(vm, address, new_value);
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_And:
+        mem_value &= value;
         break;
-    }
-    case Fy_BinaryOperator_Or: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value |= value;
-        Fy_VM_setMem16(vm, address, new_value);
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Or:
+        mem_value |= value;
         break;
-    }
-    case Fy_BinaryOperator_Xor: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value ^= value;
-        Fy_VM_setMem16(vm, address, new_value);
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Xor:
+        mem_value ^= value;
         break;
-    }
-    case Fy_BinaryOperator_Cmp: {
-        uint16_t new_value = Fy_VM_getMem16(vm, address);
-        new_value -= value;
-        Fy_VM_setResult16InFlags(vm, new_value);
+    case Fy_BinaryOperator_Cmp:
+        // Just for the flags
+        mem_value = Fy_VM_sub16(vm, mem_value, value);
+        set_in_mem = false;
         break;
-    }
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
         return false;
     }
+
+    // Set result in flags unless explicitly not allowed
+    if (set_in_flags)
+        Fy_VM_setResult16InFlags(vm, mem_value);
+    // Set result in memory unless explicitly not allowed
+    if (set_in_mem)
+        Fy_VM_setMem16(vm, address, mem_value);
     return true;
 }
 
 bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint8_t value) {
+    uint8_t mem_value;
+    bool set_in_flags = true;
+    bool set_in_mem = true;
+
+    mem_value = Fy_VM_getMem8(vm, address);
+
     switch (operator) {
     case Fy_BinaryOperator_Mov:
-        Fy_VM_setMem8(vm, address, value);
+        mem_value = value;
+        set_in_flags = false;
         break;
-    case Fy_BinaryOperator_Add: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value += value;
-        Fy_VM_setMem8(vm, address, new_value);
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Add:
+        mem_value = Fy_VM_add8(vm, mem_value, value);
         break;
-    }
-    case Fy_BinaryOperator_Sub: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value -= value;
-        Fy_VM_setMem8(vm, address, new_value);
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Sub:
+        mem_value = Fy_VM_sub8(vm, mem_value, value);
         break;
-    }
-    case Fy_BinaryOperator_And: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value &= value;
-        Fy_VM_setMem8(vm, address, new_value);
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_And:
+        mem_value &= value;
         break;
-    }
-    case Fy_BinaryOperator_Or: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value |= value;
-        Fy_VM_setMem8(vm, address, new_value);
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Or:
+        mem_value |= value;
         break;
-    }
-    case Fy_BinaryOperator_Xor: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value ^= value;
-        Fy_VM_setMem8(vm, address, new_value);
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Xor:
+        mem_value ^= value;
         break;
-    }
-    case Fy_BinaryOperator_Cmp: {
-        uint8_t new_value = Fy_VM_getMem8(vm, address);
-        new_value -= value;
-        Fy_VM_setResult8InFlags(vm, new_value);
+    case Fy_BinaryOperator_Cmp:
+        mem_value = Fy_VM_sub8(vm, mem_value, value);
+        set_in_mem = false;
         break;
-    }
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
         return false;
     }
+
+    // Set result in flags unless explicitly not allowed
+    if (set_in_flags)
+        Fy_VM_setResult8InFlags(vm, mem_value);
+    // Set result in memory unless explicitly not allowed
+    if (set_in_mem)
+        Fy_VM_setMem8(vm, address, mem_value);
     return true;
 }
 
@@ -593,7 +552,7 @@ int Fy_VM_runAll(Fy_VM *vm) {
         return 0;
 }
 
-void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
+static void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
     if (res == 0)
         vm->flags |= FY_FLAGS_ZERO; // Enable
     else
@@ -605,7 +564,7 @@ void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res) {
         vm->flags &= ~FY_FLAGS_SIGN; // Disable
 }
 
-void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res) {
+static void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res) {
     if (res == 0)
         vm->flags |= FY_FLAGS_ZERO; // Enable
     else
@@ -615,6 +574,54 @@ void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res) {
         vm->flags |= FY_FLAGS_SIGN; // Enable
     else
         vm->flags &= ~FY_FLAGS_SIGN; // Disable
+}
+
+static void Fy_VM_setOverflowAndCarry16(Fy_VM *vm, int32_t value) {
+    uint32_t value_unsigned = *(uint32_t*)&value;
+
+    if (value >= (1 << 15) || value <= ~(1 << 15))
+        vm->flags |= FY_FLAGS_OVERFLOW;
+    else
+        vm->flags &= ~FY_FLAGS_OVERFLOW;
+
+    if (value_unsigned >= 1 << 16)
+        vm->flags |= FY_FLAGS_CARRY;
+    else
+        vm->flags &= ~FY_FLAGS_CARRY;
+}
+
+static void Fy_VM_setOverflowAndCarry8(Fy_VM *vm, int32_t value) {
+    uint32_t value_unsigned = *(uint32_t*)&value;
+
+    if (value >= (1 << 7) || value <= ~(1 << 7))
+        vm->flags |= FY_FLAGS_OVERFLOW;
+    else
+        vm->flags &= ~FY_FLAGS_OVERFLOW;
+
+    if (value_unsigned >= 1 << 8)
+        vm->flags |= FY_FLAGS_CARRY;
+    else
+        vm->flags &= ~FY_FLAGS_CARRY;
+}
+
+static uint16_t Fy_VM_add16(Fy_VM *vm, uint16_t lhs, uint16_t rhs) {
+    Fy_VM_setOverflowAndCarry16(vm, (int32_t)lhs + (int32_t)rhs);
+    return lhs + rhs;
+}
+
+static uint16_t Fy_VM_sub16(Fy_VM *vm, uint16_t lhs, uint16_t rhs) {
+    Fy_VM_setOverflowAndCarry16(vm, (int32_t)lhs - (int32_t)rhs);
+    return lhs - rhs;
+}
+
+static uint8_t Fy_VM_add8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
+    Fy_VM_setOverflowAndCarry8(vm, (int32_t)lhs + (int32_t)rhs);
+    return lhs + rhs;
+}
+
+static uint8_t Fy_VM_sub8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
+    Fy_VM_setOverflowAndCarry8(vm, (int32_t)lhs - (int32_t)rhs);
+    return lhs - rhs;
 }
 
 /* Set the ip register to the given address relative to the code's start point in memory */

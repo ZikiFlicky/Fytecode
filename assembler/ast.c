@@ -245,6 +245,8 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
         break;
     case Fy_ASTType_Variable: {
         Fy_BucketNode *entry = Fy_Symbolmap_getEntry(&parser->symmap, ast->as_variable);
+        if (!entry)
+            Fy_Parser_error(parser, Fy_ParserError_SymbolNotFound, &ast->state, "%s", ast->as_variable);
         if (entry->type != Fy_MapEntryType_Variable)
             Fy_Parser_error(parser, Fy_ParserError_SymbolNotVariable, &ast->state, "%s", ast->as_variable);
         out->has_variable = true;

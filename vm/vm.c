@@ -3,10 +3,10 @@
 /* Declare functions */
 static void Fy_VM_setResult16InFlags(Fy_VM *vm, int16_t res);
 static void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res);
-static int16_t Fy_VM_add16(Fy_VM *vm, int16_t lhs, int16_t rhs);
-static int16_t Fy_VM_sub16(Fy_VM *vm, int16_t lhs, int16_t rhs);
-static int8_t Fy_VM_add8(Fy_VM *vm, int8_t lhs, int8_t rhs);
-static int8_t Fy_VM_sub8(Fy_VM *vm, int8_t lhs, int8_t rhs);
+static uint16_t Fy_VM_add16(Fy_VM *vm, uint16_t lhs, uint16_t rhs);
+static uint16_t Fy_VM_sub16(Fy_VM *vm, uint16_t lhs, uint16_t rhs);
+static uint8_t Fy_VM_add8(Fy_VM *vm, uint8_t lhs, uint8_t rhs);
+static uint8_t Fy_VM_sub8(Fy_VM *vm, uint8_t lhs, uint8_t rhs);
 
 /*
  * Reads all of the binary file into `out`.
@@ -597,36 +597,46 @@ static void Fy_VM_setResult8InFlags(Fy_VM *vm, int8_t res) {
         vm->flags &= ~FY_FLAGS_SIGN; // Disable
 }
 
-static void Fy_VM_setNumberFailFlags(Fy_VM *vm, int32_t no_error, int32_t maybe_error) {
+static void Fy_VM_setOverflowFlag(Fy_VM *vm, int32_t no_error, int32_t maybe_error) {
     if (no_error != maybe_error)
         vm->flags |= FY_FLAGS_OVERFLOW;
     else
         vm->flags &= ~FY_FLAGS_OVERFLOW;
+}
 
-    if (*(uint32_t*)&no_error != *(uint32_t*)&maybe_error)
+static void Fy_VM_setCarryFlag(Fy_VM *vm, uint32_t no_error, uint32_t maybe_error) {
+    if (no_error != maybe_error)
         vm->flags |= FY_FLAGS_CARRY;
     else
         vm->flags &= ~FY_FLAGS_CARRY;
 }
 
-static int16_t Fy_VM_add16(Fy_VM *vm, int16_t lhs, int16_t rhs) {
-    Fy_VM_setNumberFailFlags(vm, (int32_t)lhs + (int32_t)rhs, (int32_t)(lhs + rhs));
-    return lhs + rhs;
+static uint16_t Fy_VM_add16(Fy_VM *vm, uint16_t lhs, uint16_t rhs) {
+    uint16_t res = lhs + rhs;
+    Fy_VM_setCarryFlag(vm, (uint32_t)lhs + (uint32_t)rhs, (uint32_t)res);
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs + *(int16_t*)&rhs), (int32_t)(*(int16_t*)&lhs + *(int16_t*)&rhs));
+    return res;
 }
 
-static int16_t Fy_VM_sub16(Fy_VM *vm, int16_t lhs, int16_t rhs) {
-    Fy_VM_setNumberFailFlags(vm, (int32_t)lhs - (int32_t)rhs, (int32_t)(lhs - rhs));
-    return lhs - rhs;
+static uint16_t Fy_VM_sub16(Fy_VM *vm, uint16_t lhs, uint16_t rhs) {
+    uint16_t res = lhs - rhs;
+    Fy_VM_setCarryFlag(vm, (uint32_t)lhs - (uint32_t)rhs, (uint32_t)res);
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs - *(int16_t*)&rhs), (int32_t)(*(int16_t*)&lhs - *(int16_t*)&rhs));
+    return res;
 }
 
-static int8_t Fy_VM_add8(Fy_VM *vm, int8_t lhs, int8_t rhs) {
-    Fy_VM_setNumberFailFlags(vm, (int32_t)lhs + (int32_t)rhs, (int32_t)(lhs + rhs));
-    return lhs + rhs;
+static uint8_t Fy_VM_add8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
+    uint8_t res = lhs + rhs;
+    Fy_VM_setCarryFlag(vm, (uint32_t)lhs + (uint32_t)rhs, (uint32_t)res);
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs + *(int16_t*)&rhs), (int32_t)(*(int8_t*)&lhs + *(int8_t*)&rhs));
+    return res;
 }
 
-static int8_t Fy_VM_sub8(Fy_VM *vm, int8_t lhs, int8_t rhs) {
-    Fy_VM_setNumberFailFlags(vm, (int32_t)lhs - (int32_t)rhs, (int32_t)(lhs - rhs));
-    return lhs - rhs;
+static uint8_t Fy_VM_sub8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
+    uint8_t res = lhs - rhs;
+    Fy_VM_setCarryFlag(vm, (uint32_t)lhs - (uint32_t)rhs, (uint32_t)res);
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs - *(int16_t*)&rhs), (int32_t)(*(int8_t*)&lhs - *(int8_t*)&rhs));
+    return res;
 }
 
 /* Set the ip register to the given address relative to the code's start point in memory */

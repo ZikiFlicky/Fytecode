@@ -463,7 +463,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         if (!Fy_VM_getReg8(vm, reg_id, &value))
             return;
 
-        Fy_VM_runOperatorOnMem16(vm, operator, write_address, value);
+        Fy_VM_runOperatorOnMem8(vm, operator, write_address, value);
         instruction_size += 1 + memory_param_size;
         break;
     }

@@ -102,6 +102,8 @@ enum Fy_BinaryOperator {
     Fy_BinaryOperator_And,
     Fy_BinaryOperator_Or,
     Fy_BinaryOperator_Xor,
+    Fy_BinaryOperator_Shl,
+    Fy_BinaryOperator_Shr,
     Fy_BinaryOperator_Cmp
 };
 

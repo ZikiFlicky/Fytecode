@@ -287,6 +287,20 @@ static const Fy_ParserParseRule Fy_parseRuleXor = {
         .operator_id = Fy_BinaryOperator_Xor
     }
 };
+static const Fy_ParserParseRule Fy_parseRuleShl = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Shl,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Shl
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleShr = {
+    .type = Fy_ParserParseRuleType_BinaryOperator,
+    .start_token = Fy_TokenType_Shr,
+    .as_operator = {
+        .operator_id = Fy_BinaryOperator_Shr
+    }
+};
 static const Fy_ParserParseRule Fy_parseRuleCmp = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Cmp,
@@ -304,6 +318,8 @@ const Fy_ParserParseRule* const Fy_parserRules[] = {
     &Fy_parseRuleAnd,
     &Fy_parseRuleOr,
     &Fy_parseRuleXor,
+    &Fy_parseRuleShl,
+    &Fy_parseRuleShr,
     &Fy_parseRuleCmp,
     &Fy_parseRuleDebug,
     &Fy_parseRuleDebugStack,

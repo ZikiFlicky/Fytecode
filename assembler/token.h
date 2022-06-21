@@ -20,6 +20,8 @@ typedef enum Fy_TokenType {
     Fy_TokenType_And,
     Fy_TokenType_Or,
     Fy_TokenType_Xor,
+    Fy_TokenType_Shl,
+    Fy_TokenType_Shr,
     Fy_TokenType_Cmp,
     Fy_TokenType_Debug,
     Fy_TokenType_DebugStack,

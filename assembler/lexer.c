@@ -67,6 +67,8 @@ const Fy_KeywordTokenDef Fy_keywordTokens[] = {
     { "and", Fy_TokenType_And },
     { "or", Fy_TokenType_Or },
     { "xor", Fy_TokenType_Xor },
+    { "shl", Fy_TokenType_Shl },
+    { "shr", Fy_TokenType_Shr },
     { "cmp", Fy_TokenType_Cmp },
     { "push", Fy_TokenType_Push },
     { "pop", Fy_TokenType_Pop },

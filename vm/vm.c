@@ -362,6 +362,12 @@ bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg
     case Fy_BinaryOperator_Xor:
         reg_value ^= value;
         break;
+    case Fy_BinaryOperator_Shl:
+        reg_value <<= value;
+        break;
+    case Fy_BinaryOperator_Shr:
+        reg_value >>= value;
+        break;
     case Fy_BinaryOperator_Cmp:
         reg_value = Fy_VM_sub16(vm, reg_value, value);
         set_in_reg = false;
@@ -409,6 +415,12 @@ bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_
         break;
     case Fy_BinaryOperator_Xor:
         reg_value ^= value;
+        break;
+    case Fy_BinaryOperator_Shl:
+        reg_value <<= value;
+        break;
+    case Fy_BinaryOperator_Shr:
+        reg_value >>= value;
         break;
     case Fy_BinaryOperator_Cmp:
         // Just for the flags
@@ -458,6 +470,12 @@ bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t ad
     case Fy_BinaryOperator_Xor:
         mem_value ^= value;
         break;
+    case Fy_BinaryOperator_Shl:
+        mem_value <<= value;
+        break;
+    case Fy_BinaryOperator_Shr:
+        mem_value >>= value;
+        break;
     case Fy_BinaryOperator_Cmp:
         // Just for the flags
         mem_value = Fy_VM_sub16(vm, mem_value, value);
@@ -503,6 +521,12 @@ bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t add
         break;
     case Fy_BinaryOperator_Xor:
         mem_value ^= value;
+        break;
+    case Fy_BinaryOperator_Shl:
+        mem_value <<= value;
+        break;
+    case Fy_BinaryOperator_Shr:
+        mem_value >>= value;
         break;
     case Fy_BinaryOperator_Cmp:
         mem_value = Fy_VM_sub8(vm, mem_value, value);

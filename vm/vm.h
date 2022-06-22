@@ -59,6 +59,11 @@ struct Fy_VM {
     uint8_t flags;
     /* Start time */
     Fy_Time start_time;
+    /* Keyboard related stuff */
+    struct {
+        bool has_key;
+        SDL_Scancode key_scancode;
+    } keyboard;
 
     /* Graphics-related */
     SDL_Window *window;

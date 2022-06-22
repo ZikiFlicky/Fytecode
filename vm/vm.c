@@ -566,9 +566,28 @@ static void Fy_VM_runInstruction(Fy_VM *vm) {
     }
 }
 
+static void Fy_VM_handleEvents(Fy_VM *vm) {
+    // If we have a window check window events
+    if (vm->window) {
+        SDL_Event event;
+        // Loop all SDL events
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_KEYDOWN:
+                vm->keyboard.has_key = true;
+                vm->keyboard.key_scancode = event.key.keysym.scancode;
+                break;
+            }
+        }
+    }
+}
+
 /* Returns exit code */
 int Fy_VM_runAll(Fy_VM *vm) {
     while (vm->running) {
+        // Handle other events
+        Fy_VM_handleEvents(vm);
+        // Run the awaiting instructions
         Fy_VM_runInstruction(vm);
     }
     if (vm->error)

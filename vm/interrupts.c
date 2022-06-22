@@ -7,6 +7,7 @@ static void Fy_interruptOpenWindow_run(Fy_VM *vm);
 static void Fy_interruptSetPixel_run(Fy_VM *vm);
 static void Fy_interruptUpdate_run(Fy_VM *vm);
 static void Fy_interruptGetTime_run(Fy_VM *vm);
+static void Fy_interruptGetKeyboardInput_run(Fy_VM *vm);
 
 Fy_InterruptRunFunc Fy_interruptFuncs[] = {
     Fy_interruptPutNumber_run,
@@ -15,7 +16,8 @@ Fy_InterruptRunFunc Fy_interruptFuncs[] = {
     Fy_interruptOpenWindow_run,
     Fy_interruptSetPixel_run,
     Fy_interruptUpdate_run,
-    Fy_interruptGetTime_run
+    Fy_interruptGetTime_run,
+    Fy_interruptGetKeyboardInput_run,
 };
 
 
@@ -107,6 +109,14 @@ static void Fy_interruptGetTime_run(Fy_VM *vm) {
 
     Fy_VM_setReg16(vm, Fy_Reg16_Ax, diff.seconds);
     Fy_VM_setReg16(vm, Fy_Reg16_Bx, diff.milliseconds);
+}
+
+static void Fy_interruptGetKeyboardInput_run(Fy_VM *vm) {
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, vm->keyboard.has_key ? 1 : 0);
+    if (vm->keyboard.has_key) {
+        Fy_VM_setReg16(vm, Fy_Reg16_Bx, vm->keyboard.key_scancode);
+        vm->keyboard.has_key = false;
+    }
 }
 
 static void Fy_interruptUpdate_run(Fy_VM *vm) {

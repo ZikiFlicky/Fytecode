@@ -44,6 +44,12 @@ int main(int argc, char **argv) {
     bool add_shebang = false;
     int i = 1;
 
+    // TODO: Allow not setting signal handlers as a command line parameter
+    if (!Fy_SetSignalHandlers()) {
+        fprintf(stderr, "Unable to set signal handlers\n");
+        return 1;
+    }
+
     // Load constant opcodes for instructions
     Fy_loadInstructionOpcodes();
 

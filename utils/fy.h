@@ -18,6 +18,8 @@
 #include "../vm/registers.h"
 #include "../vm/interrupts.h"
 
+#include "exitsignal.h"
+
 #define _POSIX_C_SOURCE 199309L
 #define __USE_POSIX199309
 #include <unistd.h>
@@ -35,6 +37,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#include <signal.h>
 
 #include <SDL2/SDL.h>
 

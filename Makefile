@@ -9,7 +9,7 @@ NAME=fy
 RM=rm -f
 RMDIR=rm -rf
 
-OBJECTS=token.o lexer.o ast.o parser.o generator.o main.o instruction.o symbolmap.o vm.o interrupts.o timecontrol.o
+OBJECTS=token.o lexer.o ast.o parser.o generator.o main.o instruction.o symbolmap.o vm.o interrupts.o timecontrol.o exitsignal.o
 
 .PHONY: clean all debug
 
@@ -32,6 +32,9 @@ $(BUILDDIR)/$(NAME): $(OBJECTS)
 	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
 
 %.o: vm/%.c $(BUILDDIR)
+	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
+
+%.o: utils/%.c $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
 
 clean:

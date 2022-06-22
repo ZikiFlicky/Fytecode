@@ -600,6 +600,10 @@ static void Fy_VM_handleEvents(Fy_VM *vm) {
             }
         }
     }
+    if (Fy_hadExitSignal) {
+        vm->running = false;
+        vm->error = true;
+    }
 }
 
 /* Returns exit code */

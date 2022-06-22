@@ -64,6 +64,8 @@ struct Fy_VM {
         bool has_key;
         SDL_Scancode key_scancode;
     } keyboard;
+    /* Random related stuff */
+    uint16_t random_seed;
 
     /* Graphics-related */
     SDL_Window *window;
@@ -75,6 +77,7 @@ void Fy_BytecodeFileStream_Destruct(Fy_BytecodeFileStream *bc);
 
 void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out);
 void Fy_VM_Destruct(Fy_VM *vm);
+uint16_t Fy_VM_generateRandom(Fy_VM *vm);
 uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address);
 uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address);
 void Fy_VM_setMem8(Fy_VM *vm, uint16_t address, uint8_t value);

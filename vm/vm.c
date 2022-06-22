@@ -170,6 +170,13 @@ void Fy_VM_Destruct(Fy_VM *vm) {
     free(vm->mem_space_bottom);
 }
 
+uint16_t Fy_VM_generateRandom(Fy_VM *vm) {
+    uint16_t n = vm->random_seed;
+    srand(n);
+    vm->random_seed = rand();
+    return n;
+}
+
 void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
     (void)vm;
     printf("RuntimeError: %s", Fy_RuntimeError_toString(err));

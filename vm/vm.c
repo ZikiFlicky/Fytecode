@@ -628,14 +628,14 @@ static uint16_t Fy_VM_sub16(Fy_VM *vm, uint16_t lhs, uint16_t rhs) {
 static uint8_t Fy_VM_add8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
     uint8_t res = lhs + rhs;
     Fy_VM_setCarryFlag(vm, (uint32_t)lhs + (uint32_t)rhs, (uint32_t)res);
-    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs + *(int16_t*)&rhs), (int32_t)(*(int8_t*)&lhs + *(int8_t*)&rhs));
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int8_t*)&lhs + *(int8_t*)&rhs), (int32_t)(*(int8_t*)&lhs + *(int8_t*)&rhs));
     return res;
 }
 
 static uint8_t Fy_VM_sub8(Fy_VM *vm, uint8_t lhs, uint8_t rhs) {
     uint8_t res = lhs - rhs;
     Fy_VM_setCarryFlag(vm, (uint32_t)lhs - (uint32_t)rhs, (uint32_t)res);
-    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int16_t*)&lhs - *(int16_t*)&rhs), (int32_t)(*(int8_t*)&lhs - *(int8_t*)&rhs));
+    Fy_VM_setOverflowFlag(vm, (int32_t)(*(int8_t*)&lhs - *(int8_t*)&rhs), (int32_t)(*(int8_t*)&lhs - *(int8_t*)&rhs));
     return res;
 }
 

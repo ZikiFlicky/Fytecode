@@ -443,7 +443,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         break;
     }
     case Fy_BinaryOperatorArgsType_Memory8Const: {
-        uint8_t value = Fy_VM_getMem16(vm, address + 1);
+        uint8_t value = Fy_VM_getMem8(vm, address + 1);
         uint16_t write_address;
         uint16_t memory_param_size;
 

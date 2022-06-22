@@ -21,8 +21,7 @@ proc fib
     push cx
     push dx
 
-    mov ax [n]
-    cmp ax 0
+    cmp [word n] 0
     jg calculate
     mov ax [a]
     jmp return

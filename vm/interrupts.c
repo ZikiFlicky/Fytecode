@@ -86,6 +86,7 @@ static void Fy_interruptSetPixel_run(Fy_VM *vm) {
     uint8_t y;
     uint8_t color_id;
     SDL_Color color;
+    int screen_width, screen_height;
     uint8_t *base;
 
     Fy_VM_getReg8(vm, Fy_Reg8_Ah, &x);
@@ -94,6 +95,13 @@ static void Fy_interruptSetPixel_run(Fy_VM *vm) {
 
     if (color_id > sizeof(Fy_screenPalette) / sizeof(SDL_Color)) {
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InterruptError, "color '%d' invalid", color_id);
+        return;
+    }
+
+    SDL_GetWindowSize(vm->window, &screen_width, &screen_height);
+
+    if (x >= (uint8_t)screen_width || y >= (uint8_t)screen_height) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_PixelNotInScreen, "(%d, %d)", x, y);
         return;
     }
 

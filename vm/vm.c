@@ -584,6 +584,19 @@ static void Fy_VM_handleEvents(Fy_VM *vm) {
                 vm->keyboard.has_key = true;
                 vm->keyboard.key_scancode = event.key.keysym.scancode;
                 break;
+            case SDL_WINDOWEVENT:
+                switch (event.window.event) {
+                case SDL_WINDOWEVENT_CLOSE:
+                    // If we close the window we should exit the program
+                    vm->running = false;
+                    vm->error = true;
+                    SDL_FreeSurface(vm->surface);
+                    vm->surface = NULL;
+                    SDL_DestroyWindow(vm->window);
+                    vm->window = NULL;
+                    break;
+                }
+                break;
             }
         }
     }

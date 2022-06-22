@@ -162,6 +162,8 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
     out->flags = 0;
     out->window = NULL;
     out->surface = NULL;
+
+    Fy_Time_Init(&out->start_time);
 }
 
 void Fy_VM_Destruct(Fy_VM *vm) {

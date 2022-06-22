@@ -6,6 +6,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "timecontrol.h"
+
 #define FY_FLAGS_ZERO (1 << 0)
 #define FY_FLAGS_SIGN (1 << 1)
 #define FY_FLAGS_OVERFLOW (1 << 2)
@@ -55,6 +57,8 @@ struct Fy_VM {
     /* Is there an error? combined with `running` */
     bool error;
     uint8_t flags;
+    /* Start time */
+    Fy_Time start_time;
 
     /* Graphics-related */
     SDL_Window *window;

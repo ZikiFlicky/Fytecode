@@ -6,6 +6,7 @@ static void Fy_interruptPutString_run(Fy_VM *vm);
 static void Fy_interruptOpenWindow_run(Fy_VM *vm);
 static void Fy_interruptSetPixel_run(Fy_VM *vm);
 static void Fy_interruptUpdate_run(Fy_VM *vm);
+static void Fy_interruptGetTime_run(Fy_VM *vm);
 
 Fy_InterruptRunFunc Fy_interruptFuncs[] = {
     Fy_interruptPutNumber_run,
@@ -13,7 +14,8 @@ Fy_InterruptRunFunc Fy_interruptFuncs[] = {
     Fy_interruptPutString_run,
     Fy_interruptOpenWindow_run,
     Fy_interruptSetPixel_run,
-    Fy_interruptUpdate_run
+    Fy_interruptUpdate_run,
+    Fy_interruptGetTime_run
 };
 
 
@@ -97,6 +99,14 @@ static void Fy_interruptSetPixel_run(Fy_VM *vm) {
     base[1] = color.g;
     base[2] = color.b;
     base[3] = color.a;
+}
+
+static void Fy_interruptGetTime_run(Fy_VM *vm) {
+    Fy_Time diff;
+    Fy_Time_getTimeSince(&vm->start_time, &diff);
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, diff.seconds);
+    Fy_VM_setReg16(vm, Fy_Reg16_Bx, diff.milliseconds);
 }
 
 static void Fy_interruptUpdate_run(Fy_VM *vm) {

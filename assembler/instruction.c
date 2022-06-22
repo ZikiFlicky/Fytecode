@@ -38,7 +38,6 @@ static void Fy_instructionTypeDebugStack_run(Fy_VM *vm, uint16_t address) {
     } else {
         printf("NO STACK INFO\n");
     }
-
 }
 
 static void Fy_instructionTypeEndProgram_run(Fy_VM *vm, uint16_t address) {

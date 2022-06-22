@@ -139,8 +139,6 @@ struct Fy_ParserParseRule {
     };
 };
 
-extern const Fy_ParserParseRule* const Fy_parserRules[];
-
 void Fy_Parser_Init(Fy_Lexer *lexer, Fy_Parser *out);
 void Fy_Parser_Destruct(Fy_Parser *parser);
 void Fy_Parser_dumpState(Fy_Parser *parser, Fy_ParserState *out_state);

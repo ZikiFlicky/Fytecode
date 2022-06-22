@@ -27,7 +27,8 @@ enum Fy_RuntimeError {
     Fy_RuntimeError_ReadableReg8NotFound,
     Fy_RuntimeError_WritableReg8NotFound,
     Fy_RuntimeError_InterruptNotFound,
-    Fy_RuntimeError_InterruptError
+    Fy_RuntimeError_InterruptError,
+    Fy_RuntimeError_DivisionResultTooBig
 };
 
 struct Fy_VM {

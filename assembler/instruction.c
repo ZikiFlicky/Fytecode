@@ -256,6 +256,202 @@ static void Fy_instructionTypeInt_run(Fy_VM *vm, uint16_t address) {
     func(vm);
 }
 
+static void Fy_instructionTypeMulReg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeMulReg16_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs, rhs;
+    uint32_t result;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs);
+    if (!Fy_VM_getReg16(vm, reg_id, &rhs))
+        return;
+
+    result = (uint32_t)lhs * (uint32_t)rhs;
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, result & 0xffff);
+    Fy_VM_setReg16(vm, Fy_Reg16_Dx, result >> 16);
+}
+
+static void Fy_instructionTypeMulReg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeMulReg8_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint8_t lhs, rhs;
+    uint16_t result;
+
+    Fy_VM_getReg8(vm, Fy_Reg8_Al, &lhs);
+    if (!Fy_VM_getReg8(vm, reg_id, &rhs))
+        return;
+
+    result = (uint16_t)lhs * (uint16_t)rhs;
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, result);
+}
+
+static void Fy_instructionTypeImulReg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeImulReg16_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs, rhs;
+    int32_t result;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs);
+    if (!Fy_VM_getReg16(vm, reg_id, &rhs))
+        return;
+
+    result = (int32_t)*(int16_t*)&lhs * (int32_t)*(int16_t*)&rhs;
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, result & 0xffff);
+    Fy_VM_setReg16(vm, Fy_Reg16_Dx, result >> 16);
+}
+
+static void Fy_instructionTypeImulReg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeImulReg8_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint8_t lhs, rhs;
+    int16_t result;
+
+    Fy_VM_getReg8(vm, Fy_Reg8_Al, &lhs);
+    if (!Fy_VM_getReg8(vm, reg_id, &rhs))
+        return;
+
+    result = (uint16_t)*(int8_t*)&lhs * (uint16_t)*(int8_t*)&rhs;
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, result);
+}
+
+static void Fy_instructionTypeDivReg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeDivReg16_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs_high, lhs_low, rhs;
+    uint32_t lhs;
+    uint32_t result_div;
+    uint16_t result_mod;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs_low);
+    Fy_VM_getReg16(vm, Fy_Reg16_Dx, &lhs_high);
+    if (!Fy_VM_getReg16(vm, reg_id, &rhs))
+        return;
+
+    lhs = ((uint32_t)lhs_high << 16) + (uint32_t)lhs_low;
+
+    result_div = lhs / (uint32_t)rhs;
+    result_mod = (uint16_t)(lhs % (uint32_t)rhs); // Will always be in range
+
+    if (result_div > 0xffff) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionResultTooBig, NULL);
+        return;
+    }
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, (uint16_t)result_div);
+    Fy_VM_setReg16(vm, Fy_Reg16_Dx, result_mod);
+}
+
+static void Fy_instructionTypeDivReg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeDivReg8_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs;
+    uint8_t rhs;
+    uint16_t result_div;
+    uint8_t result_mod;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs);
+    if (!Fy_VM_getReg8(vm, reg_id, &rhs))
+        return;
+
+    result_div = lhs / (uint16_t)rhs;
+    result_mod = (uint8_t)(lhs % (uint16_t)rhs); // Will always be in range
+
+    if (result_div > 0xff) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionResultTooBig, NULL);
+        return;
+    }
+
+    Fy_VM_setReg8(vm, Fy_Reg8_Al, (uint8_t)result_div);
+    Fy_VM_setReg8(vm, Fy_Reg8_Ah, result_mod);
+}
+
+static void Fy_instructionTypeIdivReg16_write(Fy_Generator *generator, Fy_Instruction_OpReg16 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeIdivReg16_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs_high, lhs_low, rhs_unsigned;
+    uint32_t lhs_unsigned;
+    int32_t lhs, rhs;
+    int32_t result_div;
+    int16_t result_mod;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs_low);
+    Fy_VM_getReg16(vm, Fy_Reg16_Dx, &lhs_high);
+    if (!Fy_VM_getReg16(vm, reg_id, &rhs_unsigned))
+        return;
+
+    lhs_unsigned = ((uint32_t)lhs_high << 16) + (uint32_t)lhs_low;
+    lhs = *(int32_t*)&lhs_unsigned;
+    rhs = (int32_t)*(int16_t*)&rhs_unsigned;
+
+    result_div = lhs / rhs;
+    result_mod = (int16_t)(lhs % rhs); // Will always be in range
+
+    if (result_div > 0x7fff || result_div < -0x8000) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionResultTooBig, NULL);
+        return;
+    }
+
+    Fy_VM_setReg16(vm, Fy_Reg16_Ax, (uint16_t)result_div);
+    Fy_VM_setReg16(vm, Fy_Reg16_Dx, result_mod);
+}
+
+static void Fy_instructionTypeIdivReg8_write(Fy_Generator *generator, Fy_Instruction_OpReg8 *instruction) {
+    Fy_Generator_addByte(generator, instruction->reg_id);
+}
+
+static void Fy_instructionTypeIdivReg8_run(Fy_VM *vm, uint16_t address) {
+    uint8_t reg_id = Fy_VM_getMem8(vm, address + 0);
+    uint16_t lhs_unsigned;
+    uint8_t rhs_unsigned;
+    int16_t lhs;
+    int16_t rhs;
+    int16_t result_div;
+    int8_t result_mod;
+
+    Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs_unsigned);
+    if (!Fy_VM_getReg8(vm, reg_id, &rhs_unsigned))
+        return;
+
+    lhs = *(int16_t*)&lhs_unsigned;
+    rhs = (int16_t)*(int8_t*)&lhs_unsigned;
+
+    result_div = lhs / rhs;
+    result_mod = (int8_t)(lhs % rhs); // Will always be in range
+
+    if (result_div > 0x7f || result_div < -0x80) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionResultTooBig, NULL);
+        return;
+    }
+
+    Fy_VM_setReg8(vm, Fy_Reg8_Al, (uint8_t)result_div);
+    Fy_VM_setReg8(vm, Fy_Reg8_Ah, result_mod);
+}
+
 static uint16_t Fy_instructionTypeBinaryOperator_getsize(Fy_Instruction_BinaryOperator *instruction) {
     uint16_t size = 1; // Because we have one info byte
 
@@ -615,6 +811,54 @@ Fy_InstructionType Fy_instructionTypeInt = {
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeInt_write,
     .run_func = Fy_instructionTypeInt_run
 };
+Fy_InstructionType Fy_instructionTypeMulReg16 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMulReg16_write,
+    .run_func = Fy_instructionTypeMulReg16_run
+};
+Fy_InstructionType Fy_instructionTypeMulReg8 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeMulReg8_write,
+    .run_func = Fy_instructionTypeMulReg8_run
+};
+Fy_InstructionType Fy_instructionTypeImulReg16 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeImulReg16_write,
+    .run_func = Fy_instructionTypeImulReg16_run
+};
+Fy_InstructionType Fy_instructionTypeImulReg8 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeImulReg8_write,
+    .run_func = Fy_instructionTypeImulReg8_run
+};
+Fy_InstructionType Fy_instructionTypeDivReg16 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeDivReg16_write,
+    .run_func = Fy_instructionTypeDivReg16_run
+};
+Fy_InstructionType Fy_instructionTypeDivReg8 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeDivReg8_write,
+    .run_func = Fy_instructionTypeDivReg8_run
+};
+Fy_InstructionType Fy_instructionTypeIdivReg16 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeIdivReg16_write,
+    .run_func = Fy_instructionTypeIdivReg16_run
+};
+Fy_InstructionType Fy_instructionTypeIdivReg8 = {
+    .variable_size = false,
+    .additional_size = 1,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeIdivReg8_write,
+    .run_func = Fy_instructionTypeIdivReg8_run
+};
 Fy_InstructionType Fy_instructionTypeBinaryOperator = {
     .variable_size = true,
     .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeBinaryOperator_getsize,
@@ -646,5 +890,13 @@ Fy_InstructionType* const Fy_instructionTypes[] = {
     &Fy_instructionTypeDebugStack,
     &Fy_instructionTypeLea,
     &Fy_instructionTypeInt,
+    &Fy_instructionTypeMulReg16,
+    &Fy_instructionTypeMulReg8,
+    &Fy_instructionTypeImulReg16,
+    &Fy_instructionTypeImulReg8,
+    &Fy_instructionTypeDivReg16,
+    &Fy_instructionTypeDivReg8,
+    &Fy_instructionTypeIdivReg16,
+    &Fy_instructionTypeIdivReg8,
     &Fy_instructionTypeBinaryOperator
 };

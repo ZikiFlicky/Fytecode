@@ -22,7 +22,6 @@ Fy_InterruptRunFunc Fy_interruptFuncs[] = {
     Fy_interruptGetRandom_run
 };
 
-
 SDL_Color Fy_screenPalette[] = {
     { 0xff, 0xff, 0xff, 0xff },
     { 0, 0, 0, 0xff },

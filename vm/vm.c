@@ -167,6 +167,11 @@ void Fy_VM_Init(Fy_BytecodeFileStream *bc, Fy_VM *out) {
 }
 
 void Fy_VM_Destruct(Fy_VM *vm) {
+    if (vm->window) {
+        SDL_FreeSurface(vm->surface);
+        SDL_DestroyWindow(vm->window);
+        SDL_Quit();
+    }
     free(vm->mem_space_bottom);
 }
 
@@ -194,18 +199,18 @@ void Fy_VM_runtimeError(Fy_VM *vm, Fy_RuntimeError err, char *additional, ...) {
 
 uint8_t Fy_VM_getMem8(Fy_VM *vm, uint16_t address) {
     // assert(address <= vm->mem_size - 1);
-    return vm->mem_space_bottom[address];
+    return ((uint8_t*)vm->mem_space_bottom)[address];
 }
 
 uint16_t Fy_VM_getMem16(Fy_VM *vm, uint16_t address) {
     // assert(address <= vm->mem_size - 2);
     // Little endian
-    return vm->mem_space_bottom[address] + (vm->mem_space_bottom[address + 1] << 8);
+    return ((uint16_t)vm->mem_space_bottom[address]) + ((uint16_t)vm->mem_space_bottom[address + 1] << 8);
 }
 
 void Fy_VM_setMem16(Fy_VM *vm, uint16_t address, uint16_t value) {
-    vm->mem_space_bottom[address] = value & 0xff;
-    vm->mem_space_bottom[address + 1] = value >> 8;
+    vm->mem_space_bottom[address] = (uint8_t)(value & 0xff);
+    vm->mem_space_bottom[address + 1] = (uint8_t)(value >> 8);
 }
 
 void Fy_VM_setMem8(Fy_VM *vm, uint16_t address, uint8_t value) {
@@ -590,10 +595,6 @@ static void Fy_VM_handleEvents(Fy_VM *vm) {
                     // If we close the window we should exit the program
                     vm->running = false;
                     vm->error = true;
-                    SDL_FreeSurface(vm->surface);
-                    vm->surface = NULL;
-                    SDL_DestroyWindow(vm->window);
-                    vm->window = NULL;
                     break;
                 }
                 break;

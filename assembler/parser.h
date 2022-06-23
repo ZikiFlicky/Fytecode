@@ -23,6 +23,7 @@ typedef enum Fy_BinaryOperator Fy_BinaryOperator;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef void (*Fy_InstructionProcessFunc)(Fy_Parser*, Fy_Instruction*);
 typedef void (*Fy_InstructionProcessLabelFunc)(Fy_Instruction*, Fy_Parser*);
+typedef void (*Fy_InstructionCustomDeleteFunc)(Fy_Instruction*);
 
 struct Fy_ParserState {
     char *stream;
@@ -129,6 +130,7 @@ struct Fy_ParserParseRule {
             /* Process instruction after full file parsing */
             Fy_InstructionProcessFunc process_func;
             Fy_InstructionProcessLabelFunc process_label_func;
+            Fy_InstructionCustomDeleteFunc delete_func;
         } as_custom;
         struct {
             Fy_BinaryOperator operator_id;

@@ -9,6 +9,17 @@ static Fy_BucketNode *Fy_BucketNode_New(char *name, Fy_MapEntryType type) {
 }
 
 static void Fy_BucketNode_Delete(Fy_BucketNode *node) {
+    switch (node->type) {
+    case Fy_MapEntryType_Label:
+    case Fy_MapEntryType_Variable:
+        break;
+    case Fy_MapEntryType_Macro:
+        free(node->macro.tokens);
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+
     free(node->name);
     free(node);
 }
@@ -60,6 +71,11 @@ static Fy_BucketNode *Fy_Symbolmap_addEntry(Fy_Symbolmap *map, char *name, Fy_Ma
                 // Macros can be redefined
                 if (type == Fy_MapEntryType_Macro) {
                     modify_node = base_node;
+                    // Remove previous token
+                    free(modify_node->name);
+                    free(modify_node->macro.tokens);
+                    // Set new token
+                    modify_node->name = name;
                     found = true;
                 } else {
                     return NULL;

@@ -28,6 +28,9 @@ static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *i
 /* Process-label-function (parsing step 3) declarations */
 static void Fy_ProcessLabelOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction);
 
+/* Custom instruction delete functions */
+static void Fy_DeleteLea(Fy_Instruction_OpReg16Mem *instruction);
+
 /* Function to parse anything found in text */
 static bool Fy_Parser_parseLine(Fy_Parser *parser);
 
@@ -45,7 +48,8 @@ static const Fy_ParserParseRule Fy_parseRuleNop = {
         .amount_params = 0,
         .func_no_params = Fy_ParseNop,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleDebug = {
@@ -55,7 +59,8 @@ static const Fy_ParserParseRule Fy_parseRuleDebug = {
         .amount_params = 0,
         .func_no_params = Fy_ParseDebug,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleDebugStack = {
@@ -65,7 +70,8 @@ static const Fy_ParserParseRule Fy_parseRuleDebugStack = {
         .amount_params = 0,
         .func_no_params = Fy_ParseDebugStack,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleEnd = {
@@ -75,7 +81,8 @@ static const Fy_ParserParseRule Fy_parseRuleEnd = {
         .amount_params = 0,
         .func_no_params = Fy_ParseEnd,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleJmp = {
@@ -177,7 +184,8 @@ static const Fy_ParserParseRule Fy_parseRulePushConst = {
         .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParsePushConst,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRulePushReg16 = {
@@ -188,7 +196,8 @@ static const Fy_ParserParseRule Fy_parseRulePushReg16 = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParsePushReg16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRulePop = {
@@ -199,7 +208,8 @@ static const Fy_ParserParseRule Fy_parseRulePop = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParsePop,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleCall = {
@@ -216,7 +226,8 @@ static const Fy_ParserParseRule Fy_parseRuleRet = {
         .amount_params = 0,
         .func_no_params = Fy_ParseRet,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleRetConst16 = {
@@ -227,7 +238,8 @@ static const Fy_ParserParseRule Fy_parseRuleRetConst16 = {
         .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParseRetConst16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleLea = {
@@ -239,7 +251,8 @@ static const Fy_ParserParseRule Fy_parseRuleLea = {
         .arg2_type = Fy_InstructionArgType_Memory16,
         .func_two_params = Fy_ParseLea,
         .process_func = (Fy_InstructionProcessFunc)Fy_ProcessOpReg16Mem,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = (Fy_InstructionCustomDeleteFunc)Fy_DeleteLea
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleInt = {
@@ -250,7 +263,8 @@ static const Fy_ParserParseRule Fy_parseRuleInt = {
         .arg1_type = Fy_InstructionArgType_Const16,
         .func_one_param = Fy_ParseInt,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleDivReg16 = {
@@ -261,7 +275,8 @@ static const Fy_ParserParseRule Fy_parseRuleDivReg16 = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParseDivReg16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleDivReg8 = {
@@ -272,7 +287,8 @@ static const Fy_ParserParseRule Fy_parseRuleDivReg8 = {
         .arg1_type = Fy_InstructionArgType_Reg8,
         .func_one_param = Fy_ParseDivReg8,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleIdivReg16 = {
@@ -283,7 +299,8 @@ static const Fy_ParserParseRule Fy_parseRuleIdivReg16 = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParseIdivReg16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleIdivReg8 = {
@@ -294,7 +311,8 @@ static const Fy_ParserParseRule Fy_parseRuleIdivReg8 = {
         .arg1_type = Fy_InstructionArgType_Reg8,
         .func_one_param = Fy_ParseIdivReg8,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleMulReg16 = {
@@ -305,7 +323,8 @@ static const Fy_ParserParseRule Fy_parseRuleMulReg16 = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParseMulReg16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleMulReg8 = {
@@ -316,7 +335,8 @@ static const Fy_ParserParseRule Fy_parseRuleMulReg8 = {
         .arg1_type = Fy_InstructionArgType_Reg8,
         .func_one_param = Fy_ParseMulReg8,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleImulReg16 = {
@@ -327,7 +347,8 @@ static const Fy_ParserParseRule Fy_parseRuleImulReg16 = {
         .arg1_type = Fy_InstructionArgType_Reg16,
         .func_one_param = Fy_ParseImulReg16,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleImulReg8 = {
@@ -338,7 +359,8 @@ static const Fy_ParserParseRule Fy_parseRuleImulReg8 = {
         .arg1_type = Fy_InstructionArgType_Reg8,
         .func_one_param = Fy_ParseImulReg8,
         .process_func = NULL,
-        .process_label_func = NULL
+        .process_label_func = NULL,
+        .delete_func = NULL
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleMov = {
@@ -554,7 +576,7 @@ void Fy_Parser_Destruct(Fy_Parser *parser) {
     if (parser->amount_allocated > 0) {
         for (size_t i = 0; i < parser->amount_used; ++i) {
             Fy_Instruction *instruction = parser->instructions[i];
-            free(instruction);
+            Fy_Instruction_Delete(instruction);
         }
         free(parser->instructions);
     }
@@ -834,19 +856,22 @@ static void Fy_ProcessOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruc
     if (node->type != Fy_MapEntryType_Label)
         Fy_Parser_error(parser, Fy_ParserError_SymbolNotCode, NULL, "%s", instruction->name);
     instruction->instruction_offset = node->code_label;
-    // We don't need this anymore
-    free(instruction->name);
 }
 
 static void Fy_ProcessOpReg16Mem(Fy_Parser *parser, Fy_Instruction_OpReg16Mem *instruction) {
     Fy_AST_eval(instruction->address_ast, parser, &instruction->value);
-    Fy_AST_Delete(instruction->address_ast);
 }
 
 /* Label processing functions */
 
 static void Fy_ProcessLabelOpLabel(Fy_Parser *parser, Fy_Instruction_OpLabel *instruction) {
     instruction->address = Fy_Parser_getCodeOffsetByInstructionIndex(parser, instruction->instruction_offset);
+}
+
+/* Custom delete functions */
+
+static void Fy_DeleteLea(Fy_Instruction_OpReg16Mem *instruction) {
+    Fy_AST_Delete(instruction->address_ast);
 }
 
 /* General parsing functions */

@@ -7,6 +7,56 @@ Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size) 
     return instruction;
 }
 
+void Fy_Instruction_Delete(Fy_Instruction *instruction) {
+    switch (instruction->parse_rule->type) {
+    case Fy_ParserParseRuleType_Custom: {
+        Fy_InstructionCustomDeleteFunc delete_func = instruction->parse_rule->as_custom.delete_func;
+        if (delete_func)
+            delete_func(instruction);
+        break;
+    }
+    case Fy_ParserParseRuleType_Jump: {
+        Fy_Instruction_OpLabel *jump_instruction = (Fy_Instruction_OpLabel*)instruction;
+        free(jump_instruction->name);
+        break;
+    }
+    case Fy_ParserParseRuleType_BinaryOperator: {
+        Fy_Instruction_BinaryOperator *binary_instruction = (Fy_Instruction_BinaryOperator*)instruction;
+        switch (binary_instruction->type) {
+        case Fy_BinaryOperatorArgsType_Reg16Const:
+        case Fy_BinaryOperatorArgsType_Reg16Reg16:
+        case Fy_BinaryOperatorArgsType_Reg8Const:
+        case Fy_BinaryOperatorArgsType_Reg8Reg8:
+            break;
+        case Fy_BinaryOperatorArgsType_Reg16Memory16:
+            Fy_AST_Delete(binary_instruction->as_reg16mem16.ast);
+            break;
+        case Fy_BinaryOperatorArgsType_Reg8Memory8:
+            Fy_AST_Delete(binary_instruction->as_reg8mem8.ast);
+            break;
+        case Fy_BinaryOperatorArgsType_Memory16Const:
+            Fy_AST_Delete(binary_instruction->as_mem16const.ast);
+            break;
+        case Fy_BinaryOperatorArgsType_Memory16Reg16:
+            Fy_AST_Delete(binary_instruction->as_mem16reg16.ast);
+            break;
+        case Fy_BinaryOperatorArgsType_Memory8Const:
+            Fy_AST_Delete(binary_instruction->as_mem8const.ast);
+            break;
+        case Fy_BinaryOperatorArgsType_Memory8Reg8:
+            Fy_AST_Delete(binary_instruction->as_mem8reg8.ast);
+            break;
+        default:
+            FY_UNREACHABLE();
+        }
+        break;
+    }
+    default:
+        FY_UNREACHABLE();
+    }
+    free(instruction);
+}
+
 /* Instruction type functions */
 static void Fy_instructionTypeDebug_run(Fy_VM *vm, uint16_t address) {
     (void)address;

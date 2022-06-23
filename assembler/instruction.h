@@ -250,5 +250,6 @@ extern Fy_InstructionType* const Fy_instructionTypes[32];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size);
+void Fy_Instruction_Delete(Fy_Instruction *instruction);
 
 #endif /* FY_INSTRUCTION_H */

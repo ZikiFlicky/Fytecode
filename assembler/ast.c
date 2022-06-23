@@ -9,6 +9,31 @@ Fy_AST *Fy_AST_New(Fy_ASTType type) {
     return ast;
 }
 
+void Fy_AST_Delete(Fy_AST *ast) {
+    switch (ast->type) {
+    case Fy_ASTType_Number:
+    case Fy_ASTType_Bx:
+    case Fy_ASTType_Bp:
+        break;
+    case Fy_ASTType_Variable:
+        free(ast->as_variable);
+        break;
+    case Fy_ASTType_Add:
+    case Fy_ASTType_Sub:
+    case Fy_ASTType_Mul:
+    case Fy_ASTType_Div:
+        Fy_AST_Delete(ast->lhs);
+        Fy_AST_Delete(ast->rhs);
+        break;
+    case Fy_ASTType_Neg:
+        Fy_AST_Delete(ast->as_neg);
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+    free(ast);
+}
+
 static Fy_AST *Fy_ASTParser_parseLiteralExpr(Fy_ASTParser *ast_parser) {
     Fy_Parser *parser;
     Fy_AST *expr = NULL;
@@ -371,31 +396,6 @@ void Fy_AST_eval(Fy_AST *ast, Fy_Parser *parser, Fy_InlineValue *out) {
     default:
         FY_UNREACHABLE();
     }
-}
-
-void Fy_AST_Delete(Fy_AST *ast) {
-    switch (ast->type) {
-    case Fy_ASTType_Number:
-    case Fy_ASTType_Bx:
-    case Fy_ASTType_Bp:
-        break;
-    case Fy_ASTType_Variable:
-        free(ast->as_variable);
-        break;
-    case Fy_ASTType_Add:
-    case Fy_ASTType_Sub:
-    case Fy_ASTType_Mul:
-    case Fy_ASTType_Div:
-        Fy_AST_Delete(ast->lhs);
-        Fy_AST_Delete(ast->rhs);
-        break;
-    case Fy_ASTType_Neg:
-        Fy_AST_Delete(ast->as_neg);
-        break;
-    default:
-        FY_UNREACHABLE();
-    }
-    free(ast);
 }
 
 static inline bool Fy_InlineValue_isFullyNumeric(Fy_InlineValue *inline_value) {

@@ -87,9 +87,7 @@ int main(int argc, char **argv) {
             else
                 shebang = NULL;
             Fy_Parser_generateToFile(&parser, argv[i + 2], shebang);
-
             Fy_Parser_Destruct(&parser);
-
             free(stream);
             return 0;
         } else if (strcmp(argv[i], "--run") == 0 || strcmp(argv[i], "-r") == 0) {

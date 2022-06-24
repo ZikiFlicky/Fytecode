@@ -15,6 +15,7 @@ typedef struct Fy_Parser Fy_Parser;
 typedef struct Fy_ParserParseRule Fy_ParserParseRule;
 typedef struct Fy_Instruction Fy_Instruction;
 typedef enum Fy_BinaryOperatorArgsType Fy_BinaryOperatorArgsType;
+typedef enum Fy_UnaryOperatorArgsType Fy_UnaryOperatorArgsType;
 typedef enum Fy_BinaryOperator Fy_BinaryOperator;
 typedef struct Fy_InstructionType Fy_InstructionType;
 typedef struct Fy_Instruction_OpLabel Fy_Instruction_OpLabel;
@@ -25,6 +26,7 @@ typedef struct Fy_Instruction_OpReg16 Fy_Instruction_OpReg16;
 typedef struct Fy_Instruction_OpMem Fy_Instruction_OpMem;
 typedef struct Fy_Instruction_OpReg16Mem Fy_Instruction_OpReg16Mem;
 typedef struct Fy_Instruction_BinaryOperator Fy_Instruction_BinaryOperator;
+typedef struct Fy_Instruction_UnaryOperator Fy_Instruction_UnaryOperator;
 typedef void (*Fy_InstructionWriteFunc)(Fy_Generator*, Fy_Instruction*);
 typedef uint16_t (*Fy_InstructionGetSizeFunc)(Fy_Instruction*);
 typedef void (*Fy_InstructionRunFunc)(Fy_VM*, uint16_t);
@@ -62,6 +64,13 @@ enum Fy_BinaryOperatorArgsType {
     Fy_BinaryOperatorArgsType_Memory16Reg16,
     Fy_BinaryOperatorArgsType_Memory8Const,
     Fy_BinaryOperatorArgsType_Memory8Reg8
+};
+
+enum Fy_UnaryOperatorArgsType {
+    Fy_UnaryOperatorArgsType_Reg16 = 1,
+    Fy_UnaryOperatorArgsType_Mem16,
+    Fy_UnaryOperatorArgsType_Reg8,
+    Fy_UnaryOperatorArgsType_Mem8
 };
 
 /* Inheriting instructions */
@@ -195,6 +204,24 @@ struct Fy_Instruction_BinaryOperator {
     };
 };
 
+struct Fy_Instruction_UnaryOperator {
+    FY_INSTRUCTION_BASE;
+    Fy_UnaryOperatorArgsType type;
+    Fy_UnaryOperator operator;
+    union {
+        uint8_t as_reg8;
+        uint8_t as_reg16;
+        struct {
+            Fy_AST *ast;
+            Fy_InlineValue address;
+        } as_mem8;
+        struct {
+            Fy_AST *ast;
+            Fy_InlineValue address;
+        } as_mem16;
+    };
+};
+
 /* Instruction types */
 extern Fy_InstructionType Fy_instructionTypeNop;
 extern Fy_InstructionType Fy_instructionTypeMovReg16Const;
@@ -245,8 +272,9 @@ extern Fy_InstructionType Fy_instructionTypeCmpReg8Reg8;
 extern Fy_InstructionType Fy_instructionTypeAddReg8Const;
 extern Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
 extern Fy_InstructionType Fy_instructionTypeBinaryOperator;
+extern Fy_InstructionType Fy_instructionTypeUnaryOperator;
 
-extern Fy_InstructionType* const Fy_instructionTypes[32];
+extern Fy_InstructionType* const Fy_instructionTypes[33];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size);

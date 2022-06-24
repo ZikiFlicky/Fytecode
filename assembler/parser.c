@@ -40,6 +40,11 @@ typedef struct Fy_BinaryOperatorRule {
     Fy_BinaryOperatorArgsType binary_instruction_type;
 } Fy_BinaryOperatorRule;
 
+typedef struct Fy_UnaryOperatorRule {
+    Fy_InstructionArgType arg_type;
+    Fy_UnaryOperatorArgsType unary_instruction_type;
+} Fy_UnaryOperatorRule;
+
 /* Define rules */
 static const Fy_ParserParseRule Fy_parseRuleNop = {
     .type = Fy_ParserParseRuleType_Custom,
@@ -366,64 +371,92 @@ static const Fy_ParserParseRule Fy_parseRuleImulReg8 = {
 static const Fy_ParserParseRule Fy_parseRuleMov = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Mov,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Mov
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleAdd = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Add,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Add
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleSub = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Sub,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Sub
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleAnd = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_And,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_And
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleOr = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Or,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Or
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleXor = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Xor,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Xor
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleShl = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Shl,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Shl
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleShr = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Shr,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Shr
     }
 };
 static const Fy_ParserParseRule Fy_parseRuleCmp = {
     .type = Fy_ParserParseRuleType_BinaryOperator,
     .start_token = Fy_TokenType_Cmp,
-    .as_operator = {
+    .as_binary = {
         .operator_id = Fy_BinaryOperator_Cmp
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleNeg = {
+    .type = Fy_ParserParseRuleType_UnaryOperator,
+    .start_token = Fy_TokenType_Neg,
+    .as_unary = {
+        .operator_id = Fy_UnaryOperator_Neg
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleInc = {
+    .type = Fy_ParserParseRuleType_UnaryOperator,
+    .start_token = Fy_TokenType_Inc,
+    .as_unary = {
+        .operator_id = Fy_UnaryOperator_Inc
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleDec = {
+    .type = Fy_ParserParseRuleType_UnaryOperator,
+    .start_token = Fy_TokenType_Dec,
+    .as_unary = {
+        .operator_id = Fy_UnaryOperator_Dec
+    }
+};
+static const Fy_ParserParseRule Fy_parseRuleNot = {
+    .type = Fy_ParserParseRuleType_UnaryOperator,
+    .start_token = Fy_TokenType_Not,
+    .as_unary = {
+        .operator_id = Fy_UnaryOperator_Not
     }
 };
 
@@ -470,11 +503,15 @@ static const Fy_ParserParseRule* const Fy_parserRules[] = {
     &Fy_parseRuleMulReg16,
     &Fy_parseRuleMulReg8,
     &Fy_parseRuleImulReg16,
-    &Fy_parseRuleImulReg8
+    &Fy_parseRuleImulReg8,
+    &Fy_parseRuleNeg,
+    &Fy_parseRuleInc,
+    &Fy_parseRuleDec,
+    &Fy_parseRuleNot
 };
 
 /* Binary expression instruction rules */
-static const Fy_BinaryOperatorRule binary_operator_rules[] = {
+static const Fy_BinaryOperatorRule Fy_binaryOperatorRules[] = {
     { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Const16, Fy_BinaryOperatorArgsType_Reg16Const },
     { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Reg16, Fy_BinaryOperatorArgsType_Reg16Reg16 },
     { Fy_InstructionArgType_Reg16, Fy_InstructionArgType_Memory16, Fy_BinaryOperatorArgsType_Reg16Memory16 },
@@ -485,6 +522,14 @@ static const Fy_BinaryOperatorRule binary_operator_rules[] = {
     { Fy_InstructionArgType_Memory16, Fy_InstructionArgType_Reg16, Fy_BinaryOperatorArgsType_Memory16Reg16 },
     { Fy_InstructionArgType_Memory8, Fy_InstructionArgType_Const8, Fy_BinaryOperatorArgsType_Memory8Const },
     { Fy_InstructionArgType_Memory8, Fy_InstructionArgType_Reg8, Fy_BinaryOperatorArgsType_Memory8Reg8 }
+};
+
+/* Unary expression instruction rules */
+static const Fy_UnaryOperatorRule Fy_unaryOperatorRules[] = {
+    { Fy_InstructionArgType_Reg16, Fy_UnaryOperatorArgsType_Reg16 },
+    { Fy_InstructionArgType_Memory16, Fy_UnaryOperatorArgsType_Mem16 },
+    { Fy_InstructionArgType_Reg8, Fy_UnaryOperatorArgsType_Reg8 },
+    { Fy_InstructionArgType_Memory8, Fy_UnaryOperatorArgsType_Mem8 },
 };
 
 /* Returns whether `type1` can be considered of type `type2` */
@@ -969,9 +1014,9 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, co
 
     // Decide how we handle the instruction arguments
 
-    for (size_t i = 0; i < sizeof(binary_operator_rules) / sizeof(Fy_BinaryOperatorRule); ++i) {
-        if (Fy_InstructionArgType_is(arg1->type, binary_operator_rules[i].arg1_type) && Fy_InstructionArgType_is(arg2->type, binary_operator_rules[i].arg2_type)) {
-            args_type = binary_operator_rules[i].binary_instruction_type;
+    for (size_t i = 0; i < sizeof(Fy_binaryOperatorRules) / sizeof(Fy_BinaryOperatorRule); ++i) {
+        if (Fy_InstructionArgType_is(arg1->type, Fy_binaryOperatorRules[i].arg1_type) && Fy_InstructionArgType_is(arg2->type, Fy_binaryOperatorRules[i].arg2_type)) {
+            args_type = Fy_binaryOperatorRules[i].binary_instruction_type;
             ++amount_matches;
         }
     }
@@ -987,7 +1032,7 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, co
     }
 
     instruction = FY_INSTRUCTION_NEW(Fy_Instruction_BinaryOperator, Fy_instructionTypeBinaryOperator);
-    instruction->operator = rule->as_operator.operator_id;
+    instruction->operator = rule->as_binary.operator_id;
     instruction->type = args_type;
     switch (args_type) {
     case Fy_BinaryOperatorArgsType_Reg16Const:
@@ -1029,6 +1074,60 @@ static Fy_Instruction *Fy_Parser_parseByBinaryOperatorRule(Fy_Parser *parser, co
     case Fy_BinaryOperatorArgsType_Memory8Reg8:
         instruction->as_mem8reg8.ast = arg1->as_memory;
         instruction->as_mem8reg8.reg_id = arg2->as_reg8;
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+
+    return (Fy_Instruction*)instruction;
+}
+
+
+static Fy_Instruction *Fy_Parser_parseByUnaryOperatorRule(Fy_Parser *parser, const Fy_ParserParseRule *rule, uint8_t amount_args,
+                                                            Fy_InstructionArg *arg1, Fy_InstructionArg *arg2, Fy_ParserState *start_state) {
+    Fy_Instruction_UnaryOperator *instruction;
+    Fy_UnaryOperatorArgsType args_type;
+    size_t amount_matches = 0;
+
+    (void)arg2;
+
+    if (amount_args != 1)
+        return NULL;
+
+    // Decide how we handle the instruction arguments
+
+    for (size_t i = 0; i < sizeof(Fy_unaryOperatorRules) / sizeof(Fy_UnaryOperatorRule); ++i) {
+        if (Fy_InstructionArgType_is(arg1->type, Fy_unaryOperatorRules[i].arg_type)) {
+            args_type = Fy_unaryOperatorRules[i].unary_instruction_type;
+            ++amount_matches;
+        }
+    }
+
+    switch (amount_matches) {
+    case 0:
+        return NULL;
+    case 1:
+        break;
+    default:
+        // Got more than 1 match
+        Fy_Parser_error(parser, Fy_ParserError_AmbiguousInstructionParameters, start_state, NULL);
+    }
+
+    instruction = FY_INSTRUCTION_NEW(Fy_Instruction_UnaryOperator, Fy_instructionTypeUnaryOperator);
+    instruction->operator = rule->as_unary.operator_id;
+    instruction->type = args_type;
+    switch (args_type) {
+    case Fy_UnaryOperatorArgsType_Reg16:
+        instruction->as_reg16 = arg1->as_reg16;
+        break;
+    case Fy_UnaryOperatorArgsType_Mem16:
+        instruction->as_mem16.ast = arg1->as_memory;
+        break;
+    case Fy_UnaryOperatorArgsType_Reg8:
+        instruction->as_reg8 = arg1->as_reg8;
+        break;
+    case Fy_UnaryOperatorArgsType_Mem8:
+        instruction->as_mem8.ast = arg1->as_memory;
         break;
     default:
         FY_UNREACHABLE();
@@ -1091,6 +1190,9 @@ static Fy_Instruction *Fy_Parser_parseInstruction(Fy_Parser *parser) {
                 break;
             case Fy_ParserParseRuleType_BinaryOperator:
                 new_instruction = Fy_Parser_parseByBinaryOperatorRule(parser, rule, amount_args, &arg1, &arg2, &start_backtrack);
+                break;
+            case Fy_ParserParseRuleType_UnaryOperator:
+                new_instruction = Fy_Parser_parseByUnaryOperatorRule(parser, rule, amount_args, &arg1, &arg2, &start_backtrack);
                 break;
             case Fy_ParserParseRuleType_Jump:
                 new_instruction = Fy_Parser_parseByJumpRule(parser, rule, amount_args, &arg1, &arg2);
@@ -1490,6 +1592,24 @@ static void Fy_Parser_processInstructions(Fy_Parser *parser) {
             }
             break;
         }
+        case Fy_ParserParseRuleType_UnaryOperator: {
+            Fy_Instruction_UnaryOperator *unary_instruction = (Fy_Instruction_UnaryOperator*)instruction;
+            // Evaluate memory AST in instructions that reference memory
+            switch (unary_instruction->type) {
+            case Fy_UnaryOperatorArgsType_Reg16:
+            case Fy_UnaryOperatorArgsType_Reg8:
+                break;
+            case Fy_UnaryOperatorArgsType_Mem16:
+                Fy_AST_eval(unary_instruction->as_mem16.ast, parser, &unary_instruction->as_mem16.address);
+                break;
+            case Fy_UnaryOperatorArgsType_Mem8:
+                Fy_AST_eval(unary_instruction->as_mem8.ast, parser, &unary_instruction->as_mem8.address);
+                break;
+            default:
+                FY_UNREACHABLE();
+            }
+            break;
+        }
         case Fy_ParserParseRuleType_Jump:
             Fy_ProcessOpLabel(parser, (Fy_Instruction_OpLabel*)instruction);
             break;
@@ -1542,6 +1662,7 @@ static void Fy_Parser_processLabels(Fy_Parser *parser) {
                 instruction->parse_rule->as_custom.process_label_func(instruction, parser);
             break;
         case Fy_ParserParseRuleType_BinaryOperator:
+        case Fy_ParserParseRuleType_UnaryOperator:
             break;
         case Fy_ParserParseRuleType_Jump:
             Fy_ProcessLabelOpLabel(parser, (Fy_Instruction_OpLabel*)instruction);

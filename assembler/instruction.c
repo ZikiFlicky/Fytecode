@@ -15,11 +15,6 @@ void Fy_Instruction_Delete(Fy_Instruction *instruction) {
             delete_func(instruction);
         break;
     }
-    case Fy_ParserParseRuleType_Jump: {
-        Fy_Instruction_OpLabel *jump_instruction = (Fy_Instruction_OpLabel*)instruction;
-        free(jump_instruction->name);
-        break;
-    }
     case Fy_ParserParseRuleType_BinaryOperator: {
         Fy_Instruction_BinaryOperator *binary_instruction = (Fy_Instruction_BinaryOperator*)instruction;
         switch (binary_instruction->type) {
@@ -49,6 +44,28 @@ void Fy_Instruction_Delete(Fy_Instruction *instruction) {
         default:
             FY_UNREACHABLE();
         }
+        break;
+    }
+    case Fy_ParserParseRuleType_UnaryOperator: {
+        Fy_Instruction_UnaryOperator *unary_instruction = (Fy_Instruction_UnaryOperator*)instruction;
+        switch (unary_instruction->type) {
+        case Fy_UnaryOperatorArgsType_Reg16:
+        case Fy_UnaryOperatorArgsType_Reg8:
+            break;
+        case Fy_UnaryOperatorArgsType_Mem16:
+            Fy_AST_Delete(unary_instruction->as_mem16.ast);
+            break;
+        case Fy_UnaryOperatorArgsType_Mem8:
+            Fy_AST_Delete(unary_instruction->as_mem8.ast);
+            break;
+        default:
+            FY_UNREACHABLE();
+        }
+        break;
+    }
+    case Fy_ParserParseRuleType_Jump: {
+        Fy_Instruction_OpLabel *jump_instruction = (Fy_Instruction_OpLabel*)instruction;
+        free(jump_instruction->name);
         break;
     }
     default:
@@ -601,7 +618,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
     case Fy_BinaryOperatorArgsType_Reg16Const: {
         uint8_t reg_id = Fy_VM_getMem8(vm, address + 1);
         uint16_t value = Fy_VM_getMem16(vm, address + 2);
-        Fy_VM_runOperatorOnReg16(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg16(vm, operator, reg_id, value);
         instruction_size += 1 + 2;
         break;
     }
@@ -613,7 +630,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         if (!Fy_VM_getReg16(vm, reg2_id, &value))
             return;
 
-        Fy_VM_runOperatorOnReg16(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg16(vm, operator, reg_id, value);
         instruction_size += 1 + 1;
         break;
     }
@@ -626,14 +643,14 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         memory_param_size = Fy_VM_readMemoryParam(vm, address + 2, &value_address);
         value = Fy_VM_getMem16(vm, value_address);
 
-        Fy_VM_runOperatorOnReg16(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg16(vm, operator, reg_id, value);
         instruction_size += 1 + memory_param_size;
         break;
     }
     case Fy_BinaryOperatorArgsType_Reg8Const: {
         uint8_t reg_id = Fy_VM_getMem8(vm, address + 1);
         uint8_t value = Fy_VM_getMem8(vm, address + 2);
-        Fy_VM_runOperatorOnReg8(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg8(vm, operator, reg_id, value);
         instruction_size += 1 + 1;
         break;
     }
@@ -645,7 +662,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         if (!Fy_VM_getReg8(vm, reg2_id, &value))
             return;
 
-        Fy_VM_runOperatorOnReg8(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg8(vm, operator, reg_id, value);
         instruction_size += 1 + 1;
         break;
     }
@@ -658,7 +675,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         memory_param_size = Fy_VM_readMemoryParam(vm, address + 2, &value_address);
         value = Fy_VM_getMem8(vm, value_address);
 
-        Fy_VM_runOperatorOnReg8(vm, operator, reg_id, value);
+        Fy_VM_runBinaryOperatorOnReg8(vm, operator, reg_id, value);
         instruction_size += 1 + memory_param_size;
         break;
     }
@@ -669,7 +686,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
 
         memory_param_size = Fy_VM_readMemoryParam(vm, address + 3, &write_address);
 
-        Fy_VM_runOperatorOnMem16(vm, operator, write_address, value);
+        Fy_VM_runBinaryOperatorOnMem16(vm, operator, write_address, value);
         instruction_size += 2 + memory_param_size;
         break;
     }
@@ -683,7 +700,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         if (!Fy_VM_getReg16(vm, reg_id, &value))
             return;
 
-        Fy_VM_runOperatorOnMem16(vm, operator, write_address, value);
+        Fy_VM_runBinaryOperatorOnMem16(vm, operator, write_address, value);
         instruction_size += 1 + memory_param_size;
         break;
     }
@@ -694,7 +711,7 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
 
         memory_param_size = Fy_VM_readMemoryParam(vm, address + 2, &write_address);
 
-        Fy_VM_runOperatorOnMem8(vm, operator, write_address, value);
+        Fy_VM_runBinaryOperatorOnMem8(vm, operator, write_address, value);
         instruction_size += 1 + memory_param_size;
         break;
     }
@@ -708,13 +725,87 @@ static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
         if (!Fy_VM_getReg8(vm, reg_id, &value))
             return;
 
-        Fy_VM_runOperatorOnMem8(vm, operator, write_address, value);
+        Fy_VM_runBinaryOperatorOnMem8(vm, operator, write_address, value);
         instruction_size += 1 + memory_param_size;
         break;
     }
     default:
         Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Binary operator id '%d'", type);
         return;
+    }
+
+    vm->reg_ip += instruction_size;
+}
+
+static uint16_t Fy_instructionTypeUnaryOperator_getsize(Fy_Instruction_UnaryOperator *instruction) {
+    uint16_t size = 1;
+
+    switch (instruction->type) {
+    case Fy_UnaryOperatorArgsType_Mem16:
+        size += Fy_InlineValue_getMapping(&instruction->as_mem16.address, NULL);
+        break;
+    case Fy_UnaryOperatorArgsType_Mem8:
+        size += Fy_InlineValue_getMapping(&instruction->as_mem8.address, NULL);
+        break;
+    case Fy_UnaryOperatorArgsType_Reg16:
+    case Fy_UnaryOperatorArgsType_Reg8:
+        ++size;
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+
+    return size;
+}
+
+static void Fy_instructionTypeUnaryOperator_write(Fy_Generator *generator, Fy_Instruction_UnaryOperator *instruction) {
+    Fy_Generator_addByte(generator, ((uint8_t)instruction->type << 4) + (uint8_t)instruction->operator);
+
+    switch (instruction->type) {
+    case Fy_UnaryOperatorArgsType_Mem16:
+        Fy_Generator_addMemory(generator, &instruction->as_mem16.address);
+        break;
+    case Fy_UnaryOperatorArgsType_Mem8:
+        Fy_Generator_addMemory(generator, &instruction->as_mem8.address);
+        break;
+    case Fy_UnaryOperatorArgsType_Reg16:
+        Fy_Generator_addByte(generator, instruction->as_reg16);
+        break;
+    case Fy_UnaryOperatorArgsType_Reg8:
+        Fy_Generator_addByte(generator, instruction->as_reg8);
+        break;
+    default:
+        FY_UNREACHABLE();
+    }
+}
+
+static void Fy_InstructionTypeUnaryOperator_run(Fy_VM *vm, uint16_t address) {
+    uint8_t info_byte = Fy_VM_getMem8(vm, address + 0);
+    uint8_t type = info_byte >> 4;
+    uint8_t operator = info_byte & 0x0f;
+    uint16_t instruction_size = 1 + 1; // How much we need to advance
+
+    switch (type) {
+    case Fy_UnaryOperatorArgsType_Reg16:
+        Fy_VM_runUnaryOperatorOnReg16(vm, operator, Fy_VM_getMem8(vm, address + 1));
+        ++instruction_size;
+        break;
+    case Fy_UnaryOperatorArgsType_Mem16: {
+        uint16_t memory_address;
+        instruction_size += Fy_VM_readMemoryParam(vm, address + 1, &memory_address);
+        Fy_VM_runUnaryOperatorOnMem16(vm, operator, memory_address);
+        break;
+    }
+    case Fy_UnaryOperatorArgsType_Reg8:
+        Fy_VM_runUnaryOperatorOnReg8(vm, operator, Fy_VM_getMem8(vm, address + 1));
+        ++instruction_size;
+        break;
+    case Fy_UnaryOperatorArgsType_Mem8: {
+        uint16_t memory_address;
+        instruction_size += Fy_VM_readMemoryParam(vm, address + 1, &memory_address);
+        Fy_VM_runUnaryOperatorOnMem8(vm, operator, memory_address);
+        break;
+    }
     }
 
     vm->reg_ip += instruction_size;
@@ -914,6 +1005,12 @@ Fy_InstructionType Fy_instructionTypeBinaryOperator = {
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeBinaryOperator_write,
     .run_func = Fy_InstructionTypeBinaryOperator_run
 };
+Fy_InstructionType Fy_instructionTypeUnaryOperator = {
+    .variable_size = true,
+    .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeUnaryOperator_getsize,
+    .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeUnaryOperator_write,
+    .run_func = Fy_InstructionTypeUnaryOperator_run
+};
 
 Fy_InstructionType* const Fy_instructionTypes[] = {
     &Fy_instructionTypeNop,
@@ -947,5 +1044,6 @@ Fy_InstructionType* const Fy_instructionTypes[] = {
     &Fy_instructionTypeDivReg8,
     &Fy_instructionTypeIdivReg16,
     &Fy_instructionTypeIdivReg8,
-    &Fy_instructionTypeBinaryOperator
+    &Fy_instructionTypeBinaryOperator,
+    &Fy_instructionTypeUnaryOperator
 };

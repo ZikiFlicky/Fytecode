@@ -350,7 +350,7 @@ bool Fy_VM_isWritableReg8(Fy_VM *vm, uint8_t reg) {
     return false;
 }
 
-bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint16_t value) {
+bool Fy_VM_runBinaryOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint16_t value) {
     uint16_t reg_value;
     bool set_in_flags = true;
     bool set_in_reg = true;
@@ -404,7 +404,7 @@ bool Fy_VM_runOperatorOnReg16(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg
     return true;
 }
 
-bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint8_t value) {
+bool Fy_VM_runBinaryOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_id, uint8_t value) {
     uint8_t reg_value;
     bool set_in_flags = true;
     bool set_in_reg = true;
@@ -459,7 +459,7 @@ bool Fy_VM_runOperatorOnReg8(Fy_VM *vm, Fy_BinaryOperator operator, uint8_t reg_
     return true;
 }
 
-bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint16_t value) {
+bool Fy_VM_runBinaryOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint16_t value) {
     uint16_t mem_value;
     bool set_in_flags = true;
     bool set_in_mem = true;
@@ -511,7 +511,7 @@ bool Fy_VM_runOperatorOnMem16(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t ad
     return true;
 }
 
-bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint8_t value) {
+bool Fy_VM_runBinaryOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t address, uint8_t value) {
     uint8_t mem_value;
     bool set_in_flags = true;
     bool set_in_mem = true;
@@ -559,6 +559,107 @@ bool Fy_VM_runOperatorOnMem8(Fy_VM *vm, Fy_BinaryOperator operator, uint16_t add
     // Set result in memory unless explicitly not allowed
     if (set_in_mem)
         Fy_VM_setMem8(vm, address, mem_value);
+    return true;
+}
+
+static bool Fy_VM_runUnaryOperator16(Fy_VM *vm, Fy_UnaryOperator operator, uint16_t *value) {
+    switch (operator) {
+    case Fy_UnaryOperator_Neg:
+        *value = ~(*value) + 1; // Do neg manually instead of casting
+        break;
+    case Fy_UnaryOperator_Inc:
+        *value = Fy_VM_add16(vm, *value, 1);
+        break;
+    case Fy_UnaryOperator_Dec:
+        *value = Fy_VM_sub16(vm, *value, 1);
+        break;
+    case Fy_UnaryOperator_Not:
+        *value = ~(*value);
+        break;
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+
+    Fy_VM_setResult16InFlags(vm, *value);
+    return true;
+}
+
+static bool Fy_VM_runUnaryOperator8(Fy_VM *vm, Fy_UnaryOperator operator, uint8_t *value) {
+    switch (operator) {
+    case Fy_UnaryOperator_Neg:
+        *value = ~(*value) + 1; // Do neg manually instead of casting
+        break;
+    case Fy_UnaryOperator_Inc:
+        *value = Fy_VM_add8(vm, *value, 1);
+        break;
+    case Fy_UnaryOperator_Dec:
+        *value = Fy_VM_sub8(vm, *value, 1);
+        break;
+    case Fy_UnaryOperator_Not:
+        *value = ~(*value);
+        break;
+    default:
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_InvalidOpcode, "Invalid operator opcode '%d'", operator);
+        return false;
+    }
+
+    Fy_VM_setResult8InFlags(vm, *value);
+    return true;
+}
+
+bool Fy_VM_runUnaryOperatorOnReg16(Fy_VM *vm, Fy_UnaryOperator operator, uint8_t reg_id) {
+    uint16_t reg_value;
+
+    if (!Fy_VM_getReg16(vm, reg_id, &reg_value))
+        return false;
+
+    if (!Fy_VM_runUnaryOperator16(vm, operator, &reg_value))
+        return false;
+
+    if (!Fy_VM_setReg16(vm, reg_id, reg_value))
+        return false;
+
+    return true;
+}
+
+bool Fy_VM_runUnaryOperatorOnMem16(Fy_VM *vm, Fy_UnaryOperator operator, uint16_t address) {
+    uint16_t mem_value;
+
+    mem_value = Fy_VM_getMem16(vm, address);
+
+    if (!Fy_VM_runUnaryOperator16(vm, operator, &mem_value))
+        return false;
+
+    Fy_VM_setMem16(vm, address, mem_value);
+    return true;
+}
+
+
+bool Fy_VM_runUnaryOperatorOnReg8(Fy_VM *vm, Fy_UnaryOperator operator, uint8_t reg_id) {
+    uint8_t reg_value;
+
+    if (!Fy_VM_getReg8(vm, reg_id, &reg_value))
+        return false;
+
+    if (!Fy_VM_runUnaryOperator8(vm, operator, &reg_value))
+        return false;
+
+    if (!Fy_VM_setReg8(vm, reg_id, reg_value))
+        return false;
+
+    return true;
+}
+
+bool Fy_VM_runUnaryOperatorOnMem8(Fy_VM *vm, Fy_UnaryOperator operator, uint16_t address) {
+    uint8_t mem_value;
+
+    mem_value = Fy_VM_getMem8(vm, address);
+
+    if (!Fy_VM_runUnaryOperator8(vm, operator, &mem_value))
+        return false;
+
+    Fy_VM_setMem8(vm, address, mem_value);
     return true;
 }
 

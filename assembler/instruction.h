@@ -273,8 +273,9 @@ extern Fy_InstructionType Fy_instructionTypeAddReg8Const;
 extern Fy_InstructionType Fy_instructionTypeAddReg8Reg8;
 extern Fy_InstructionType Fy_instructionTypeBinaryOperator;
 extern Fy_InstructionType Fy_instructionTypeUnaryOperator;
+extern Fy_InstructionType Fy_instructionTypeCbw;
 
-extern Fy_InstructionType* const Fy_instructionTypes[33];
+extern Fy_InstructionType* const Fy_instructionTypes[34];
 
 /* Instruction methods/functions */
 Fy_Instruction *Fy_Instruction_New(const Fy_InstructionType *type, size_t size);

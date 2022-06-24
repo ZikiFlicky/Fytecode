@@ -78,6 +78,7 @@ const Fy_KeywordTokenDef Fy_keywordTokens[] = {
     { "not", Fy_TokenType_Not },
     { "mul", Fy_TokenType_Mul },
     { "imul", Fy_TokenType_Imul },
+    { "cbw", Fy_TokenType_Cbw },
     { "push", Fy_TokenType_Push },
     { "pop", Fy_TokenType_Pop },
     { "int", Fy_TokenType_Int },

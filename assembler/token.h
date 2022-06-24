@@ -31,6 +31,7 @@ typedef enum Fy_TokenType {
     Fy_TokenType_Inc,
     Fy_TokenType_Dec,
     Fy_TokenType_Not,
+    Fy_TokenType_Cbw,
     Fy_TokenType_Debug,
     Fy_TokenType_DebugStack,
     Fy_TokenType_Jmp,

@@ -608,7 +608,7 @@ static void Fy_instructionTypeBinaryOperator_write(Fy_Generator *generator, Fy_I
     }
 }
 
-static void Fy_InstructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
+static void Fy_instructionTypeBinaryOperator_run(Fy_VM *vm, uint16_t address) {
     uint8_t info_byte = Fy_VM_getMem8(vm, address + 0);
     uint8_t type = info_byte >> 4;
     uint8_t operator = info_byte & 0x0f;
@@ -779,7 +779,7 @@ static void Fy_instructionTypeUnaryOperator_write(Fy_Generator *generator, Fy_In
     }
 }
 
-static void Fy_InstructionTypeUnaryOperator_run(Fy_VM *vm, uint16_t address) {
+static void Fy_instructionTypeUnaryOperator_run(Fy_VM *vm, uint16_t address) {
     uint8_t info_byte = Fy_VM_getMem8(vm, address + 0);
     uint8_t type = info_byte >> 4;
     uint8_t operator = info_byte & 0x0f;
@@ -809,6 +809,20 @@ static void Fy_InstructionTypeUnaryOperator_run(Fy_VM *vm, uint16_t address) {
     }
 
     vm->reg_ip += instruction_size;
+}
+
+static void Fy_instructionTypeCbw_run(Fy_VM *vm, uint16_t address) {
+    uint8_t al_value;
+
+    (void)address;
+    if (!Fy_VM_getReg8(vm, Fy_Reg8_Al, &al_value))
+        return;
+
+    // If signed, set ah to indicate the sign
+    if (al_value >> 7) {
+        if (!Fy_VM_setReg8(vm, Fy_Reg8_Ah, 0xff))
+            return;
+    }
 }
 
 /* Type definitions */
@@ -1003,13 +1017,19 @@ Fy_InstructionType Fy_instructionTypeBinaryOperator = {
     .variable_size = true,
     .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeBinaryOperator_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeBinaryOperator_write,
-    .run_func = Fy_InstructionTypeBinaryOperator_run
+    .run_func = Fy_instructionTypeBinaryOperator_run
 };
 Fy_InstructionType Fy_instructionTypeUnaryOperator = {
     .variable_size = true,
     .getsize_func = (Fy_InstructionGetSizeFunc)Fy_instructionTypeUnaryOperator_getsize,
     .write_func = (Fy_InstructionWriteFunc)Fy_instructionTypeUnaryOperator_write,
-    .run_func = Fy_InstructionTypeUnaryOperator_run
+    .run_func = Fy_instructionTypeUnaryOperator_run
+};
+Fy_InstructionType Fy_instructionTypeCbw = {
+    .variable_size = false,
+    .additional_size = 0,
+    .write_func = NULL,
+    .run_func = Fy_instructionTypeCbw_run
 };
 
 Fy_InstructionType* const Fy_instructionTypes[] = {
@@ -1045,5 +1065,6 @@ Fy_InstructionType* const Fy_instructionTypes[] = {
     &Fy_instructionTypeIdivReg16,
     &Fy_instructionTypeIdivReg8,
     &Fy_instructionTypeBinaryOperator,
-    &Fy_instructionTypeUnaryOperator
+    &Fy_instructionTypeUnaryOperator,
+    &Fy_instructionTypeCbw
 };

@@ -158,7 +158,7 @@ proc has_enough_time_elapsed
 ms_bigger:
     ; The last ms is bigger than the current one so we need to convert one of the diff seconds into milliseconds
     ; So we don't get a negative result
-    sub [word diff_sec] 1
+    dec [word diff_sec]
     add ax 1000
     sub ax [last_draw_time_ms]
 
@@ -225,11 +225,11 @@ draw_width_line:
     ; Color for call
     int 4 ; Draw pixel
 
-    add cl 1
+    inc cl
     cmp cl CUBE_SIZE
     jb draw_width_line
 
-    add ch 1
+    inc ch
     cmp ch CUBE_SIZE
     jb draw_y_times
 
@@ -256,7 +256,7 @@ proc snake_add_entry
     mov al [tail_y]
     mov [snake_entries + bx + 1] al
 
-    add [word amount_snake_entries] 1
+    inc [word amount_snake_entries]
 
     pop bx
     pop ax
@@ -287,7 +287,7 @@ loop_snake:
     jmp end_search_position
 
 position_not_equal:
-    add cx 1
+    inc cx
     add bx 2
     cmp cx [amount_snake_entries]
     jl loop_snake
@@ -328,7 +328,7 @@ proc move_snake
     ; Shift all snake entries
     mov cx [amount_snake_entries]
 shift_snake_body:
-    sub cx 1
+    dec cx
     cmp cx 0
     je end_shift_snake_body
 

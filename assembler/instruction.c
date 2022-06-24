@@ -414,6 +414,11 @@ static void Fy_instructionTypeDivReg16_run(Fy_VM *vm, uint16_t address) {
 
     lhs = ((uint32_t)lhs_high << 16) + (uint32_t)lhs_low;
 
+    if ((uint32_t)rhs == 0) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionByZero, NULL);
+        return;
+    }
+
     result_div = lhs / (uint32_t)rhs;
     result_mod = (uint16_t)(lhs % (uint32_t)rhs); // Will always be in range
 
@@ -440,6 +445,11 @@ static void Fy_instructionTypeDivReg8_run(Fy_VM *vm, uint16_t address) {
     Fy_VM_getReg16(vm, Fy_Reg16_Ax, &lhs);
     if (!Fy_VM_getReg8(vm, reg_id, &rhs))
         return;
+
+    if ((uint16_t)rhs == 0) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionByZero, NULL);
+        return;
+    }
 
     result_div = lhs / (uint16_t)rhs;
     result_mod = (uint8_t)(lhs % (uint16_t)rhs); // Will always be in range
@@ -474,6 +484,11 @@ static void Fy_instructionTypeIdivReg16_run(Fy_VM *vm, uint16_t address) {
     lhs = *(int32_t*)&lhs_unsigned;
     rhs = (int32_t)*(int16_t*)&rhs_unsigned;
 
+    if (rhs == 0) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionByZero, NULL);
+        return;
+    }
+
     result_div = lhs / rhs;
     result_mod = (int16_t)(lhs % rhs); // Will always be in range
 
@@ -505,6 +520,11 @@ static void Fy_instructionTypeIdivReg8_run(Fy_VM *vm, uint16_t address) {
 
     lhs = *(int16_t*)&lhs_unsigned;
     rhs = (int16_t)*(int8_t*)&lhs_unsigned;
+
+    if (rhs == 0) {
+        Fy_VM_runtimeError(vm, Fy_RuntimeError_DivisionByZero, NULL);
+        return;
+    }
 
     result_div = lhs / rhs;
     result_mod = (int8_t)(lhs % rhs); // Will always be in range

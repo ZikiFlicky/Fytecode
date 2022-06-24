@@ -114,6 +114,8 @@ static char *Fy_RuntimeError_toString(Fy_RuntimeError error) {
         return "Interrupt not found";
     case Fy_RuntimeError_InterruptError:
         return "Interrupt error";
+    case Fy_RuntimeError_DivisionByZero:
+        return "Division by zero";
     case Fy_RuntimeError_DivisionResultTooBig:
         return "Division result too big";
     default:

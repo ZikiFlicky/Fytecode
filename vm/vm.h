@@ -31,6 +31,7 @@ enum Fy_RuntimeError {
     Fy_RuntimeError_InterruptNotFound,
     Fy_RuntimeError_InterruptError,
     Fy_RuntimeError_PixelNotInScreen,
+    Fy_RuntimeError_DivisionByZero,
     Fy_RuntimeError_DivisionResultTooBig
 };
 
